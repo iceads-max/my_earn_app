@@ -102,7 +102,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
     .action-btn {
       border: none;
@@ -127,6 +127,37 @@
       background: linear-gradient(135deg, #009952, #00ff88) !important;
       color: #07120a !important;
       box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4) !important;
+    }
+
+    .limit-container {
+      background: rgba(184, 41, 255, 0.08);
+      border: 1px solid rgba(184, 41, 255, 0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .limit-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: #9c8eaf;
+    }
+    .limit-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #09050d;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .limit-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #b829ff, #00ff88);
+      transition: width 0.3s ease;
     }
 
     .card-item {
@@ -302,6 +333,17 @@
     <button class="action-btn btn-green" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
+  <!-- Daily 500 Ads Limit Counter Display -->
+  <div class="limit-container">
+    <div class="limit-labels">
+      <span>နေ့စဉ် Ads ကန့်သတ်ချက်</span>
+      <span><strong id="ads-watched-count" style="color:#00ff88;">0</strong> / 500 Ads</span>
+    </div>
+    <div class="limit-bar-bg">
+      <div class="limit-bar-fill" id="ads-progress-fill"></div>
+    </div>
+  </div>
+
   <!-- ================= 5 TAB VIEWS ================= -->
 
   <!-- View 1: TASK -->
@@ -448,15 +490,16 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
-    // Active ဖြစ်နေသော Block ID 57762 အား တပ်ဆင်ထားပါသည်
-    const ADSGRAM_BLOCK_ID = "57762";
+    // Cyber Earn ၏ တရားဝင် Block ID ဖြစ်ပါသည်
+    const ADSGRAM_BLOCK_ID = "58116";
+    const MAX_DAILY_ADS = 500; // တစ်ရက်လျှင် အများဆုံး ၅၀၀ ကြိမ်
 
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
 
-    // Adsgram Controller စတင် ချိတ်ဆက်ခြင်း
+    // Adsgram Controller စတင်ချိတ်ဆက်ခြင်း
     let AdController = null;
     try {
       if (window.Adsgram) {
@@ -470,6 +513,41 @@
     let currentBalance = 0.000;
     let lastDaily = 0;
     let completedTasks = [];
+
+    // Daily Ads Limit တွက်ချက်သည့် စနစ် (Local Storage အခြေခံ)
+    function getTodayString() {
+      const d = new Date();
+      return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+    }
+
+    function getDailyAdCount() {
+      const recordKey = `cyber_ads_${userData.id}_date`;
+      const countKey = `cyber_ads_${userData.id}_count`;
+      const savedDate = localStorage.getItem(recordKey);
+      const today = getTodayString();
+
+      if (savedDate !== today) {
+        localStorage.setItem(recordKey, today);
+        localStorage.setItem(countKey, "0");
+        return 0;
+      }
+      return parseInt(localStorage.getItem(countKey) || "0", 10);
+    }
+
+    function incrementDailyAdCount() {
+      const countKey = `cyber_ads_${userData.id}_count`;
+      const current = getDailyAdCount();
+      const updated = current + 1;
+      localStorage.setItem(countKey, updated.toString());
+      renderAdLimitUI(updated);
+      return updated;
+    }
+
+    function renderAdLimitUI(count) {
+      document.getElementById("ads-watched-count").innerText = count;
+      const pct = Math.min(100, Math.round((count / MAX_DAILY_ADS) * 100));
+      document.getElementById("ads-progress-fill").style.width = `${pct}%`;
+    }
 
     function switchNav(viewId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
@@ -506,6 +584,8 @@
       document.getElementById("withdraw-hint").innerText = `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
       document.getElementById("daily-text").innerText = `၂၄ နာရီတစ်ကြိမ် $${config.daily_bonus} ရယူပါ`;
       document.getElementById("ref-percent-text").innerText = config.ref_percent;
+
+      renderAdLimitUI(getDailyAdCount());
 
       const link = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
       document.getElementById("invite-link-input").value = link;
@@ -583,13 +663,21 @@
       });
     }
 
-    // Adsgram Rewarded Video အစစ် ပြသမည့် Logic
+    // တနေ့ Ads ၅၀၀ ကန့်သတ်ချက်ဖြင့် ဗီဒီယိုကြော်ငြာပြသမည့် Logic
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       if (config.bot_status === 'OFF') {
         showAlert("ခေတ္တစောင့်ပါ", "စနစ်ပြုပြင်ထိန်းသိမ်းနေသဖြင့် Ads ခေတ္တပိတ်ထားပါသည်။");
         return;
       }
+
+      // Ads ၅၀၀ ကန့်သတ်ချက် စစ်ဆေးခြင်း
+      const watched = getDailyAdCount();
+      if (watched >= MAX_DAILY_ADS) {
+        showAlert("သတိပေးချက်", `ယနေ့အတွက် သတ်မှတ်ထားသော Ads ${MAX_DAILY_ADS} ကြိမ် ပြည့်သွားပါပြီ။ မနက်ဖြန်တွင် ထပ်မံကြည့်ရှုနိုင်ပါမည်။`);
+        return;
+      }
+
       if (isShowingAd) return;
 
       const btn = document.getElementById("btn-watch-ad");
@@ -598,7 +686,7 @@
         if (window.Adsgram) {
           AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
         } else {
-          showAlert("ကြော်ငြာမရသေးပါ", "Ads Network နှင့် ခေတ္တချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
+          showAlert("ခေတ္တစောင့်ပါ", "Ads Network နှင့် ချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
           return;
         }
       }
@@ -609,14 +697,18 @@
       AdController.show().then((result) => {
         isShowingAd = false;
         btn.innerText = "⚡ Ads ကြည့်မည်";
+
+        // ကောင်တာ တိုးခြင်းနှင့် ဆုကြေးပေါင်းထည့်ခြင်း
+        const newCount = incrementDailyAdCount();
         const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
         updateBalanceInDB(nBal);
-        showAlert("🎉 အောင်မြင်ပါသည်", `ဗီဒီယိုကြော်ငြာ ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်!`);
+
+        showAlert("🎉 အောင်မြင်ပါသည်", `ဗီဒီယိုကြော်ငြာ ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်! (ယနေ့ ကြည့်ပြီး: ${newCount}/${MAX_DAILY_ADS})`);
       }).catch((result) => {
         isShowingAd = false;
         btn.innerText = "⚡ Ads ကြည့်မည်";
         if (result?.error) {
-          showAlert("ကြော်ငြာမရှိသေးပါ", "လက်ရှိ ပြသရန် ကြော်ငြာမရှိသေးပါ။ ခဏအကြာမှ ထပ်မံကြိုးစားပေးပါ။");
+          showAlert("ကြော်ငြာမရှိသေးပါ", "Adsgram စနစ်က အတည်ပြုနေဆဲ (In moderation) ဖြစ်၍ ခေတ္တစောင့်ဆိုင်းပေးပါခင်ဗျာ။");
         } else {
           showAlert("သတိပေးချက်", "ဆုကြေးရရှိရန် ကြော်ငြာဗီဒီယိုကို အဆုံးထိ ကြည့်ရှုပေးရပါမည်။");
         }
