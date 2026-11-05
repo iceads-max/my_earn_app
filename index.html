@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Earn Bot</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Supabase Library ကို ချိတ်ဆက်ခြင်း -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background-color: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .card {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #e94560;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            margin-top: 20px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn:active { background-color: #c72c48; }
+        h2 { color: #ffd369; }
+        #loading { color: yellow; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h2 id="greeting">🔥 မင်္ဂလာပါ</h2>
+    <p id="loading">ခဏစောင့်ပါ... ချိတ်ဆက်နေပါတယ်</p>
+    
+    <div class="card" style="display:none;" id="main-card">
+        <p>လက်ကျန်ငွေ (Points)</p>
+        <h1 id="balance">0</h1>
+        <p style="color: #00ff88;">≈ $0.00 USDT</p>
+    </div>
+
+    <button class="btn" style="display:none;" id="earn-btn" onclick="earnPoints()">WATCH AD & EARN</button>
+
+    <script>
+        // ၁။ Telegram WebApp ကို ချိတ်ဆက်ခြင်း
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        const user = tg.initDataUnsafe?.user;
+
+        // ၂။ မင်းရဲ့ Supabase ကုဒ်တွေ ထည့်ရမယ့်နေရာ
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // ဒီနေရာမှာ မင်းရဲ့ URL ကို အစားထိုးပါ
+        const SUPABASE_KEY = 'YOUR_SUPABASE_KEY'; // ဒီနေရာမှာ sb_publis... ကုဒ်ကို အစားထိုးပါ
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ၃။ App စတင်တဲ့အခါ အလုပ်လုပ်မယ့် Function
+        async function initApp() {
+            if (!user) {
+                document.getElementById('loading').innerText = "Telegram ကနေ ဖွင့်ပေးပါ။";
+                return;
+            }
+
+            document.getElementById('greeting').innerText = `🔥 Welcome, ${user.first_name}`;
+
+            // Database ထဲမှာ User ရှိမရှိ စစ်ဆေးမယ်
+            let { data: dbUser, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            // User မရှိသေးရင် အသစ်ထည့်မယ်
+            if (!dbUser) {
+                const { data: newUser, error: insertError } = await supabaseClient
+                    .from('users')
+                    .insert([{ id: user.id, first_name: user.first_name, balance: 0 }])
+                    .select()
+                    .single();
+                
+                if (insertError) {
+                    console.error(insertError);
+                    document.getElementById('loading').innerText = "Database Error!";
+                    return;
+                }
+                dbUser = newUser;
+            }
+
+            // အောင်မြင်ရင် မျက်နှာပြင်ပြမယ်
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-card').style.display = 'block';
+            document.getElementById('earn-btn').style.display = 'block';
+            document.getElementById('balance').innerText = dbUser.balance;
+        }
+
+        // ၄။ ပိုက်ဆံရှာတဲ့ Function
+        async function earnPoints() {
+            const currentBalance = parseInt(document.getElementById('balance').innerText);
+            const newBalance = currentBalance + 10;
+
+            // Database မှာ ပိုက်ဆံ တိုးမယ်
+            const { error } = await supabaseClient
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('id', user.id);
+
+            if (!error) {
+                document.getElementById('balance').innerText = newBalance;
+                tg.HapticFeedback.impactOccurred('medium');
+                tg.showAlert("ဂုဏ်ယူပါတယ်! 10 Points ရသွားပါပြီ။");
+            } else {
+                tg.showAlert("Error တက်နေပါတယ်။");
+            }
+        }
+
+        // App ကို စတင်လိုက်ပါ
+        initApp();
+    </script>
+</body>
+</html>
