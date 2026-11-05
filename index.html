@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cyber Earn & Arena</title>
+  <title>Cyber Earn - Official Mini App</title>
   
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Supabase Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- Monetag Ad Tag SDK -->
+  <!-- Monetag Ad Tag SDK (Zone: 12199472) -->
   <script src="//libtl.com/sdk.js" data-zone="12199472" data-sdk="show_12199472"></script>
 
   <style>
     :root {
-      --bg: #090d16;
-      --card-bg: #131a29;
+      --bg: #0b0f19;
+      --card-bg: #121927;
       --accent: #00ffcc;
       --accent-glow: rgba(0, 255, 204, 0.25);
       --text: #ffffff;
@@ -25,48 +25,49 @@
       --success: #2ed573;
       --gold: #ffa502;
       --purple: #8e44ad;
+      --border-color: rgba(255, 255, 255, 0.08);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 14px; user-select: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 14px 14px 40px; user-select: none; }
     
-    .header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
+    /* Top Header */
+    .header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 14px; }
     .user-info { display: flex; align-items: center; gap: 10px; }
-    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #162235; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; color: var(--accent); }
-    .badge { font-size: 11px; color: var(--accent); background: rgba(0,255,204,0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(0,255,204,0.3); }
+    .avatar { width: 42px; height: 42px; border-radius: 50%; background: #162235; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; color: var(--accent); }
+    .badge { font-size: 11px; color: var(--accent); background: rgba(0,255,204,0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(0,255,204,0.3); font-weight: 600; }
 
     /* Total Balance Card */
-    .balance-card { width: 100%; max-width: 450px; background: linear-gradient(135deg, #131b2e 0%, #090e18 100%); border: 1px solid rgba(0,255,204,0.25); border-radius: 16px; padding: 18px; text-align: center; margin-bottom: 14px; box-shadow: 0 8px 24px var(--accent-glow); }
+    .balance-card { width: 100%; max-width: 450px; background: linear-gradient(135deg, #131b2e 0%, #090e18 100%); border: 1px solid rgba(0,255,204,0.25); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 14px; box-shadow: 0 8px 24px var(--accent-glow); }
     .balance-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-    .balance-amount { font-size: 34px; font-weight: 800; color: var(--accent); margin: 6px 0; }
+    .balance-amount { font-size: 36px; font-weight: 800; color: var(--accent); margin: 6px 0; }
     .balance-sub { font-size: 11px; color: var(--text-muted); }
 
     /* Stats Grid */
-    .stats-card { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 14px; padding: 12px; display: flex; justify-content: space-around; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.06); }
+    .stats-card { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 14px; padding: 12px; display: flex; justify-content: space-around; margin-bottom: 14px; border: 1px solid var(--border-color); }
     .stat-item { text-align: center; }
     .stat-val { font-size: 15px; font-weight: 700; color: #fff; }
     .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Main Earn Buttons */
+    /* Action Buttons Grid */
     .btn-grid { width: 100%; max-width: 450px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .btn { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform 0.1s; }
+    .btn { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; transition: transform 0.1s, background 0.2s; }
     .btn:active { transform: scale(0.97); }
-    .btn-main { grid-column: span 2; background: linear-gradient(90deg, #00cec9, #00b894); color: #000; border: none; font-size: 15px; font-weight: 700; padding: 15px; box-shadow: 0 4px 15px rgba(0, 206, 201, 0.3); }
+    .btn-main { grid-column: span 2; background: linear-gradient(90deg, #00cec9, #00b894); color: #000; border: none; font-size: 16px; font-weight: 800; padding: 16px; box-shadow: 0 4px 15px rgba(0, 206, 201, 0.3); }
     .btn-gold { background: linear-gradient(90deg, #f39c12, #e67e22); color: #000; border: none; }
     .btn-danger { border-color: rgba(255, 71, 87, 0.4); }
 
-    /* Cyber Arena Game Section */
-    .arena-card { width: 100%; max-width: 450px; background: var(--card-bg); border: 1px solid rgba(142, 68, 173, 0.4); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
-    .arena-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .arena-title { font-size: 14px; font-weight: 700; color: #d2a8ff; display: flex; align-items: center; gap: 6px; }
-    .arena-timer { font-size: 12px; color: var(--gold); font-weight: bold; background: rgba(255,165,2,0.1); padding: 4px 8px; border-radius: 8px; }
-    .color-select-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .btn-color { padding: 10px; border-radius: 10px; border: 2px solid transparent; font-weight: bold; font-size: 13px; cursor: pointer; text-align: center; }
-    .color-red { background: rgba(255, 71, 87, 0.2); color: #ff4757; border-color: #ff4757; }
-    .color-green { background: rgba(46, 213, 115, 0.2); color: #2ed573; border-color: #2ed573; }
-    .color-blue { background: rgba(30, 144, 255, 0.2); color: #1e90ff; border-color: #1e90ff; }
-    .btn-bet-action { width: 100%; background: linear-gradient(90deg, #8e44ad, #9b59b6); color: #fff; font-weight: bold; border: none; border-radius: 10px; padding: 12px; cursor: pointer; }
+    /* Section Containers */
+    .section-card { width: 100%; max-width: 450px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 15px; margin-bottom: 14px; }
+    .section-title { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
 
-    /* Input & Modal Overlays */
+    /* Tasks List */
+    .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .task-item:last-child { border-bottom: none; }
+    .task-desc { font-size: 13px; font-weight: 500; }
+    .task-reward { font-size: 11px; color: var(--accent); }
+    .task-btn { background: rgba(0,255,204,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* Custom Popup Overlays */
     .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 999999; padding: 20px; }
     .popup-box { background: #131a29; border: 1px solid var(--accent); border-radius: 16px; width: 100%; max-width: 350px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
     .popup-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; }
@@ -78,7 +79,7 @@
 </head>
 <body>
 
-  <!-- Top User Profile Header -->
+  <!-- Header -->
   <div class="header">
     <div class="user-info">
       <div class="avatar" id="u-avatar">U</div>
@@ -90,14 +91,14 @@
     <div class="badge">BEP-20 Live</div>
   </div>
 
-  <!-- Wallet Balance Display -->
+  <!-- Total Balance Display -->
   <div class="balance-card">
     <div class="balance-label">Total Balance</div>
     <div class="balance-amount">$<span id="bal-val">0.0000</span></div>
     <div class="balance-sub">Tether USD (USDT BEP-20)</div>
   </div>
 
-  <!-- Core Statistics -->
+  <!-- User Stats -->
   <div class="stats-card">
     <div class="stat-item">
       <div class="stat-val" id="st-watched">0 / 500</div>
@@ -113,39 +114,36 @@
     </div>
   </div>
 
-  <!-- Action Buttons -->
+  <!-- Primary Earn Actions -->
   <div class="btn-grid">
     <button class="btn btn-main" id="btn-watch-ad">
-      <span style="font-size: 18px;">⚡</span>
+      <span style="font-size: 20px;">⚡</span>
       <span>Watch Ad & Earn ($<span id="cfg-reward">0.003</span>)</span>
     </button>
     <button class="btn btn-gold" id="btn-daily-bonus">
       <span>🎁 Daily Bonus</span>
     </button>
     <button class="btn" id="btn-invite">
-      <span>👥 Invite Link</span>
+      <span>👥 Invite Friends</span>
     </button>
     <button class="btn btn-danger" id="btn-withdraw-modal">
       <span style="color: var(--danger);">💳 Withdraw USDT</span>
     </button>
   </div>
 
-  <!-- Cyber Arena Prediction Game -->
-  <div class="arena-card">
-    <div class="arena-header">
-      <div class="arena-title">⚔️ Cyber Arena (Round #<span id="arena-round">1</span>)</div>
-      <div class="arena-timer">⏳ <span id="round-timer">30</span>s</div>
+  <!-- Official Tasks Section -->
+  <div class="section-card">
+    <div class="section-title">📋 Official Channel Tasks</div>
+    <div class="task-item">
+      <div>
+        <div class="task-desc">Join Official Telegram Channel</div>
+        <div class="task-reward">+ $0.005 USDT</div>
+      </div>
+      <button class="task-btn" onclick="openChannel()">Join</button>
     </div>
-    <div class="color-select-grid">
-      <button class="btn-color color-red" onclick="selectColor('Red')">RED (2x)</button>
-      <button class="btn-color color-green" onclick="selectColor('Green')">GREEN (2x)</button>
-      <button class="btn-color color-blue" onclick="selectColor('Blue')">BLUE (2x)</button>
-    </div>
-    <input type="number" step="0.001" class="input-box" id="bet-amt" placeholder="Bet Amount (Min: $0.001)">
-    <button class="btn-bet-action" id="btn-place-bet">Place Arena Bet</button>
   </div>
 
-  <!-- System Notification Modal -->
+  <!-- Alert Modal -->
   <div class="popup-overlay" id="popup-box">
     <div class="popup-box">
       <div class="popup-title" id="pop-title">သတိပေးချက်</div>
@@ -154,7 +152,7 @@
     </div>
   </div>
 
-  <!-- Withdraw Execution Modal -->
+  <!-- Withdraw Modal -->
   <div class="popup-overlay" id="withdraw-modal">
     <div class="popup-box">
       <div class="popup-title" style="color: var(--accent);">USDT BEP-20 ထုတ်ယူရန်</div>
@@ -174,10 +172,11 @@
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oaHpiZWF5ZmNjb2lxZXZ5ZGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2Mzg4NzYsImV4cCI6MjA2MjIxNDg3Nn0.7bWv8WkI-KzXpWbXW1iJ5o0V7xH7L9iJ0kK1lM2nO3p";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Bot Config
+    // Bot Configuration
     const BOT_USERNAME = "CyberEarns_bot";
     const ADMIN_ID = 6093710107;
     const MAX_DAILY_ADS = 500;
+    const OFFICIAL_CHANNEL = "https://t.me/Tonsarsar";
 
     let tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
@@ -187,10 +186,8 @@
 
     let currentBalance = 0.0000;
     let config = { ad_reward: 0.003, min_withdraw: 0.03, daily_bonus: 0.005 };
-    let selectedColor = "";
-    let currentRound = 1;
 
-    // Popups
+    // Notification Popup Logic
     function showAlert(title, msg) {
       document.getElementById('pop-title').innerText = title;
       document.getElementById('pop-msg').innerText = msg;
@@ -200,7 +197,7 @@
       document.getElementById('popup-box').style.display = 'none';
     });
 
-    // Daily Limit Local Counter
+    // Daily Limit Local Storage
     function getDailyAdCount() {
       const today = new Date().toISOString().slice(0, 10);
       const data = JSON.parse(localStorage.getItem(`ads_${user.id}`) || '{}');
@@ -213,7 +210,7 @@
       document.getElementById('st-watched').innerText = `${count} / ${MAX_DAILY_ADS}`;
     }
 
-    // Initialize State
+    // Initialize User Data
     async function initUser() {
       document.getElementById('u-name').innerText = user.first_name || "Cyber Player";
       document.getElementById('u-id').innerText = `ID: ${user.id}`;
@@ -249,7 +246,7 @@
       await supabase.from('cyber_users').update({ balance: nBal }).eq('user_id', user.id);
     }
 
-    // Monetag Rewarded Interstitial Call
+    // Monetag Rewarded Interstitial Execution
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       const watched = getDailyAdCount();
       if (!IS_ADMIN && watched >= MAX_DAILY_ADS) {
@@ -257,6 +254,7 @@
         return;
       }
 
+      // Monetag SDK Call
       if (typeof show_12199472 === 'function') {
         show_12199472().then(() => {
           incrementDailyAdCount();
@@ -264,7 +262,8 @@
           updateBalanceInDB(nBal);
           showAlert("🎉 အောင်မြင်ပါသည်", `ကြော်ငြာကြည့်ရှုမှုအတွက် +$${config.ad_reward} USDT ရရှိပါသည်!`);
         }).catch((err) => {
-          showAlert("သတိပေးချက်", "ကြော်ငြာဖွင့်၍ မရသေးပါခင်ဗျာ။ ခဏအကြာမှ ထပ်စမ်းပေးပါ။");
+          console.error("Monetag Error:", err);
+          showAlert("သတိပေးချက်", "ကြော်ငြာရယူ၍ မရသေးပါခင်ဗျာ။ ခဏအကြာမှ ထပ်စမ်းပေးပါ။");
         });
       } else {
         showAlert("ခေတ္တစောင့်ပါ", "ကြော်ငြာ SDK ချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
@@ -285,7 +284,7 @@
       showAlert("🎉 ဂုဏ်ယူပါသည်", `နေ့စဉ် Bonus +$${config.daily_bonus} USDT ရရှိပါသည်!`);
     });
 
-    // Friends Link
+    // Referral Friends Link
     document.getElementById("btn-invite").addEventListener("click", () => {
       const link = `https://t.me/${BOT_USERNAME}?start=${user.id}`;
       if (navigator.clipboard) {
@@ -296,59 +295,16 @@
       }
     });
 
-    // Arena Color Select
-    function selectColor(color) {
-      selectedColor = color;
-      showAlert("အရောင်ရွေးချယ်မှု", `${color} အရောင်ကို ရွေးချယ်ထားပါသည်။ Bet ပမာဏရိုက်ထည့်ပြီး Bet ထိုးနိုင်ပါပြီ။`);
+    // Task Execution
+    function openChannel() {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(OFFICIAL_CHANNEL);
+      } else {
+        window.open(OFFICIAL_CHANNEL, '_blank');
+      }
     }
 
-    // Place Arena Bet Execution
-    document.getElementById("btn-place-bet").addEventListener("click", async () => {
-      const amt = Number(document.getElementById('bet-amt').value);
-      if (!selectedColor) {
-        showAlert("သတိပေးချက်", "ကျေးဇူးပြု၍ အရောင်တစ်ခု ရွေးချယ်ပေးပါ (Red, Green, Blue)။");
-        return;
-      }
-      if (isNaN(amt) || amt < 0.001) {
-        showAlert("သတိပေးချက်", "အနည်းဆုံး Bet ပမာဏမှာ $0.001 ဖြစ်ပါသည်။");
-        return;
-      }
-      if (amt > currentBalance) {
-        showAlert("လက်ကျန်ငွေမလုံလောက်ပါ", `သင့်လက်ကျန်ငွေမှာ $${currentBalance.toFixed(4)} သာ ရှိပါသည်။`);
-        return;
-      }
-
-      const nBal = Number((currentBalance - amt).toFixed(4));
-      await updateBalanceInDB(nBal);
-
-      try {
-        await supabase.from('cyber_arena_bets').insert([{
-          round_id: currentRound,
-          user_id: user.id,
-          user_name: user.first_name || "Player",
-          bet_amount: amt,
-          color: selectedColor
-        }]);
-        showAlert("⚔️ Bet အောင်မြင်သည်", `Round #${currentRound} တွင် ${selectedColor} ပေါ် $${amt} Bet ထိုးပြီးပါပြီ!`);
-        document.getElementById('bet-amt').value = '';
-      } catch (e) {
-        console.error("Bet DB error:", e);
-      }
-    });
-
-    // Round Timer Simulation
-    let timeLeft = 30;
-    setInterval(() => {
-      timeLeft--;
-      if (timeLeft <= 0) {
-        timeLeft = 30;
-        currentRound++;
-        document.getElementById('arena-round').innerText = currentRound;
-      }
-      document.getElementById('round-timer').innerText = timeLeft;
-    }, 1000);
-
-    // Withdraw Modal
+    // Withdraw Modal Controls
     document.getElementById("btn-withdraw-modal").addEventListener("click", () => {
       document.getElementById('withdraw-modal').style.display = 'flex';
     });
