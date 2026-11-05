@@ -448,8 +448,8 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
-    // သင့် တရားဝင် Adsgram Block ID (UnitID: 58116)
-    const ADSGRAM_BLOCK_ID = "58116";
+    // Active ဖြစ်နေသော Block ID ကို တပ်ဆင်ထားပါသည်
+    const ADSGRAM_BLOCK_ID = "57762";
 
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
@@ -583,7 +583,7 @@
       });
     }
 
-    // တကယ့် Adsgram ဗီဒီယိုကြော်ငြာ ပြသမည့် Logic
+    // Adsgram Rewarded Video အစစ် ပြသမည့် Logic
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       if (config.bot_status === 'OFF') {
@@ -594,7 +594,6 @@
 
       const btn = document.getElementById("btn-watch-ad");
 
-      // AdController အဆင်သင့် မဖြစ်သေးပါက
       if (!AdController) {
         if (window.Adsgram) {
           AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
@@ -608,7 +607,6 @@
       btn.innerText = "⏳ ကြော်ငြာဖွင့်နေသည်...";
 
       AdController.show().then((result) => {
-        // User က ဗီဒီယိုပြီးဆုံးအောင် ကြည့်ရှုပြီးမှသာ ဆုကြေးရမည်
         isShowingAd = false;
         btn.innerText = "⚡ Ads ကြည့်မည်";
         const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
