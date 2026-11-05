@@ -6,9 +6,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn v4.0</title>
+  <title>Cyber Earn v5.0</title>
   
-  <script src="https://telegram.org/js/telegram-web-app.js?v=4.0"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js?v=5.0"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
@@ -189,7 +189,7 @@
     .tab-view.active-view { display: block; }
 
     /* =========================================
-       JACKPOT ROULETTE & GAME STYLES
+       EXCLUSIVE GAME MENU & VISUAL STYLES
        ========================================= */
     .game-nav-bar {
       display: flex;
@@ -225,7 +225,6 @@
       box-shadow: inset 0 0 30px rgba(184, 41, 255, 0.25);
     }
 
-    /* ROULETTE WHEEL WRAPPER */
     .roulette-container {
       position: relative;
       width: 210px;
@@ -254,7 +253,6 @@
       transition: transform 4s cubic-bezier(0.12, 0.8, 0.2, 1);
     }
 
-    /* PLAYERS MULTI-COLOR BET LIST */
     .bet-player-row {
       display: flex;
       align-items: center;
@@ -267,7 +265,6 @@
       font-size: 11px;
     }
 
-    /* 3D COIN FLIP */
     .coin-3d-box {
       perspective: 800px;
       margin: 16px auto;
@@ -406,7 +403,7 @@
 </head>
 <body>
 
-  <!-- Dynamic IP Conflict Overlay -->
+  <!-- Dynamic IP Conflict Screen -->
   <div id="ip-block-screen">
     <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
     <h2 style="color:#ff3366; margin-bottom:12px;">IP တူညီနေပါသည်</h2>
@@ -668,7 +665,6 @@
 
     function initRoulette() {
       if (jackpotBets.length === 0) {
-        // စမ်းသပ် bot ကစားသမား ထည့်သွင်းထားပေးခြင်း
         jackpotBets = [
           { user_id: 1001, user_name: "CyberBot_Alpha", bet_amount: 0.02, color: '#b829ff' }
         ];
@@ -684,7 +680,6 @@
       const myChance = totalPot > 0 ? ((myTotal / totalPot) * 100).toFixed(1) : 0;
       document.getElementById('ui-my-chance').innerText = `${myChance}%`;
 
-      // Draw Roulette Canvas Slice
       const canvas = document.getElementById("roulette-canvas");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -705,7 +700,6 @@
         currentAngle += sliceAngle;
       });
 
-      // Render Player List
       const container = document.getElementById("jackpot-players-container");
       container.innerHTML = "";
       jackpotBets.forEach(b => {
@@ -755,7 +749,6 @@
       isRouletteSpinning = true;
       const totalPot = jackpotBets.reduce((sum, b) => sum + Number(b.bet_amount), 0);
 
-      // Random Point ထောက်လှမ်းခြင်း (များများလောင်းသူ အချိုးကျ နိုင်ခြေများ)
       const randVal = Math.random() * totalPot;
       let cumulative = 0;
       let winner = jackpotBets[0];
@@ -768,7 +761,6 @@
         }
       }
 
-      // Wheel Spin Animation
       const canvas = document.getElementById("roulette-canvas");
       const rounds = 5 * 360;
       rouletteDeg += rounds + Math.floor(Math.random() * 360);
@@ -776,7 +768,7 @@
 
       setTimeout(async () => {
         isRouletteSpinning = false;
-        const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Fee
+        const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Platform Fee
 
         if (Number(winner.user_id) === Number(userData.id)) {
           const winBal = Number((currentBalance + payout).toFixed(4));
@@ -786,7 +778,6 @@
           showAlert("😢 အခြားသူ အနိုင်ရပါသည်", `ကံထူးရှင်မှာ [${winner.user_name}] ဖြစ်ပါသည်! နောက်တစ်ကြိမ် ကံစမ်းပါခင်ဗျာ။`);
         }
 
-        // Round ပြန်စတင်ခြင်း
         jackpotBets = [
           { user_id: 1002, user_name: "CyberBot_Beta", bet_amount: 0.02, color: '#00e5ff' }
         ];
@@ -795,7 +786,7 @@
     }
 
     // ============================================
-    // SOLO GAMES (DYNAMIC WIN RATE: 3x 50%, THEN 30%)
+    // SOLO GAMES (DYNAMIC WIN RATE)
     // ============================================
     let chosenFlipSide = 'HEAD';
     let isFlipping = false;
@@ -823,7 +814,6 @@
       void coin.offsetWidth;
       coin.classList.add('coin-flipping');
 
-      // Dynamic Win Rate (၃ ကြိမ်ထိ 50%, ကျော်ပါက 30%)
       const rate = getSoloWinRate();
       const isWin = (Math.random() < rate);
       const actualResult = isWin ? chosenFlipSide : (chosenFlipSide === 'HEAD' ? 'TAIL' : 'HEAD');
@@ -834,7 +824,7 @@
         isFlipping = false;
 
         if (isWin) {
-          const winPrize = Number((bet * 2 * 0.90).toFixed(4)); // 10% Fee
+          const winPrize = Number((bet * 2 * 0.90).toFixed(4));
           nBal = Number((nBal + winPrize).toFixed(4));
           await updateBalanceInDB(nBal);
           showAlert("🎉 အနိုင်ရပါသည်!", `ရလဒ်: [${actualResult}]\n10% Fee နှုတ်ပြီး +$${winPrize} USDT ရရှိပါသည်!`);
@@ -850,7 +840,6 @@
       const canvas = document.getElementById("double-canvas");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
-      const segments = ["2x", "0x", "2x", "0x"];
       const colors = ["#00ff88", "#140a24", "#b829ff", "#140a24"];
       ctx.clearRect(0,0,220,220);
       for(let i=0; i<4; i++){
