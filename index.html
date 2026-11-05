@@ -7,380 +7,118 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #090c15;
-      --card-bg: rgba(18, 24, 38, 0.85);
-      --card-border: rgba(0, 240, 255, 0.2);
-      --neon-cyan: #00f0ff;
-      --neon-green: #00ff88;
-      --neon-purple: #b026ff;
+      --bg: #07090e;
+      --card: rgba(15, 20, 34, 0.9);
+      --border: rgba(0, 240, 255, 0.25);
+      --cyan: #00f0ff;
+      --green: #00ff88;
+      --purple: #b026ff;
       --text: #ffffff;
-      --text-muted: #8492a6;
+      --dim: #79859f;
       --danger: #ff3366;
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-    body {
-      background-color: var(--bg);
-      background-image: radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%);
-      color: var(--text);
-      padding: 16px;
-      padding-bottom: 90px;
-      min-height: 100vh;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 90px; }
 
-    /* Header Profile */
-    .header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      margin-top: 5px;
-    }
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .avatar-hex {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #00f0ff, #b026ff);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
-    }
-    .user-info h3 {
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-    }
-    .user-info p {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-family: monospace;
-    }
-    .status-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 5px 10px;
-      border-radius: 20px;
-      background: rgba(0, 255, 136, 0.1);
-      border: 1px solid var(--neon-green);
-      color: var(--neon-green);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .user-profile { display: flex; align-items: center; gap: 10px; }
+    .avatar-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--cyan), var(--purple)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .status-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(0, 255, 136, 0.1); border: 1px solid var(--green); color: var(--green); }
 
-    /* Main Balance Screen */
-    .balance-container {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 22px;
-      padding: 24px 20px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(0, 240, 255, 0.05);
-      margin-bottom: 20px;
-    }
-    .balance-container::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-green), transparent);
-    }
-    .balance-subtitle {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .balance-amount {
-      font-size: 40px;
-      font-weight: 900;
-      color: var(--neon-green);
-      text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-      margin-bottom: 4px;
-      font-family: monospace;
-    }
-    .reward-pill {
-      display: inline-block;
-      font-size: 11px;
-      color: var(--neon-cyan);
-      background: rgba(0, 240, 255, 0.08);
-      padding: 4px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(0, 240, 255, 0.2);
-    }
+    .balance-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 22px; text-align: center; box-shadow: 0 8px 30px rgba(0, 240, 255, 0.08); margin-bottom: 18px; position: relative; overflow: hidden; }
+    .balance-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--green)); }
+    .balance-val { font-size: 38px; font-weight: 900; color: var(--green); margin: 6px 0; font-family: monospace; }
 
-    /* Primary Action Buttons */
-    .button-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .cyber-button {
-      border: none;
-      border-radius: 16px;
-      padding: 16px 12px;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-      position: relative;
-    }
-    .cyber-button:active {
-      transform: scale(0.96);
-    }
-    .btn-glow-cyan {
-      background: linear-gradient(135deg, #00f0ff, #0088ff);
-      color: #050811;
-      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.35);
-    }
-    .btn-glow-green {
-      background: linear-gradient(135deg, #00ff88, #00aa55);
-      color: #050811;
-      box-shadow: 0 6px 20px rgba(0, 255, 136, 0.35);
-    }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+    .cyber-btn { border: none; border-radius: 14px; padding: 15px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .cyber-btn:active { transform: scale(0.97); }
+    .btn-earn { background: linear-gradient(135deg, #00f0ff, #0077ff); color: #000; box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3); }
+    .btn-withdraw { background: linear-gradient(135deg, #00ff88, #00aa44); color: #000; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3); }
 
-    /* Sections & Cards */
-    .section-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin: 16px 0 10px 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .feature-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 16px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(8px);
-    }
-    .feature-card h4 {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 3px;
-    }
-    .feature-card p {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-    .action-tag-btn {
-      background: rgba(0, 240, 255, 0.08);
-      border: 1px solid var(--neon-cyan);
-      color: var(--neon-cyan);
-      padding: 9px 16px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-    }
-    .action-tag-btn:disabled {
-      border-color: #232938;
-      background: transparent;
-      color: #4b5568;
-      cursor: not-allowed;
-    }
+    .section-title { font-size: 12px; color: var(--dim); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 10px 4px; }
+    .card-item { background: var(--card); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .btn-action { background: rgba(0, 240, 255, 0.1); border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-action:disabled { border-color: #262c3e; color: #555e75; background: transparent; cursor: not-allowed; }
 
-    /* Admin Bar */
-    #admin-access-card {
-      display: none;
-      background: rgba(176, 38, 255, 0.08);
-      border: 1px solid var(--neon-purple);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 20px;
-    }
-
-    /* Popups & Panels */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.88);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000;
-      opacity: 0; visibility: hidden;
-      transition: all 0.2s ease;
-      padding: 20px;
-      backdrop-filter: blur(8px);
-    }
-    .modal-overlay.active {
-      opacity: 1; visibility: visible;
-    }
-    .modal-sheet {
-      background: #101524;
-      border: 1px solid var(--neon-cyan);
-      box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
-      border-radius: 24px;
-      padding: 24px;
-      width: 100%; max-width: 360px;
-    }
-    .modal-sheet input {
-      width: 100%;
-      padding: 13px 14px;
-      background: #090c15;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      color: white;
-      font-size: 14px;
-      margin-top: 6px;
-      margin-bottom: 14px;
-      outline: none;
-      font-family: monospace;
-    }
-    .modal-sheet input:focus {
-      border-color: var(--neon-cyan);
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
-    }
-    .close-btn {
-      background: #171d2f;
-      color: var(--text-muted);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
+    /* Modal Overlay */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s ease; padding: 20px; backdrop-filter: blur(8px); }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-box { background: #0f1422; border: 1px solid var(--cyan); border-radius: 20px; padding: 22px; width: 100%; max-width: 360px; }
+    .modal-box input { width: 100%; padding: 12px; background: #07090e; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 14px; margin: 6px 0 14px; outline: none; }
+    .modal-box input:focus { border-color: var(--cyan); }
   </style>
 </head>
 <body>
 
-  <!-- Top Header Profile -->
   <div class="header-bar">
     <div class="user-profile">
-      <div class="avatar-hex">⚡</div>
-      <div class="user-info">
+      <div class="avatar-icon">⚡</div>
+      <div>
         <h3 id="ui-username">...</h3>
-        <p id="ui-userid">ID: ...</p>
+        <p id="ui-userid" style="font-size: 11px; color: var(--dim); font-family: monospace;">ID: ...</p>
       </div>
     </div>
-    <div class="status-badge">CYBER V2</div>
+    <div class="status-badge" id="bot-status-tag">SYSTEM ONLINE</div>
   </div>
 
-  <!-- Admin Bar (Admin ID သီးသန့် မြင်ရမည်) -->
-  <div id="admin-access-card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <h4 style="color: var(--neon-purple); font-size:14px;">⚙️ Admin Control Panel</h4>
-      <span style="font-size:10px; color:#aaa; font-family:monospace;">ACTIVE</span>
-    </div>
-    <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Ad ကြေးနှင့် ငွေထုတ်နှုန်းများကို Mini App မှ ပြင်ဆင်ရန်</p>
-    <button class="action-tag-btn" style="width:100%; border-color:var(--neon-purple); color:var(--neon-purple); background:transparent;" id="btn-open-admin">Control Panel ဖွင့်မည်</button>
+  <div class="balance-box">
+    <div style="font-size: 11px; color: var(--dim); text-transform: uppercase;">လက်ကျန်ငွေ (USDT BEP-20)</div>
+    <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
+    <div style="font-size: 12px; color: var(--cyan);" id="ui-rate-info">Ad ဆုကြေး: $0.003 / Ad</div>
   </div>
 
-  <!-- Main Balance Display -->
-  <div class="balance-container">
-    <div class="balance-subtitle">လက်ကျန်ငွေ (USDT BEP-20)</div>
-    <div class="balance-amount">$<span id="ui-balance">0.0000</span></div>
-    <div class="reward-pill" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
+  <div class="btn-grid">
+    <button class="cyber-btn btn-earn" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
+    <button class="cyber-btn btn-withdraw" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
-  <!-- Action Buttons -->
-  <div class="button-grid">
-    <button class="cyber-button btn-glow-cyan" id="btn-watch-ad">
-      <span style="font-size:20px;">⚡</span>
-      <span>Ads ကြည့်မည်</span>
-    </button>
-    <button class="cyber-button btn-glow-green" id="btn-open-withdraw">
-      <span style="font-size:20px;">💳</span>
-      <span>Withdraw</span>
-    </button>
-  </div>
-
-  <!-- Rewards Section -->
-  <div class="section-label">🎁 နေ့စဉ်ဆု & မိတ်ဆက်</div>
-  <div class="feature-card">
+  <div class="section-title">🎁 နေ့စဉ်ဆုလက်ဆောင် & မိတ်ဆက်</div>
+  <div class="card-item">
     <div>
       <h4>Daily Bonus</h4>
-      <p>၂၄ နာရီတစ်ကြိမ် $0.005 ရယူပါ</p>
+      <p style="font-size:11px; color:var(--dim);" id="daily-text">၂၄ နာရီတစ်ကြိမ် ရယူပါ</p>
     </div>
-    <button class="action-tag-btn" id="btn-daily">Claim</button>
+    <button class="btn-action" id="btn-daily">Claim</button>
   </div>
 
-  <div class="feature-card">
+  <div class="card-item">
     <div>
-      <h4>Invite Friends (20% Bonus)</h4>
-      <p>မိတ်ဆက်သူများ ရရှိသည့်ငွေမှ 20% ရမည်</p>
+      <h4>Invite Friends (<span id="ref-percent-text">20</span>%)</h4>
+      <p style="font-size:11px; color:var(--dim);">မိတ်ဆက်သူများ ရှာဖွေမှုမှ ရရှိမည်</p>
     </div>
-    <button class="action-tag-btn" id="btn-share">Share</button>
+    <button class="btn-action" id="btn-share">Share</button>
   </div>
 
-  <!-- Tasks Section -->
-  <div class="section-label">📋 Tasks များ</div>
-  <div class="feature-card">
-    <div>
-      <h4>Join Telegram Channel</h4>
-      <p style="color: var(--neon-green); font-weight:700;">+$0.010 USDT</p>
-    </div>
-    <button class="action-tag-btn" id="btn-task-tg">Join</button>
+  <div class="section-title">📋 Tasks များ</div>
+  <div id="tasks-container">
+    <p style="font-size:12px; color:var(--dim); padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
   </div>
 
   <!-- Notification Alert Modal -->
   <div class="modal-overlay" id="modal-alert">
-    <div class="modal-sheet" style="text-align: center;">
-      <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
-      <p id="alert-msg" style="color: var(--text-muted); font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
-      <button class="cyber-button btn-glow-cyan" style="width: 100%; padding:13px;" id="alert-ok-btn">ကောင်းပြီ</button>
+    <div class="modal-box" style="text-align: center;">
+      <h3 id="alert-title" style="margin-bottom: 8px;">အသိပေးချက်</h3>
+      <p id="alert-msg" style="color: var(--dim); font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
+      <button class="cyber-btn btn-earn" style="width: 100%; padding:13px;" id="alert-ok-btn">ကောင်းပြီ</button>
     </div>
   </div>
 
-  <!-- Withdraw Screen Modal (အမှား/အမှန် စာသားကို အထဲတွင် တိုက်ရိုက်ပြပေးမည်) -->
+  <!-- Withdraw Screen Modal (Screen ပေါ်တွင် အမှား/အမှန် တိုက်ရိုက်ပြသမည်) -->
   <div class="modal-overlay" id="modal-withdraw">
-    <div class="modal-sheet">
-      <h3 style="margin-bottom: 4px; text-align: center; font-size:17px;">USDT BEP-20 ထုတ်ယူရန်</h3>
-      <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 14px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ စတင်ထုတ်နိုင်ပါသည်</p>
+    <div class="modal-box">
+      <h3 style="margin-bottom: 4px; text-align: center;">USDT BEP-20 ထုတ်ယူရန်</h3>
+      <p style="font-size: 11px; color: var(--dim); text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
 
-      <!-- အမှားနှင့် အောင်မြင်မှု သတိပေးစာတန်း ပြမည့်နေရာ -->
-      <div id="withdraw-msg-box" style="display: none; padding: 11px; border-radius: 10px; font-size: 12px; text-align: center; margin-bottom: 14px; font-weight: bold; line-height: 1.4;"></div>
+      <div id="withdraw-msg-box" style="display: none; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 12px; font-weight: bold;"></div>
 
-      <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">ထုတ်ယူမည့် ပမာဏ ($)</label>
+      <label style="font-size: 11px; color: var(--dim);">ထုတ်ယူမည့် ပမာဏ ($)</label>
       <input type="number" id="input-amount" step="0.001" placeholder="0.03">
 
-      <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">BEP-20 Wallet Address (0x...)</label>
+      <label style="font-size: 11px; color: var(--dim);">BEP-20 Wallet Address (0x...)</label>
       <input type="text" id="input-wallet" placeholder="0x...">
 
-      <button class="cyber-button btn-glow-green" style="width: 100%; margin-bottom: 10px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
-      <button class="cyber-button close-btn" style="width: 100%; padding:13px;" id="btn-close-withdraw">ပိတ်မည်</button>
-    </div>
-  </div>
-
-  <!-- Admin Modal -->
-  <div class="modal-overlay" id="modal-admin">
-    <div class="modal-sheet">
-      <h3 style="margin-bottom: 14px; text-align: center; color: var(--neon-purple); font-size:16px;">⚙️ Admin Settings</h3>
-      
-      <label style="font-size: 11px; color: var(--text-muted);">Ads ၁ ကြိမ်ကြည့်လျှင်ပေးမည့်ငွေ ($)</label>
-      <input type="number" id="admin-ad-reward" step="0.001">
-
-      <label style="font-size: 11px; color: var(--text-muted);">အနည်းဆုံး ငွေထုတ်ပမာဏ ($)</label>
-      <input type="number" id="admin-min-withdraw" step="0.01">
-
-      <button class="cyber-button" style="width: 100%; background: var(--neon-purple); color: white; margin-bottom: 10px; padding:13px;" id="btn-save-admin">သိမ်းဆည်းမည်</button>
-      <button class="cyber-button close-btn" style="width: 100%; padding:13px;" id="btn-close-admin">ပိတ်မည်</button>
+      <button class="cyber-btn btn-withdraw" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
+      <button class="cyber-btn" style="width: 100%; background: #161c2d; color: white; padding:13px;" id="btn-close-withdraw">ပိတ်မည်</button>
     </div>
   </div>
 
@@ -389,102 +127,117 @@
     const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
 
     const tg = window.Telegram?.WebApp;
-    if (tg) {
-      try { tg.ready(); tg.expand(); } catch (e) {}
-    }
+    if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
-    const isAdmin = (userData.id === 6093710107);
 
     let config = {
+      bot_status: 'ON',
       ad_reward: 0.003,
-      min_withdraw: 0.03
+      min_withdraw: 0.03,
+      daily_bonus: 0.005,
+      ref_percent: 20
     };
 
     let userState = {
-      balance: Number(localStorage.getItem("cb_balance") || 0.000),
-      lastDaily: Number(localStorage.getItem("cb_daily") || 0),
-      taskDone: localStorage.getItem("cb_task_tg") === "1"
+      balance: Number(localStorage.getItem("cyber_bal") || 0.000),
+      lastDaily: Number(localStorage.getItem("cyber_daily") || 0),
+      completedTasks: JSON.parse(localStorage.getItem("cyber_done_tasks") || "[]")
     };
 
-    const uiUsername = document.getElementById("ui-username");
-    const uiUserid = document.getElementById("ui-userid");
-    const uiBalance = document.getElementById("ui-balance");
-    const uiRateInfo = document.getElementById("ui-rate-info");
-    const withdrawHint = document.getElementById("withdraw-hint");
-
-    const modalAlert = document.getElementById("modal-alert");
-    const alertTitle = document.getElementById("alert-title");
-    const alertMsg = document.getElementById("alert-msg");
-    const alertOkBtn = document.getElementById("alert-ok-btn");
-
-    const modalWithdraw = document.getElementById("modal-withdraw");
-    const modalAdmin = document.getElementById("modal-admin");
-    const withdrawMsgBox = document.getElementById("withdraw-msg-box");
-
     function showAlert(title, msg) {
-      alertTitle.innerText = title;
-      alertMsg.innerText = msg;
-      modalAlert.classList.add("active");
+      document.getElementById("alert-title").innerText = title;
+      document.getElementById("alert-msg").innerText = msg;
+      document.getElementById("modal-alert").classList.add("active");
     }
 
-    alertOkBtn.addEventListener("click", () => modalAlert.classList.remove("active"));
-    document.getElementById("btn-close-withdraw").addEventListener("click", () => modalWithdraw.classList.remove("active"));
-    document.getElementById("btn-close-admin").addEventListener("click", () => modalAdmin.classList.remove("active"));
+    document.getElementById("alert-ok-btn").addEventListener("click", () => document.getElementById("modal-alert").classList.remove("active"));
+    document.getElementById("btn-close-withdraw").addEventListener("click", () => document.getElementById("modal-withdraw").classList.remove("active"));
 
-    // ငွေထုတ်မျက်နှာပြင်ပေါ်တွင် အမှား/အမှန် စာတိုက်ရိုက်ပြပေးခြင်း
     function showWithdrawNotice(text, isError = true) {
-      withdrawMsgBox.style.display = "block";
-      withdrawMsgBox.innerText = text;
-      if (isError) {
-        withdrawMsgBox.style.background = "rgba(255, 51, 102, 0.15)";
-        withdrawMsgBox.style.color = "#ff3366";
-        withdrawMsgBox.style.border = "1px solid rgba(255, 51, 102, 0.4)";
+      const box = document.getElementById("withdraw-msg-box");
+      box.style.display = "block";
+      box.innerText = text;
+      box.style.background = isError ? "rgba(255, 51, 102, 0.15)" : "rgba(0, 255, 136, 0.15)";
+      box.style.color = isError ? "#ff3366" : "#00ff88";
+      box.style.border = isError ? "1px solid #ff3366" : "1px solid #00ff88";
+    }
+
+    function renderUI() {
+      document.getElementById("ui-username").innerText = userData.first_name;
+      document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
+      document.getElementById("ui-balance").innerText = userState.balance.toFixed(4);
+      document.getElementById("ui-rate-info").innerText = `Ad ဆုကြေး: $${config.ad_reward} / Ad`;
+      document.getElementById("withdraw-hint").innerText = `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
+      document.getElementById("daily-text").innerText = `၂၄ နာရီတစ်ကြိမ် $${config.daily_bonus} ရယူပါ`;
+      document.getElementById("ref-percent-text").innerText = config.ref_percent;
+
+      const tag = document.getElementById("bot-status-tag");
+      if (config.bot_status === 'OFF') {
+        tag.innerText = "MAINTENANCE";
+        tag.style.color = "#ff3366";
+        tag.style.borderColor = "#ff3366";
       } else {
-        withdrawMsgBox.style.background = "rgba(0, 255, 136, 0.15)";
-        withdrawMsgBox.style.color = "#00ff88";
-        withdrawMsgBox.style.border = "1px solid rgba(0, 255, 136, 0.4)";
+        tag.innerText = "SYSTEM ONLINE";
+        tag.style.color = "#00ff88";
+        tag.style.borderColor = "#00ff88";
       }
+
+      localStorage.setItem("cyber_bal", userState.balance);
+      localStorage.setItem("cyber_daily", userState.lastDaily);
+      localStorage.setItem("cyber_done_tasks", JSON.stringify(userState.completedTasks));
     }
 
-    function render() {
-      uiUsername.innerText = userData.first_name;
-      uiUserid.innerText = `ID: ${userData.id}`;
-      uiBalance.innerText = userState.balance.toFixed(4);
-      uiRateInfo.innerText = `ဆုကြေး: $${config.ad_reward} / Ad`;
-      withdrawHint.innerText = `အနည်းဆုံး $${config.min_withdraw} မှ စတင်ထုတ်နိုင်ပါသည်`;
-
-      if (isAdmin) {
-        document.getElementById("admin-access-card").style.display = "block";
-      }
-
-      if (userState.taskDone) {
-        const b = document.getElementById("btn-task-tg");
-        b.innerText = "Done";
-        b.disabled = true;
-      }
-
-      localStorage.setItem("cb_balance", userState.balance);
-      localStorage.setItem("cb_daily", userState.lastDaily);
-    }
-
-    async function fetchSettings() {
+    async function loadConfigAndTasks() {
       try {
-        const res = await fetch(`${SB_URL}/rest/v1/bot_settings?select=*`, {
+        // Load Live Settings
+        const sRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
-        const data = await res.json();
-        data.forEach(item => {
+        const sData = await sRes.json();
+        sData.forEach(item => {
+          if (item.key === 'bot_status') config.bot_status = item.value;
           if (item.key === 'ad_reward') config.ad_reward = Number(item.value);
           if (item.key === 'min_withdraw') config.min_withdraw = Number(item.value);
+          if (item.key === 'daily_bonus') config.daily_bonus = Number(item.value);
+          if (item.key === 'ref_percent') config.ref_percent = Number(item.value);
         });
-        render();
+
+        // Load Live Tasks
+        const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const tasks = await tRes.json();
+        const container = document.getElementById("tasks-container");
+        container.innerHTML = "";
+
+        tasks.forEach(t => {
+          const isDone = userState.completedTasks.includes(t.id);
+          const div = document.createElement("div");
+          div.className = "card-item";
+          div.innerHTML = `
+            <div>
+              <h4>${t.title}</h4>
+              <p style="color:var(--green); font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
+            </div>
+            <button class="btn-action" id="task-btn-${t.id}" ${isDone ? "disabled" : ""}>
+              ${isDone ? "Done" : "Start"}
+            </button>
+          `;
+          container.appendChild(div);
+
+          if (!isDone) {
+            div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => handleDynamicTask(t));
+          }
+        });
+
+        renderUI();
       } catch (e) {}
     }
 
     function syncUser() {
       try {
-        fetch(`${SB_URL}/rest/v1/users`, {
+        fetch(`${SB_URL}/rest/v1/cyber_users`, {
           method: "POST",
           headers: {
             "apikey": SB_KEY,
@@ -502,48 +255,52 @@
       } catch (e) {}
     }
 
-    // 1. Ads Watch (Timer ပါဝင်ပြီး ဆုကြေး တိုးပေးမည်)
+    // Ads Watch Logic
     let isWatching = false;
-    const btnWatch = document.getElementById("btn-watch-ad");
-    btnWatch.addEventListener("click", () => {
+    document.getElementById("btn-watch-ad").addEventListener("click", () => {
+      if (config.bot_status === 'OFF') {
+        showAlert("ခေတ္တစောင့်ပါ", "စနစ်ပြုပြင်ထိန်းသိမ်းနေသဖြင့် Ads ခေတ္တပိတ်ထားပါသည်။");
+        return;
+      }
       if (isWatching) return;
       isWatching = true;
 
-      let count = 5;
-      btnWatch.innerText = `⏳ ကြည့်ရှုနေသည် (${count}s)...`;
+      let c = 5;
+      const b = document.getElementById("btn-watch-ad");
+      b.innerText = `⏳ ကြည့်ရှုနေသည် (${c}s)...`;
 
       const t = setInterval(() => {
-        count--;
-        if (count > 0) {
-          btnWatch.innerText = `⏳ ကြည့်ရှုနေသည် (${count}s)...`;
+        c--;
+        if (c > 0) {
+          b.innerText = `⏳ ကြည့်ရှုနေသည် (${c}s)...`;
         } else {
           clearInterval(t);
-          btnWatch.innerText = "⚡ Ads ကြည့်မည်";
+          b.innerText = "⚡ Ads ကြည့်မည်";
           isWatching = false;
 
           userState.balance += config.ad_reward;
-          render();
+          renderUI();
           syncUser();
-          showAlert("🎉 အောင်မြင်ပါသည်", `ကြော်ငြာ ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်!`);
+          showAlert("🎉 အောင်မြင်ပါသည်", `ကြော်ငြာအတွက် +$${config.ad_reward} ရရှိပါသည်!`);
         }
       }, 1000);
     });
 
-    // 2. Daily Bonus
+    // Daily Bonus
     document.getElementById("btn-daily").addEventListener("click", () => {
       const now = Date.now();
       if (now - userState.lastDaily < 24 * 60 * 60 * 1000) {
-        showAlert("ခေတ္တစောင့်ပါ", "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။ ၂၄ နာရီပြည့်မှ ပြန်လာခဲ့ပါ။");
+        showAlert("ခေတ္တစောင့်ပါ", "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။");
         return;
       }
-      userState.balance += 0.005;
+      userState.balance += config.daily_bonus;
       userState.lastDaily = now;
-      render();
+      renderUI();
       syncUser();
-      showAlert("🎁 နေ့စဉ်ဆုလက်ဆောင်", "Daily Bonus +$0.005 ထည့်သွင်းပေးလိုက်ပါပြီ!");
+      showAlert("🎁 နေ့စဉ်ဆု", `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`);
     });
 
-    // 3. Share Invite
+    // Share Invite
     document.getElementById("btn-share").addEventListener("click", () => {
       const link = `https://t.me/CyberEarn_bot?start=${userData.id}`;
       if (tg?.openTelegramLink) {
@@ -554,34 +311,43 @@
       }
     });
 
-    // 4. Task Action
-    document.getElementById("btn-task-tg").addEventListener("click", () => {
-      if (userState.taskDone) return;
-      if (tg?.openLink) { tg.openLink("https://t.me/Tonsarsar"); } else { window.open("https://t.me/Tonsarsar", "_blank"); }
-
-      const b = document.getElementById("btn-task-tg");
+    // Dynamic Task Execution
+    function handleDynamicTask(task) {
+      if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
+      const b = document.getElementById(`task-btn-${task.id}`);
       b.innerText = "စစ်ဆေးနေသည်...";
 
       setTimeout(() => {
-        userState.taskDone = true;
-        userState.balance += 0.010;
-        localStorage.setItem("cb_task_tg", "1");
-        render();
+        userState.completedTasks.push(task.id);
+        userState.balance += Number(task.reward);
+        b.innerText = "Done";
+        b.disabled = true;
+        renderUI();
         syncUser();
-        showAlert("✅ Task အောင်မြင်ပါသည်", "ဆုကြေး +$0.010 ထည့်သွင်းပေးလိုက်ပါပြီ!");
-      }, 3500);
-    });
 
-    // 5. Open Withdraw Modal
+        fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
+          method: "POST",
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userData.id, task_id: task.id })
+        }).catch(() => {});
+
+        showAlert("✅ Task အောင်မြင်ပါသည်", `ဆုကြေး +$${Number(task.reward).toFixed(3)} ရရှိပါသည်!`);
+      }, 3500);
+    }
+
+    // Withdraw Logic
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
-      withdrawMsgBox.style.display = "none";
+      document.getElementById("withdraw-msg-box").style.display = "none";
       document.getElementById("input-amount").value = "";
       document.getElementById("input-wallet").value = "";
-      modalWithdraw.classList.add("active");
+      document.getElementById("modal-withdraw").classList.add("active");
     });
 
-    // 6. Submit Withdraw Action (Screen ပေါ်တွင် တိုက်ရိုက် သတိပေးစာ ပြမည်)
     document.getElementById("btn-submit-withdraw").addEventListener("click", () => {
+      if (config.bot_status === 'OFF') {
+        showWithdrawNotice("⚠️ စနစ်ပြုပြင်နေသဖြင့် ငွေထုတ်ယူမှု ခေတ္တပိတ်ထားပါသည်။", true);
+        return;
+      }
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
@@ -594,27 +360,18 @@
         return;
       }
       if (!addr.startsWith("0x") || addr.length < 40) {
-        showWithdrawNotice("⚠️ မှန်ကန်သော BEP-20 (0x...) Address ရိုက်ထည့်ပါ။", true);
+        showWithdrawNotice("⚠️ မှန်ကန်သော BEP-20 (0x...) Address ထည့်ပါ။", true);
         return;
       }
 
       userState.balance -= amt;
-      render();
+      renderUI();
       syncUser();
 
-      fetch(`${SB_URL}/rest/v1/withdrawals`, {
+      fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
-        headers: {
-          "apikey": SB_KEY,
-          "Authorization": `Bearer ${SB_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          user_id: userData.id,
-          amount: amt,
-          wallet_address: addr,
-          status: "Pending"
-        })
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: "Pending" })
       }).catch(() => {});
 
       showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Admin စစ်ဆေးပြီး လွှဲပေးပါမည်။`, false);
@@ -622,44 +379,12 @@
       document.getElementById("input-wallet").value = "";
 
       setTimeout(() => {
-        modalWithdraw.classList.remove("active");
+        document.getElementById("modal-withdraw").classList.remove("active");
       }, 2500);
     });
 
-    // 7. Admin Panel Setting Logic
-    document.getElementById("btn-open-admin").addEventListener("click", () => {
-      document.getElementById("admin-ad-reward").value = config.ad_reward;
-      document.getElementById("admin-min-withdraw").value = config.min_withdraw;
-      modalAdmin.classList.add("active");
-    });
-
-    document.getElementById("btn-save-admin").addEventListener("click", async () => {
-      const newAd = Number(document.getElementById("admin-ad-reward").value);
-      const newMin = Number(document.getElementById("admin-min-withdraw").value);
-
-      if (newAd > 0 && newMin > 0) {
-        config.ad_reward = newAd;
-        config.min_withdraw = newMin;
-        render();
-
-        await fetch(`${SB_URL}/rest/v1/bot_settings?key=eq.ad_reward`, {
-          method: "PATCH",
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ value: newAd })
-        });
-        await fetch(`${SB_URL}/rest/v1/bot_settings?key=eq.min_withdraw`, {
-          method: "PATCH",
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ value: newMin })
-        });
-
-        modalAdmin.classList.remove("active");
-        showAlert("Admin အောင်မြင်ပါသည်", "Settings များကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ!");
-      }
-    });
-
-    render();
-    fetchSettings();
+    renderUI();
+    loadConfigAndTasks();
   </script>
 </body>
 </html>
