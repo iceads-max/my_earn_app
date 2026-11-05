@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cyber Earn Bot</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Supabase Library ကို တိုက်ရိုက်ချိတ်ဆက်ခြင်း -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #1a1a2e; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; margin: 0; }
@@ -32,7 +33,7 @@
         tg.expand();
         const user = tg.initDataUnsafe?.user;
 
-        // မှန်ကန်သော URL (coqev) နှင့် Key ကို ထည့်သွင်းထားပါသည်
+        // မင်းရဲ့ အတိအကျ URL နဲ့ Key ကို ဒီနေရာမှာ ထည့်ထားပါတယ်
         const SUPABASE_URL = 'https://ohhzbeayfccoqevydat.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41';
 
@@ -46,6 +47,7 @@
 
             document.getElementById('greeting').innerText = `🔥 Welcome, ${user.first_name}`;
 
+            // Database နဲ့ ချိတ်ဆက်မယ်
             let { data: dbUser, error } = await supabaseClient
                 .from('users')
                 .select('*')
