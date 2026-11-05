@@ -6,20 +6,20 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn - Earth Edition</title>
+  <title>Cyber Earn - Purple Green Edition</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* အစိမ်းနှင့် အညိုရောင်စပ် Theme သီးသန့် Palette */
     :root {
-      --bg: #11140e !important;
-      --card-bg: #1a1e15 !important;
-      --border-color: #2e3524 !important;
-      --green-bright: #44cf06 !important;
-      --green-dark: #278000 !important;
-      --brown-accent: #c28851 !important;
-      --brown-dark: #402c1c !important;
-      --text-white: #f5f7f2 !important;
-      --text-dim: #889280 !important;
+      --bg: #0d0814;
+      --card-bg: #160f24;
+      --border-color: #2e1d4d;
+      --purple-bright: #b829ff;
+      --purple-dark: #630ea8;
+      --green-bright: #00ff88;
+      --green-dark: #008f4c;
+      --text-white: #ffffff;
+      --text-dim: #978aa8;
+      --danger: #ff3366;
     }
     * {
       box-sizing: border-box;
@@ -30,16 +30,16 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      background-color: var(--bg) !important;
-      background-image: radial-gradient(circle at 50% 0%, rgba(68, 207, 6, 0.12) 0%, transparent 60%),
-                        radial-gradient(circle at 100% 100%, rgba(194, 136, 81, 0.1) 0%, transparent 50%) !important;
-      color: var(--text-white) !important;
+      background-color: var(--bg);
+      background-image: radial-gradient(circle at 0% 0%, rgba(184, 41, 255, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(0, 255, 136, 0.12) 0%, transparent 50%);
+      color: var(--text-white);
       padding: 16px;
       padding-bottom: 95px;
       min-height: 100vh;
     }
 
-    /* Top Profile */
+    /* Top Bar */
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -54,20 +54,20 @@
     .avatar-icon {
       width: 44px;
       height: 44px;
-      background: linear-gradient(135deg, var(--brown-accent), var(--green-dark));
+      background: linear-gradient(135deg, var(--purple-bright), var(--green-bright));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 22px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 15px rgba(184, 41, 255, 0.4);
     }
     .status-badge {
       font-size: 11px;
       font-weight: 800;
       padding: 5px 12px;
       border-radius: 10px;
-      background: rgba(68, 207, 6, 0.15);
+      background: rgba(0, 255, 136, 0.12);
       border: 1px solid var(--green-bright);
       color: var(--green-bright);
     }
@@ -82,13 +82,13 @@
       margin-bottom: 16px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     }
     .balance-box::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--brown-accent), var(--green-bright));
+      background: linear-gradient(90deg, var(--purple-bright), var(--green-bright));
     }
     .balance-title {
       font-size: 11px;
@@ -103,10 +103,10 @@
       color: var(--green-bright);
       margin: 6px 0;
       font-family: monospace;
-      text-shadow: 0 0 20px rgba(68, 207, 6, 0.3);
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
     }
 
-    /* Buttons */
+    /* Dual Buttons */
     .btn-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -127,15 +127,15 @@
       transition: transform 0.1s;
     }
     .action-btn:active { transform: scale(0.96); }
-    .btn-green {
-      background: linear-gradient(135deg, #2f9403, #44cf06);
+    .btn-purple {
+      background: linear-gradient(135deg, #8712c9, #b829ff);
       color: #ffffff;
-      box-shadow: 0 4px 15px rgba(68, 207, 6, 0.25);
+      box-shadow: 0 4px 18px rgba(184, 41, 255, 0.35);
     }
-    .btn-brown {
-      background: linear-gradient(135deg, #875b34, #c28851);
-      color: #ffffff;
-      box-shadow: 0 4px 15px rgba(194, 136, 81, 0.25);
+    .btn-green {
+      background: linear-gradient(135deg, #009952, #00ff88);
+      color: #07120a;
+      box-shadow: 0 4px 18px rgba(0, 255, 136, 0.35);
     }
 
     /* Cards */
@@ -158,9 +158,9 @@
       color: var(--text-dim);
     }
     .btn-sub {
-      background: rgba(68, 207, 6, 0.12);
-      border: 1px solid var(--green-bright);
-      color: var(--green-bright);
+      background: rgba(184, 41, 255, 0.12);
+      border: 1px solid var(--purple-bright);
+      color: var(--purple-bright);
       padding: 8px 16px;
       border-radius: 10px;
       font-size: 12px;
@@ -168,8 +168,8 @@
       cursor: pointer;
     }
     .btn-sub:disabled {
-      border-color: #2f3629;
-      color: #555e4e;
+      border-color: #2b203d;
+      color: #5d536e;
       background: transparent;
       cursor: not-allowed;
     }
@@ -182,10 +182,10 @@
       display: block;
     }
 
-    /* Invite Link Box */
+    /* Invite Box */
     .invite-box {
       background: var(--card-bg);
-      border: 1px solid var(--brown-dark);
+      border: 1px solid var(--border-color);
       border-radius: 14px;
       padding: 14px;
       margin-top: 14px;
@@ -198,7 +198,7 @@
     .invite-input {
       flex: 1;
       padding: 11px;
-      background: #0b0d09;
+      background: #09050d;
       border: 1px solid var(--border-color);
       border-radius: 10px;
       color: #ddd;
@@ -207,23 +207,21 @@
       font-family: monospace;
     }
 
-    /* =========================================
-       BOTTOM NAVIGATION BAR (Task Game Home Invite Profile)
-       ========================================= */
+    /* Bottom Navigation */
     .custom-bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       height: 74px;
-      background: #141810;
-      border-top: 1px solid #283021;
+      background: #120b1c;
+      border-top: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-around;
       z-index: 999;
       padding: 0 4px;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.8);
     }
     .cnav-item {
       flex: 1;
@@ -246,13 +244,13 @@
       color: var(--green-bright);
     }
     .cnav-item.active .nav-icon {
-      filter: drop-shadow(0 0 6px rgba(68, 207, 6, 0.6));
+      filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.7));
     }
     .cnav-item.center-home.active {
-      color: var(--brown-accent);
+      color: var(--purple-bright);
     }
     .cnav-item.center-home.active .nav-icon {
-      filter: drop-shadow(0 0 6px rgba(194, 136, 81, 0.7));
+      filter: drop-shadow(0 0 8px rgba(184, 41, 255, 0.8));
     }
 
     /* Modals */
@@ -269,8 +267,8 @@
     }
     .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal-box {
-      background: #161b11;
-      border: 1px solid var(--brown-accent);
+      background: #170e24;
+      border: 1px solid var(--purple-bright);
       border-radius: 20px;
       padding: 22px;
       width: 100%; max-width: 350px;
@@ -278,13 +276,16 @@
     .modal-box input {
       width: 100%;
       padding: 12px;
-      background: #0b0d09;
+      background: #09050d;
       border: 1px solid var(--border-color);
       border-radius: 10px;
       color: white;
       font-size: 14px;
       margin: 6px 0 14px;
       outline: none;
+    }
+    .modal-box input:focus {
+      border-color: var(--green-bright);
     }
   </style>
 </head>
@@ -293,7 +294,7 @@
   <!-- Top Header Profile -->
   <div class="header-bar">
     <div class="user-profile">
-      <div class="avatar-icon">🌿</div>
+      <div class="avatar-icon">⚡</div>
       <div>
         <h3 id="ui-username" style="font-size:15px; font-weight:800;">...</h3>
         <p id="ui-userid" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">ID: ...</p>
@@ -306,13 +307,13 @@
   <div class="balance-box">
     <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
-    <div style="font-size: 11px; color: var(--brown-accent);" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
+    <div style="font-size: 11px; color: var(--purple-bright);" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
   </div>
 
   <!-- Action Buttons -->
   <div class="btn-grid">
-    <button class="action-btn btn-green" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
-    <button class="action-btn btn-brown" id="btn-open-withdraw">💳 Withdraw</button>
+    <button class="action-btn btn-purple" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
+    <button class="action-btn btn-green" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
   <!-- ================= 5 TAB VIEWS ================= -->
@@ -344,7 +345,7 @@
     </div>
   </div>
 
-  <!-- View 3: HOME (Default View) -->
+  <!-- View 3: HOME -->
   <div class="tab-view active-view" id="view-home">
     <div class="card-item">
       <div>
@@ -353,12 +354,12 @@
       </div>
       <button class="btn-sub" id="btn-daily">Claim</button>
     </div>
-    <div class="card-item" style="border-color: var(--brown-dark);">
+    <div class="card-item">
       <div>
         <h4>Ads Quick Earn</h4>
         <p style="color:var(--green-bright);">ကြော်ငြာကြည့်၍ တိုက်ရိုက်ဆုကြေးယူပါ</p>
       </div>
-      <button class="btn-sub" style="border-color:var(--brown-accent); color:var(--brown-accent);" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
+      <button class="btn-sub" style="border-color:var(--green-bright); color:var(--green-bright);" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
     </div>
   </div>
 
@@ -377,7 +378,7 @@
       <div style="font-size:12px; color:var(--text-dim); font-weight:700;">သင်၏ Invite Link</div>
       <div class="invite-input-wrap">
         <input type="text" id="invite-link-input" class="invite-input" readonly>
-        <button class="action-btn btn-brown" style="padding: 0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
+        <button class="action-btn btn-purple" style="padding: 0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
       </div>
     </div>
   </div>
@@ -399,7 +400,7 @@
     </div>
   </div>
 
-  <!-- ================= 5 BOTTOM BUTTONS (Task Game Home Invite Profile) ================= -->
+  <!-- Bottom Navigation Buttons -->
   <div class="custom-bottom-nav">
     <div class="cnav-item" onclick="switchNav('view-task', this)">
       <span class="nav-icon">📋</span>
@@ -432,7 +433,7 @@
     <div class="modal-box" style="text-align: center;">
       <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
       <p id="alert-msg" style="color: var(--text-dim); font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
-      <button class="action-btn btn-green" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
+      <button class="action-btn btn-purple" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
     </div>
   </div>
 
@@ -450,7 +451,7 @@
       <input type="text" id="input-wallet" placeholder="0x...">
 
       <button class="action-btn btn-green" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
-      <button class="action-btn" style="width: 100%; background: #22281c; color: var(--text-dim); padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
+      <button class="action-btn" style="width: 100%; background: #26193b; color: var(--text-dim); padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
     </div>
   </div>
 
@@ -491,9 +492,9 @@
       const box = document.getElementById("withdraw-msg-box");
       box.style.display = "block";
       box.innerText = text;
-      box.style.background = isError ? "rgba(217, 78, 52, 0.15)" : "rgba(68, 207, 6, 0.15)";
-      box.style.color = isError ? "#d94e34" : "#44cf06";
-      box.style.border = isError ? "1px solid #d94e34" : "1px solid #44cf06";
+      box.style.background = isError ? "rgba(255, 51, 102, 0.15)" : "rgba(0, 255, 136, 0.15)";
+      box.style.color = isError ? "#ff3366" : "#00ff88";
+      box.style.border = isError ? "1px solid #ff3366" : "1px solid #00ff88";
     }
 
     function renderUI() {
@@ -673,7 +674,7 @@
               <h4>$${item.amount} USDT</h4>
               <p style="font-size:10px; color:var(--text-dim); font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
             </div>
-            <span style="font-size:11px; font-weight:800; color: ${isApp ? 'var(--green-bright)' : 'var(--brown-accent)'};">${item.status}</span>
+            <span style="font-size:11px; font-weight:800; color: ${isApp ? 'var(--green-bright)' : 'var(--purple-bright)'};">${item.status}</span>
           `;
           container.appendChild(div);
         });
