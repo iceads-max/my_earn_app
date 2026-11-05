@@ -1,103 +1,170 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Earn Bot</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Supabase Library ကို တိုက်ရိုက်ချိတ်ဆက်ခြင်း -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { background-color: #1a1a2e; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; margin: 0; }
-        .card { background: #16213e; padding: 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); margin-top: 20px; }
-        .btn { background-color: #e94560; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; margin-top: 20px; width: 100%; font-weight: bold; cursor: pointer; }
-        h2 { color: #ffd369; }
-        #loading { color: yellow; font-size: 14px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Crypto Ads Earn Bot</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0f101c;
+      --card-bg: #1a1b2e;
+      --accent: #ff6a00;
+      --accent-gradient: linear-gradient(135deg, #ff8c00, #ff4500);
+      --green: #00d26a;
+      --text: #ffffff;
+      --subtext: #8b8e9f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 70px; }
+    
+    .header { text-align: center; margin-bottom: 20px; }
+    .fire-icon { font-size: 40px; }
+    .balance-box { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; border: 1px solid #2d304a; margin-bottom: 16px; }
+    .balance-box h2 { font-size: 32px; color: #ffae00; margin: 8px 0; }
+    .usdt-est { color: var(--green); font-size: 15px; font-weight: bold; }
+    
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .btn { border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-earn { background: var(--accent-gradient); }
+    .btn-withdraw { background: #16a34a; }
+    
+    .section-title { font-size: 16px; margin: 16px 0 10px; color: var(--subtext); display: flex; align-items: center; gap: 6px; }
+    .card { background: var(--card-bg); border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid #23253a; display: flex; align-items: center; justify-content: space-between; }
+    .card-info h4 { font-size: 15px; margin-bottom: 4px; }
+    .card-info p { font-size: 12px; color: var(--subtext); }
+    .reward-tag { color: #ffae00; font-weight: bold; font-size: 13px; }
+    
+    .btn-small { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .btn-small:disabled { background: #444; cursor: not-allowed; }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 100; }
+    .modal-content { background: var(--card-bg); border-radius: 16px; padding: 20px; width: 90%; max-width: 400px; border: 1px solid #333; }
+    .modal input { width: 100%; padding: 12px; background: #0f101c; border: 1px solid #333; border-radius: 8px; color: white; margin: 8px 0 16px; }
+  </style>
 </head>
 <body>
 
-    <h2 id="greeting">🔥 မင်္ဂလာပါ</h2>
-    <p id="loading">ခဏစောင့်ပါ... ချိတ်ဆက်နေပါတယ်</p>
-    
-    <div class="card" style="display:none;" id="main-card">
-        <p>လက်ကျန်ငွေ (Points)</p>
-        <h1 id="balance">0</h1>
-        <p style="color: #00ff88;">≈ $0.00 USDT</p>
+  <div class="header">
+    <div class="fire-icon">🔥</div>
+    <h3 id="username">ကြိုဆိုပါသည်</h3>
+    <p id="telegram-id" style="font-size: 12px; color: var(--subtext);"></p>
+  </div>
+
+  <div class="balance-box">
+    <p style="color: var(--subtext); font-size: 13px;">လက်ကျန် Points</p>
+    <h2 id="point-bal">0 PTS</h2>
+    <div class="usdt-est">≈ <span id="usdt-bal">0.0000</span> USDT</div>
+  </div>
+
+  <div class="action-grid">
+    <button class="btn btn-earn" onclick="watchAd()">⚡ ကြော်ငြာကြည့်မည်</button>
+    <button class="btn btn-withdraw" onclick="openModal('swap-modal')">🔄 Swap & Withdraw</button>
+  </div>
+
+  <div class="section-title">🎁 နေ့စဉ်ဆုလက်ဆောင် & မိတ်ဆက်</div>
+  <div class="card">
+    <div class="card-info">
+      <h4>Daily Bonus</h4>
+      <p>၂၄ နာရီတစ်ကြိမ် 50 PTS ရယူပါ</p>
     </div>
+    <button class="btn-small" onclick="claimDaily()">Claim</button>
+  </div>
 
-    <button class="btn" style="display:none;" id="earn-btn" onclick="earnPoints()">WATCH AD & EARN</button>
+  <div class="card">
+    <div class="card-info">
+      <h4>Invite Friends (20% Bonus)</h4>
+      <p>သူငယ်ချင်းများရရှိသည့် Points မှ 20% ရရှိမည်</p>
+    </div>
+    <button class="btn-small" onclick="shareRef()">Share</button>
+  </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        const user = tg.initDataUnsafe?.user;
+  <div class="section-title">📋 ပြီးမြောက်ရန် Tasks များ</div>
+  <div class="card">
+    <div class="card-info">
+      <h4>Join Telegram Channel</h4>
+      <p class="reward-tag">+100 PTS</p>
+    </div>
+    <button class="btn-small" onclick="completeTask('tg_channel', 100)">Join</button>
+  </div>
+  <div class="card">
+    <div class="card-info">
+      <h4>Subscribe YouTube</h4>
+      <p class="reward-tag">+150 PTS</p>
+    </div>
+    <button class="btn-small" onclick="completeTask('yt_sub', 150)">Subscribe</button>
+  </div>
 
-        // မင်းရဲ့ အတိအကျ URL နဲ့ Key ကို ဒီနေရာမှာ ထည့်ထားပါတယ်
-        const SUPABASE_URL = 'https://ohhzbeayfccoqevydat.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41';
+  <!-- Swap & Withdraw Modal -->
+  <div class="modal" id="swap-modal">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 12px;">USDT (BEP-20) ဖြင့် ငွေထုတ်ရန်</h3>
+      <p style="font-size: 12px; color: var(--subtext); margin-bottom: 10px;">(1,000 PTS = 1 USDT, အနည်းဆုံး 1 USDT ထုတ်ယူနိုင်ပါသည်)</p>
+      
+      <label style="font-size: 12px;">လဲလှယ်မည့် Points ပမာဏ</label>
+      <input type="number" id="swap-points" placeholder="ဥပမာ - 1000">
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      <label style="font-size: 12px;">USDT BEP-20 Wallet Address (0x...)</label>
+      <input type="text" id="wallet-addr" placeholder="0x...">
 
-        async function initApp() {
-            if (!user) {
-                document.getElementById('loading').innerText = "Telegram ကနေ ဖွင့်ပေးပါ။";
-                return;
-            }
+      <button class="btn btn-earn" style="width: 100%; margin-bottom: 8px;" onclick="submitWithdraw()">Withdraw တင်မည်</button>
+      <button class="btn" style="width: 100%; background: #333;" onclick="closeModal('swap-modal')">ပိတ်မည်</button>
+    </div>
+  </div>
 
-            document.getElementById('greeting').innerText = `🔥 Welcome, ${user.first_name}`;
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.expand(); }
 
-            // Database နဲ့ ချိတ်ဆက်မယ်
-            let { data: dbUser, error } = await supabaseClient
-                .from('users')
-                .select('*')
-                .eq('id', user.id)
-                .single();
+    const BACKEND_URL = "https://YOUR-BACKEND-SERVER.com"; // သင်၏ Backend Server URL ထည့်သွင်းပါ
+    const user = tg?.initDataUnsafe?.user || { id: 12345678, first_name: "Developer" };
 
-            if (error && error.code !== 'PGRST116') {
-                document.getElementById('loading').innerText = "Error 1: " + error.message;
-                return;
-            }
+    document.getElementById("username").innerText = `🔥 ${user.first_name}`; document.getElementById("telegram-id").innerText = `ID: ${user.id}`;
 
-            if (!dbUser) {
-                const { data: newUser, error: insertError } = await supabaseClient
-                    .from('users')
-                    .insert([{ id: user.id, first_name: user.first_name, balance: 0 }])
-                    .select()
-                    .single();
-                
-                if (insertError) {
-                    document.getElementById('loading').innerText = "Error 2: " + insertError.message;
-                    return;
-                }
-                dbUser = newUser;
-            }
+    // Backend မှ Data ရယူခြင်း
+    async function loadData() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/user?id=${user.id}&name=${encodeURIComponent(user.first_name)}`); const data = await res.json(); document.getElementById("point-bal").innerText = `${data.points} PTS`;
+        document.getElementById("usdt-bal").innerText = (data.points / 1000).toFixed(4);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    }
 
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('main-card').style.display = 'block';
-            document.getElementById('earn-btn').style.display = 'block';
-            document.getElementById('balance').innerText = dbUser.balance;
-        }
+    async function watchAd() {
+      alert("ကြော်ငြာ စတင်ပြသနေပါသည်... (5 စက္ကန့် စောင့်ပါ)");
+      setTimeout(async () => {
+        const res = await fetch(`${BACKEND_URL}/api/ad-reward`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id }) }); const d = await res.json(); alert(`ဂုဏ်ယူပါတယ်! +${d.added} PTS ရရှိပါသည်`);
+        loadData();
+      }, 5000);
+    }
 
-        async function earnPoints() {
-            const currentBalance = parseInt(document.getElementById('balance').innerText);
-            const newBalance = currentBalance + 10;
+    async function claimDaily() {
+      const res = await fetch(`${BACKEND_URL}/api/daily-bonus`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id }) }); const d = await res.json(); alert(d.message); loadData(); }  function shareRef() { const link = `https://t.me/YOUR_BOT_USERNAME?start=${user.id}`;
+      if (tg) {
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("ငါနဲ့အတူ Ads ကြည့်ပြီး USDT ရယူကြစို့!")}`);
+      } else {
+        navigator.clipboard.writeText(link);
+        alert("Referral Link ကို ကူးယူပြီးပါပြီ - " + link);
+      }
+    }
 
-            const { error } = await supabaseClient
-                .from('users')
-                .update({ balance: newBalance })
-                .eq('id', user.id);
+    async function completeTask(taskId, reward) {
+      const res = await fetch(`${BACKEND_URL}/api/complete-task`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id, taskId, reward }) }); const d = await res.json(); alert(d.message); loadData(); }  async function submitWithdraw() { const points = document.getElementById("swap-points").value; const address = document.getElementById("wallet-addr").value; if (!points \vert{}\vert{} !address \vert{}\vert{} points < 1000) { alert("အနည်းဆုံး 1000 PTS လိုအပ်ပြီး BEP-20 Address ပြည့်စုံစွာ ဖြည့်ပါ"); return; } const res = await fetch(`${BACKEND_URL}/api/withdraw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id, points: Number(points), address })
+      });
+      const d = await res.json();
+      alert(d.message);
+      closeModal('swap-modal');
+      loadData();
+    }
 
-            if (!error) {
-                document.getElementById('balance').innerText = newBalance;
-                tg.HapticFeedback.impactOccurred('medium');
-                tg.showAlert("ဂုဏ်ယူပါတယ်! 10 Points ရသွားပါပြီ။");
-            } else {
-                tg.showAlert("Error: " + error.message);
-            }
-        }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        initApp();
-    </script>
+    loadData();
+  </script>
 </body>
 </html>
