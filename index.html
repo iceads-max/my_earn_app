@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn</title>
+  <title>Cyber Earn App</title>
   
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
@@ -194,7 +194,7 @@
     .tab-view { display: none; }
     .tab-view.active-view { display: block; }
 
-    /* INVITE SECTION STYLES */
+    /* INVITE SECTION */
     .invite-box {
       background: #140d21;
       border: 1px solid #2f1c4e;
@@ -455,7 +455,6 @@
     }
     .modal-box input:focus { border-color: #00ff88; }
 
-    /* WITHDRAW IN-MODAL ALERT BANNER */
     #withdraw-msg-box {
       display: none;
       padding: 10px;
@@ -467,7 +466,6 @@
       line-height: 1.4;
     }
 
-    /* TOP PRIORITY ALERT DIALOG */
     #modal-alert {
       z-index: 20000 !important;
     }
@@ -635,7 +633,7 @@
     </div>
   </div>
 
-  <!-- TAB: INVITE (FULL DATA RESTORED) -->
+  <!-- TAB: INVITE (RESTORED) -->
   <div class="tab-view" id="view-invite">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
     <div class="card-item">
@@ -677,7 +675,7 @@
     <div class="cnav-item" onclick="switchNav('view-profile', this); loadWithdrawHistory();"><span class="nav-icon">👤</span><span>Profile</span></div>
   </div>
 
-  <!-- TOP-PRIORITY ALERT MODAL -->
+  <!-- ALERT MODAL -->
   <div class="modal-overlay" id="modal-alert">
     <div class="modal-box" style="text-align: center;">
       <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
@@ -692,7 +690,6 @@
       <h3 style="margin-bottom: 6px; text-align: center; font-size:16px;">USDT BEP-20 ထုတ်ယူရန်</h3>
       <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
       
-      <!-- In-Modal Prominent Message Box -->
       <div id="withdraw-msg-box"></div>
 
       <label style="font-size: 11px; color: #9c8eaf;">ထုတ်ယူမည့် ပမာဏ ($)</label>
@@ -819,9 +816,7 @@
     document.getElementById("alert-ok-btn").addEventListener("click", () => document.getElementById("modal-alert").classList.remove("active"));
     document.getElementById("btn-close-withdraw").addEventListener("click", () => document.getElementById("modal-withdraw").classList.remove("active"));
 
-    // ============================================
-    // PVP LOGIC (1 COLOR PER USER & 30s TIMER)
-    // ============================================
+    // PVP LOGIC (1 COLOR PER USER & 30s COUNTDOWN)
     let jackpotBets = [];
     const colorPalette = ['#00ff88', '#b829ff', '#ff007f', '#00e5ff', '#ffaa00', '#ffd700', '#00ffcc', '#ff3366'];
     let userColorMap = {};
@@ -1131,16 +1126,17 @@
       if (IS_ADMIN) {
         document.getElementById("role-tag").innerText = "ADMINISTRATOR";
         document.getElementById("role-tag").style.color = "#b829ff";
+        document.getElementById("max-ads-text").innerText = "∞";
+        document.getElementById("btn-watch-ad").innerText = "⚡ Ads ကြည့်မည် (Admin)";
       }
       document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
       document.getElementById("ui-rate-info").innerText = `ဆုကြေး: $${config.ad_reward} / Ad`;
-      document.getElementById("withdraw-hint").innerText = IS_ADMIN ? "⚡ Admin ဖြစ်၍ အချိန်ကန့်သတ်ချက် မရှိပါ" : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
       document.getElementById("daily-text").innerText = `၂၄ နာရီတစ်ကြိမ် $${config.daily_bonus} ရယူပါ`;
       document.getElementById("ref-percent-text").innerText = config.ref_percent;
 
       renderAdLimitUI(getDailyAdCount());
 
-      // Invite Link Restore
+      // Invite Link Value Set
       const link = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
       document.getElementById("invite-link-input").value = link;
     }
