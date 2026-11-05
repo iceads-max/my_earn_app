@@ -6,9 +6,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn</title>
+  <title>Cyber Earn v3.0</title>
   
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js?v=3.0"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
@@ -172,14 +172,9 @@
       align-items: center;
       justify-content: space-between;
     }
-    .card-item h4 {
-      font-size: 14px;
-      margin-bottom: 2px;
-    }
-    .card-item p {
-      font-size: 11px;
-      color: #9c8eaf;
-    }
+    .card-item h4 { font-size: 14px; margin-bottom: 2px; }
+    .card-item p { font-size: 11px; color: #9c8eaf; }
+
     .btn-sub {
       background: rgba(184, 41, 255, 0.12) !important;
       border: 1px solid #b829ff !important;
@@ -201,73 +196,72 @@
     .tab-view.active-view { display: block; }
 
     /* =========================================
-       LUXURY CASINO & PVP ARENA STYLES
+       LUXURY CASINO & PVP ARENA VISUALS
        ========================================= */
     .game-nav-bar {
       display: flex;
       gap: 8px;
       margin-bottom: 14px;
-      overflow-x: auto;
-      padding-bottom: 4px;
     }
     .gnav-btn {
       flex: 1;
-      padding: 9px 12px;
+      padding: 10px;
       background: #140d21;
       border: 1px solid #2f1c4e;
       border-radius: 12px;
       color: #9c8eaf;
       font-size: 11px;
       font-weight: 800;
-      white-space: nowrap;
       text-align: center;
       cursor: pointer;
+      transition: all 0.2s;
     }
     .gnav-btn.active {
-      background: rgba(184, 41, 255, 0.2);
+      background: rgba(184, 41, 255, 0.25);
       border-color: #b829ff;
       color: #00ff88;
-      box-shadow: 0 0 12px rgba(184, 41, 255, 0.4);
+      box-shadow: 0 0 15px rgba(184, 41, 255, 0.5);
     }
 
-    /* NEON POT CIRCLE (PVP ARENA) */
     .pvp-circle-stage {
-      background: radial-gradient(circle, rgba(184, 41, 255, 0.15) 0%, rgba(11, 7, 19, 0.95) 75%);
-      border: 1px solid #3d1d66;
+      background: radial-gradient(circle, rgba(184, 41, 255, 0.18) 0%, rgba(11, 7, 19, 0.98) 75%);
+      border: 1px solid #5a2696;
       border-radius: 24px;
       padding: 24px 16px;
       text-align: center;
       position: relative;
       margin-bottom: 16px;
-      box-shadow: inset 0 0 30px rgba(184, 41, 255, 0.2);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.8), inset 0 0 30px rgba(184, 41, 255, 0.25);
     }
+
+    /* NEON POT CIRCLE RING */
     .neon-outer-ring {
-      width: 170px;
-      height: 170px;
+      width: 175px;
+      height: 175px;
       margin: 0 auto 16px;
       border-radius: 50%;
       border: 3px dashed #b829ff;
-      padding: 8px;
+      padding: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      animation: rotateGlow 14s linear infinite;
-      box-shadow: 0 0 25px rgba(184, 41, 255, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.3);
+      animation: rotateRing 12s linear infinite;
+      box-shadow: 0 0 25px rgba(184, 41, 255, 0.6), inset 0 0 20px rgba(0, 255, 136, 0.4);
     }
     .neon-inner-core {
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: #12091f;
+      background: #11081e;
       border: 2px solid #00ff88;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+      box-shadow: 0 0 18px rgba(0, 255, 136, 0.5);
     }
-    @keyframes rotateGlow {
+    @keyframes rotateRing {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
@@ -285,7 +279,7 @@
       border-radius: 50%;
       position: relative;
       transform-style: preserve-3d;
-      transition: transform 1.5s ease-out;
+      transition: transform 1.4s cubic-bezier(0.1, 0.8, 0.3, 1);
     }
     .coin-side {
       position: absolute;
@@ -312,29 +306,29 @@
     /* SPIN WHEEL */
     .wheel-container {
       position: relative;
-      width: 190px;
-      height: 190px;
+      width: 200px;
+      height: 200px;
       margin: 10px auto 16px;
     }
     .wheel-pointer {
       position: absolute;
-      top: -10px;
+      top: -12px;
       left: 50%;
       transform: translateX(-50%);
       width: 0;
       height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-top: 18px solid #00ff88;
+      border-left: 11px solid transparent;
+      border-right: 11px solid transparent;
+      border-top: 20px solid #00ff88;
       z-index: 10;
-      filter: drop-shadow(0 0 6px #00ff88);
+      filter: drop-shadow(0 0 8px #00ff88);
     }
     .wheel-canvas {
       width: 100%;
       height: 100%;
       border-radius: 50%;
       border: 3px solid #b829ff;
-      box-shadow: 0 0 20px rgba(184, 41, 255, 0.6);
+      box-shadow: 0 0 25px rgba(184, 41, 255, 0.7);
       transition: transform 3.5s cubic-bezier(0.15, 0.9, 0.25, 1);
     }
 
@@ -359,7 +353,7 @@
       border-color: #00ff88;
       color: #00ff88;
       background: rgba(0, 255, 136, 0.15);
-      box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
     }
 
     .invite-box {
@@ -490,7 +484,7 @@
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
   </div>
 
-  <!-- Balance -->
+  <!-- Balance Box -->
   <div class="balance-box">
     <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
@@ -520,9 +514,9 @@
     </div>
   </div>
 
-  <!-- TAB: GAME (CYBER ARENA WITH VISUALS) -->
+  <!-- TAB: GAME & PVP ARENA -->
   <div class="tab-view" id="view-game">
-    <!-- Sub-Game Switcher -->
+    <!-- Sub-Game Switcher Tabs -->
     <div class="game-nav-bar">
       <div class="gnav-btn active" id="gtab-pvp" onclick="switchGameSub('sub-pvp', this)">⚔️ PvP Pot</div>
       <div class="gnav-btn" id="gtab-flip" onclick="switchGameSub('sub-flip', this)">🪙 3D Flip</div>
@@ -537,11 +531,11 @@
           <div class="neon-inner-core">
             <span style="font-size:10px; color:#9c8eaf; text-transform:uppercase;">TOTAL POT</span>
             <div style="font-size:24px; font-weight:900; color:#00ff88; margin:2px 0;">$<span id="ui-pot-val">0.02</span></div>
-            <span style="font-size:9px; color:#b829ff; font-weight:700;">10% Fee</span>
+            <span style="font-size:9px; color:#b829ff; font-weight:700;">Fee: 10%</span>
           </div>
         </div>
 
-        <div style="font-size:11px; color:#9c8eaf; font-weight:700;">လောင်းကြေးရွေးပါ ($0.01 မှစတင်):</div>
+        <div style="font-size:11px; color:#9c8eaf; font-weight:700;">လောင်းကြေးပမာဏ ($0.01 မှစတင်):</div>
         <div class="chip-selector">
           <div class="bet-chip active" onclick="setArenaBet(0.01, this)">$0.01</div>
           <div class="bet-chip" onclick="setArenaBet(0.05, this)">$0.05</div>
@@ -710,6 +704,7 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
+    // Adsgram Unit ID
     const ADSGRAM_BLOCK_ID = "58146";
     const MAX_DAILY_ADS = 500;
 
@@ -1045,7 +1040,7 @@
         })
       });
 
-      showAlert("⚔️ အခန်းဖွင့်ပြီးပါပြီ", `လောင်းကြေး $${arenaBetAmount} ဖြင့် အခန်းဖွင့်လိုက်ပါပြီ။ တခြားသူ လာရောက်ယှဉ်ပြိုင်သည်နှင့် ဆုကြေးခွဲဝေပေးပါမည်။`);
+      showAlert("⚔️ အခန်းဖွင့်ပြီးပါပြီ", `လောင်းကြေး $${arenaBetAmount} ဖြင့် အခန်းဖွင့်လိုက်ပါပြီ။`);
       loadPvPRooms();
     });
 
@@ -1074,7 +1069,7 @@
       const isJoinerWinner = (Math.random() < 0.25);
       const winnerId = isJoinerWinner ? userData.id : creatorId;
       const totalPot = Number(betAmt) * 2;
-      const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Fee
+      const payout = Number((totalPot * 0.90).toFixed(4));
 
       await fetch(`${SB_URL}/rest/v1/cyber_pvp_matches?id=eq.${roomId}`, {
         method: "PATCH",
@@ -1144,11 +1139,11 @@
         isFlipping = false;
 
         if (isWin) {
-          const winPrize = Number((bet * 2 * 0.90).toFixed(4)); // 10% Fee
+          const winPrize = Number((bet * 2 * 0.90).toFixed(4));
           nBal = Number((nBal + winPrize).toFixed(4));
           await updateBalanceInDB(nBal);
           statusText.innerText = `🎉 အနိုင်ရပါသည်! ရလဒ်: ${actualResult}`;
-          showAlert("🎉 ဂုဏ်ယူပါသည်!", `ဒင်္ဂါးပြားရလဒ်မှာ [${actualResult}] ဖြစ်ပါသည်!\n10% Fee နှုတ်ပြီး +$${winPrize} USDT ရရှိပါသည်!`);
+          showAlert("🎉 ဂုဏ်ယူပါသည်!", `ဒင်္ဂါးပြားရလဒ်မှာ [${actualResult}] ဖြစ်ပါသည်!\n+$${winPrize} USDT ရရှိပါသည်!`);
         } else {
           statusText.innerText = `😢 အရှုံးပေါ်ပါသည်! ရလဒ်: ${actualResult}`;
           showAlert("😢 နောက်တစ်ကြိမ် စမ်းပါ", `ဒင်္ဂါးပြားရလဒ်မှာ [${actualResult}] ဖြစ်ပြီး အရှုံးပေါ်သွားပါသည်!`);
@@ -1218,7 +1213,7 @@
 
       // 20% အနိုင်ရနှုန်း သတ်မှတ်ချက်
       const isWin = (Math.random() < 0.20);
-      const targetIndex = isWin ? 1 : 0; // 1: 2x, 0: 0x
+      const targetIndex = isWin ? 1 : 0;
       const segAngle = 360 / wheelSegments.length;
       
       const extraRounds = 5 * 360;
