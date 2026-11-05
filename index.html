@@ -142,6 +142,7 @@
     const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
     const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
+    const BOT_USERNAME = "CyberEarns_bot";
 
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
@@ -200,7 +201,6 @@
     // Live Fetch from Supabase directly
     async function syncDataFromDB() {
       try {
-        // 1. Fetch User Data
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -209,7 +209,6 @@
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
         } else {
-          // Register User if new
           await fetch(`${SB_URL}/rest/v1/cyber_users`, {
             method: "POST",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -217,7 +216,6 @@
           });
         }
 
-        // 2. Fetch Live Settings
         const sRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -230,14 +228,12 @@
           if (item.key === 'ref_percent') config.ref_percent = Number(item.value);
         });
 
-        // 3. Fetch Completed Tasks
         const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const cData = await cRes.json();
         completedTasks = cData.map(c => c.task_id);
 
-        // 4. Fetch Tasks List
         const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -413,11 +409,9 @@
         return;
       }
 
-      // Deduct balance
       const nBal = Number((currentBalance - amt).toFixed(4));
       updateBalanceInDB(nBal);
 
-      // Save to Supabase and get order ID
       const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" },
@@ -426,7 +420,7 @@
       const data = await res.json();
       const orderId = data[0]?.id || "New";
 
-      // Send Instant Alert to Admin Telegram
+      // Telegram Bot API ဖြင့် Admin ထံ တိုက်ရိုက် Alert ပို့ခြင်း
       const alertText = `🔔 *ငွေထုတ်တောင်းဆိုမှု အသစ် ရရှိပါသည်!*\n\n🆔 *Order ID:* \`${orderId}\`\n👤 *User:* ${userData.first_name} (\`${userData.id}\`)\n💰 *ပမာဏ:* \`$${amt} USDT\`\n🔗 *Address (BEP-20):*\n\`${addr}\`\n\n👉 အတည်ပြုရန်: \`/approve ${orderId}\``;
       fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
@@ -443,13 +437,14 @@
       }, 2500);
     });
 
+    // Invite Link (@CyberEarns_bot အတိအကျ သုံးထားပါသည်)
     document.getElementById("btn-share").addEventListener("click", () => {
-      const link = `https://t.me/CyberEarn_bot?start=${userData.id}`;
+      const link = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
       if (tg?.openTelegramLink) {
         tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Cyber Earn မှာ Ads ကြည့်ပြီး USDT ဝင်ငွေရှာကြစို့!")}`);
       } else {
         navigator.clipboard.writeText(link);
-        showAlert("Invite Link", "Link ကူးယူပြီးပါပြီ:\n" + link);
+        showAlert("Invite Link", "သင့် Link ကို ကူးယူပြီးပါပြီ:\n" + link);
       }
     });
 
