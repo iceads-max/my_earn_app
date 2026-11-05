@@ -7,34 +7,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #1a1a2e;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .card {
-            background: #16213e;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            margin-top: 20px;
-        }
-        .btn {
-            background-color: #e94560;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 10px;
-            margin-top: 20px;
-            width: 100%;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn:active { background-color: #c72c48; }
+        body { background-color: #1a1a2e; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; margin: 0; }
+        .card { background: #16213e; padding: 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); margin-top: 20px; }
+        .btn { background-color: #e94560; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; margin-top: 20px; width: 100%; font-weight: bold; cursor: pointer; }
         h2 { color: #ffd369; }
         #loading { color: yellow; font-size: 14px; }
     </style>
@@ -57,7 +32,6 @@
         tg.expand();
         const user = tg.initDataUnsafe?.user;
 
-        // မင်းရဲ့ Supabase ကုဒ်တွေ ဒီနေရာမှာ အသင့်ထည့်ထားပြီးပါပြီ
         const SUPABASE_URL = 'https://ohhzbeayfccoiqevydat.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41';
 
@@ -71,12 +45,20 @@
 
             document.getElementById('greeting').innerText = `🔥 Welcome, ${user.first_name}`;
 
+            // User ရှိမရှိ စစ်ဆေးခြင်း
             let { data: dbUser, error } = await supabaseClient
                 .from('users')
                 .select('*')
                 .eq('id', user.id)
                 .single();
 
+            // Error တက်ရင် မျက်နှာပြင်မှာ ပြမယ်
+            if (error && error.code !== 'PGRST116') { // PGRST116 ဆိုတာ User မရှိသေးလို့ ဖြစ်တဲ့ Error ပါ၊ အဲ့ဒါကို ကျော်မယ်
+                document.getElementById('loading').innerText = "Error 1: " + error.message;
+                return;
+            }
+
+            // User မရှိသေးရင် အသစ်ထည့်မယ်
             if (!dbUser) {
                 const { data: newUser, error: insertError } = await supabaseClient
                     .from('users')
@@ -85,13 +67,13 @@
                     .single();
                 
                 if (insertError) {
-                    console.error(insertError);
-                    document.getElementById('loading').innerText = "Database Error! ကျေးဇူးပြု၍ ပြန်စမ်းပါ။";
+                    document.getElementById('loading').innerText = "Error 2: " + insertError.message;
                     return;
                 }
                 dbUser = newUser;
             }
 
+            // အားလုံးအောင်မြင်ရင် ပြမယ်
             document.getElementById('loading').style.display = 'none';
             document.getElementById('main-card').style.display = 'block';
             document.getElementById('earn-btn').style.display = 'block';
@@ -112,7 +94,7 @@
                 tg.HapticFeedback.impactOccurred('medium');
                 tg.showAlert("ဂုဏ်ယူပါတယ်! 10 Points ရသွားပါပြီ။");
             } else {
-                tg.showAlert("Error တက်နေပါတယ်။");
+                tg.showAlert("Error: " + error.message);
             }
         }
 
