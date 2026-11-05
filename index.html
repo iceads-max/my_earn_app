@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn App</title>
+  <title>Cyber Earn</title>
   
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
@@ -194,7 +194,7 @@
     .tab-view { display: none; }
     .tab-view.active-view { display: block; }
 
-    /* INVITE SECTION */
+    /* INVITE SECTION STYLES */
     .invite-box {
       background: #140d21;
       border: 1px solid #2f1c4e;
@@ -219,7 +219,7 @@
       font-family: monospace;
     }
 
-    /* GAME SECTION */
+    /* GAME SECTION STYLES */
     .game-nav-bar {
       display: flex;
       gap: 8px;
@@ -403,6 +403,7 @@
       justify-content: space-around;
       z-index: 999;
       padding: 0 4px;
+      box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.85);
     }
     .cnav-item {
       flex: 1;
@@ -421,7 +422,7 @@
     .cnav-item.active { color: #00ff88 !important; }
     .cnav-item.center-home.active { color: #b829ff !important; }
 
-    /* MODAL OVERLAYS (FOREGROUND FIX) */
+    /* MODAL OVERLAYS */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -469,9 +470,32 @@
     #modal-alert {
       z-index: 20000 !important;
     }
+
+    #ip-block-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #09050d;
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+    #ip-block-screen h2 { color: #ff3366; margin-bottom: 12px; font-size: 20px; }
+    #ip-block-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
   </style>
 </head>
 <body>
+
+  <!-- Dynamic IP Anti-Cheat Screen -->
+  <div id="ip-block-screen">
+    <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
+    <h2>IP တူညီနေပါသည်</h2>
+    <p>ဤ IP ဖြင့် အခြားအကောင့်တစ်ခု ဝင်ရောက်ထားပြီး ဖြစ်ပါသည်ခင်ဗျာ။<br><br><b>VPN ဖွင့်၍ (သို့မဟုတ် Server ပြောင်း၍)</b> ချက်ချင်း ပြန်လည်ဝင်ရောက်နိုင်ပါသည်။</p>
+    <button class="action-btn btn-purple" style="padding: 12px 24px;" onclick="location.reload()">ပြန်လည်စစ်ဆေးမည်</button>
+  </div>
 
   <!-- Header -->
   <div class="header-bar">
@@ -669,7 +693,7 @@
   <!-- BOTTOM NAV -->
   <div class="custom-bottom-nav">
     <div class="cnav-item" onclick="switchNav('view-task', this)"><span class="nav-icon">📋</span><span>Task</span></div>
-    <div class="cnav-item" onclick="switchNav('view-game', this); initRoulette();"><span class="nav-icon">🎮</span><span>PvP Arena</span></div>
+    <div class="cnav-item" onclick="switchNav('view-game', this); initRoulette();"><span class="nav-icon">🎮</span><span>Game</span></div>
     <div class="cnav-item center-home active" onclick="switchNav('view-home', this)"><span class="nav-icon">🏠</span><span>Home</span></div>
     <div class="cnav-item" onclick="switchNav('view-invite', this)"><span class="nav-icon">👥</span><span>Invite</span></div>
     <div class="cnav-item" onclick="switchNav('view-profile', this); loadWithdrawHistory();"><span class="nav-icon">👤</span><span>Profile</span></div>
@@ -737,6 +761,34 @@
       soloPlayCount++;
       localStorage.setItem(`cyber_solo_plays_${userData.id}`, soloPlayCount.toString());
       return soloPlayCount <= 3 ? 0.50 : 0.30;
+    }
+
+    // IP Anti-Cheat (Admin ကင်းလွတ်ခွင့်)
+    async function checkDynamicIP() {
+      if (IS_ADMIN) return true;
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        const clientIP = ipData.ip;
+
+        const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?current_ip=eq.${clientIP}&select=id`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const usersWithSameIP = await checkRes.json();
+
+        const anotherUser = usersWithSameIP.find(u => Number(u.id) !== Number(userData.id) && Number(u.id) !== ADMIN_ID);
+        if (anotherUser) {
+          document.getElementById("ip-block-screen").style.display = "flex";
+          return false;
+        } else {
+          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            method: "PATCH",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ current_ip: clientIP })
+          });
+        }
+      } catch (err) {}
+      return true;
     }
 
     function getTodayString() {
@@ -816,7 +868,9 @@
     document.getElementById("alert-ok-btn").addEventListener("click", () => document.getElementById("modal-alert").classList.remove("active"));
     document.getElementById("btn-close-withdraw").addEventListener("click", () => document.getElementById("modal-withdraw").classList.remove("active"));
 
+    // ============================================
     // PVP LOGIC (1 COLOR PER USER & 30s COUNTDOWN)
+    // ============================================
     let jackpotBets = [];
     const colorPalette = ['#00ff88', '#b829ff', '#ff007f', '#00e5ff', '#ffaa00', '#ffd700', '#00ffcc', '#ff3366'];
     let userColorMap = {};
@@ -1131,12 +1185,12 @@
       }
       document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
       document.getElementById("ui-rate-info").innerText = `ဆုကြေး: $${config.ad_reward} / Ad`;
+      document.getElementById("withdraw-hint").innerText = IS_ADMIN ? "⚡ Admin ဖြစ်၍ အချိန်ကန့်သတ်ချက် မရှိပါ" : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
       document.getElementById("daily-text").innerText = `၂၄ နာရီတစ်ကြိမ် $${config.daily_bonus} ရယူပါ`;
       document.getElementById("ref-percent-text").innerText = config.ref_percent;
 
       renderAdLimitUI(getDailyAdCount());
 
-      // Invite Link Value Set
       const link = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
       document.getElementById("invite-link-input").value = link;
     }
@@ -1416,7 +1470,9 @@
       }
     });
 
-    syncDataFromDB();
+    checkDynamicIP().then(ok => {
+      if (ok) syncDataFromDB();
+    });
   </script>
 </body>
 </html>
