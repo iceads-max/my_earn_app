@@ -10,37 +10,35 @@
   <!-- Supabase Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- Monetag Ad Tag SDK -->
-  <script src="//libtl.com/sdk.js" data-zone="12199472" data-sdk="show_12199472"></script>
+  <!-- Original Adsgram SDK -->
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
     :root {
-      --bg: #090514;
-      --card-bg: #140a28;
-      --card-border: #28154e;
+      --bg: #0d061a;
+      --card-bg: #150d2a;
+      --card-border: #2c1a52;
       --accent-purple: #9b51e0;
       --accent-green: #00e676;
-      --accent-cyan: #00f2fe;
       --text: #ffffff;
       --text-muted: #8b80a8;
       --danger: #ff4757;
-      --gold: #ffa502;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px 14px 90px; user-select: none; }
+    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px 14px 85px; user-select: none; }
     
-    .app-viewport { width: 100%; max-width: 430px; display: flex; flex-direction: column; gap: 14px; }
+    .app-container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
 
     /* Top User Header */
-    .top-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 2px; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .user-profile { display: flex; align-items: center; gap: 12px; }
-    .avatar-bolt { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #00f2fe, #4facfe); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(0, 242, 254, 0.4); }
-    .avatar-bolt span { font-size: 22px; color: #ffeb3b; }
+    .avatar-box { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #00f2fe, #4facfe); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(0, 242, 254, 0.4); }
+    .avatar-box span { font-size: 22px; color: #ffeb3b; }
     .user-meta-name { font-weight: 700; font-size: 15px; color: #fff; }
-    .user-meta-id { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-    .badge-online { border: 1px solid var(--accent-green); color: var(--accent-green); background: rgba(0, 230, 118, 0.08); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+    .user-meta-id { font-size: 12px; color: var(--text-muted); }
+    .badge-online { border: 1px solid var(--accent-green); color: var(--accent-green); background: rgba(0, 230, 118, 0.08); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; }
 
-    /* Main Balance Box */
+    /* Balance Card */
     .balance-box { background: radial-gradient(circle at top, #1e113b 0%, #120824 100%); border: 1.5px solid var(--card-border); border-radius: 20px; padding: 22px; text-align: center; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     .balance-box::before { content: ""; position: absolute; top: -1px; left: 15%; width: 70%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent-green), transparent); }
     .balance-title { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
@@ -49,8 +47,8 @@
 
     /* Action Buttons (Ads ကြည့်မည် / Withdraw) */
     .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .btn-watch-primary { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: #fff; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35); transition: transform 0.1s; }
-    .btn-withdraw-primary { background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%); color: #000; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(0, 230, 118, 0.3); transition: transform 0.1s; }
+    .btn-watch-primary { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: #fff; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35); }
+    .btn-withdraw-primary { background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%); color: #000; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(0, 230, 118, 0.3); }
     .btn-watch-primary:active, .btn-withdraw-primary:active { transform: scale(0.97); }
 
     /* Daily Limit Progress */
@@ -61,7 +59,7 @@
     .progress-track { width: 100%; height: 6px; background: #080312; border-radius: 10px; overflow: hidden; }
     .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-green)); border-radius: 10px; transition: width 0.3s ease; }
 
-    /* Earn Rows (Daily Bonus & Quick Earn) */
+    /* Daily Bonus & Quick Earn Rows */
     .earn-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
     .earn-info-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
     .earn-info-sub { font-size: 12px; color: var(--text-muted); }
@@ -74,7 +72,7 @@
 
     /* Bottom Navigation Bar */
     .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 68px; background: #0b0517; border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-    .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; cursor: pointer; }
+    .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; cursor: pointer; text-decoration: none; }
     .nav-tab.active { color: #d18bf5; font-weight: 700; }
     .nav-icon { font-size: 20px; }
 
@@ -90,12 +88,12 @@
 </head>
 <body>
 
-  <div class="app-viewport">
+  <div class="app-container">
 
-    <!-- Top User Header -->
+    <!-- Top Header -->
     <div class="top-header">
       <div class="user-profile">
-        <div class="avatar-bolt"><span>⚡</span></div>
+        <div class="avatar-box"><span>⚡</span></div>
         <div>
           <div class="user-meta-name" id="u-name">Cyber Player</div>
           <div class="user-meta-id" id="u-id">ID: ...</div>
@@ -104,16 +102,16 @@
       <div class="badge-online">ONLINE</div>
     </div>
 
-    <!-- 1. HOME TAB -->
+    <!-- HOME TAB -->
     <div class="tab-section active-section" id="section-home">
-      <!-- Balance Display Card -->
+      <!-- Balance Card -->
       <div class="balance-box">
         <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
         <div class="balance-val">$<span id="bal-val">0.0000</span></div>
         <div class="balance-rate">ဆုကြေး: $<span id="cfg-reward">0.003</span> / Ad</div>
       </div>
 
-      <!-- Main Action Buttons -->
+      <!-- Action Row -->
       <div class="action-row">
         <button class="btn-watch-primary" id="btn-watch-ad">
           <span>⚡ Ads ကြည့်မည်</span>
@@ -123,7 +121,7 @@
         </button>
       </div>
 
-      <!-- Limit Progress -->
+      <!-- Daily Limit Progress -->
       <div class="limit-card">
         <div class="limit-header">
           <span class="limit-lbl">နေ့စဉ် Ads ကန့်သတ်ချက်</span>
@@ -134,7 +132,7 @@
         </div>
       </div>
 
-      <!-- Daily Bonus -->
+      <!-- Daily Bonus Row -->
       <div class="earn-row">
         <div>
           <div class="earn-info-title">Daily Bonus</div>
@@ -143,7 +141,7 @@
         <button class="btn-pill" id="btn-daily-bonus">Claim</button>
       </div>
 
-      <!-- Ads Quick Earn -->
+      <!-- Ads Quick Earn Row -->
       <div class="earn-row">
         <div>
           <div class="earn-info-title">Ads Quick Earn</div>
@@ -153,7 +151,7 @@
       </div>
     </div>
 
-    <!-- 2. TASK TAB -->
+    <!-- TASK TAB -->
     <div class="tab-section" id="section-task">
       <div class="earn-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
         <div class="earn-info-title" style="color: var(--accent-green);">📋 Official Tasks</div>
@@ -162,7 +160,7 @@
       </div>
     </div>
 
-    <!-- 3. GAME TAB -->
+    <!-- GAME TAB -->
     <div class="tab-section" id="section-game">
       <div class="earn-row" style="flex-direction: column; text-align: center; gap: 12px; padding: 30px 16px;">
         <div style="font-size: 32px;">🎮</div>
@@ -171,7 +169,7 @@
       </div>
     </div>
 
-    <!-- 4. INVITE TAB -->
+    <!-- INVITE TAB -->
     <div class="tab-section" id="section-invite">
       <div class="earn-row" style="flex-direction: column; gap: 14px; text-align: center; padding: 24px 16px;">
         <div style="font-size: 32px;">👥</div>
@@ -181,7 +179,7 @@
       </div>
     </div>
 
-    <!-- 5. PROFILE TAB -->
+    <!-- PROFILE TAB -->
     <div class="tab-section" id="section-profile">
       <div class="earn-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
         <div class="earn-info-title">👤 Player Information</div>
@@ -251,15 +249,22 @@
     const ADMIN_ID = 6093710107;
     const MAX_DAILY_ADS = 500;
     const OFFICIAL_CHANNEL = "https://t.me/Tonsarsar";
+    const ADSGRAM_BLOCK_ID = "58146";
 
     let tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
 
-    const user = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Cyber Player", username: "Admin" };
+    const user = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Cyber Player" };
     const IS_ADMIN = (Number(user.id) === Number(ADMIN_ID));
 
     let currentBalance = 0.0000;
     let config = { ad_reward: 0.003, min_withdraw: 0.03, daily_bonus: 0.005 };
+
+    // Adsgram Controller Init
+    let adController = null;
+    if (window.Adsgram) {
+      adController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+    }
 
     // Tab Switcher
     function switchTab(tabName, elem) {
@@ -335,7 +340,7 @@
       await supabase.from('cyber_users').update({ balance: nBal }).eq('user_id', user.id);
     }
 
-    // Monetag Rewarded Interstitial Ad Execution
+    // Original Adsgram Trigger
     function handleWatchAd() {
       const watched = getDailyAdCount();
       if (!IS_ADMIN && watched >= MAX_DAILY_ADS) {
@@ -343,21 +348,22 @@
         return;
       }
 
-      if (typeof show_12199472 === 'function') {
-        show_12199472().then(() => {
+      if (adController) {
+        adController.show().then((result) => {
           incrementDailyAdCount();
           const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
           updateBalanceInDB(nBal);
           showAlert("🎉 အောင်မြင်ပါသည်", `ကြော်ငြာကြည့်ရှုမှုအတွက် +$${config.ad_reward} USDT ရရှိပါသည်!`);
         }).catch((err) => {
-          showAlert("သတိပေးချက်", "ကြော်ငြာရယူ၍ မရသေးပါခင်ဗျာ။ ခဏအကြာမှ ထပ်စမ်းပေးပါ။");
+          console.error("Adsgram Error:", err);
+          showAlert("Adsgram Error", err?.description || "ကြော်ငြာဖွင့်၍ မရသေးပါခင်ဗျာ။");
         });
       } else {
-        showAlert("ခေတ္တစောင့်ပါ", "ကြော်ငြာ SDK ချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
+        showAlert("ခေတ္တစောင့်ပါ", "Adsgram SDK ချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
       }
     }
 
-    // Attach Event Listeners
+    // Event Listeners
     document.getElementById("btn-watch-ad").addEventListener("click", handleWatchAd);
     document.getElementById("btn-quick-ad").addEventListener("click", handleWatchAd);
 
