@@ -200,57 +200,166 @@
     .tab-view { display: none; }
     .tab-view.active-view { display: block; }
 
-    /* PVP ARENA STYLES */
-    .arena-banner {
-      background: linear-gradient(135deg, rgba(184, 41, 255, 0.2), rgba(0, 255, 136, 0.12));
-      border: 1px solid #b829ff;
-      border-radius: 20px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 20px rgba(184, 41, 255, 0.25);
+    /* =========================================
+       LUXURY CASINO & PVP ARENA STYLES
+       ========================================= */
+    .game-nav-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
     }
-    .pvp-chip-row {
+    .gnav-btn {
+      flex: 1;
+      padding: 9px 12px;
+      background: #140d21;
+      border: 1px solid #2f1c4e;
+      border-radius: 12px;
+      color: #9c8eaf;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      text-align: center;
+      cursor: pointer;
+    }
+    .gnav-btn.active {
+      background: rgba(184, 41, 255, 0.2);
+      border-color: #b829ff;
+      color: #00ff88;
+      box-shadow: 0 0 12px rgba(184, 41, 255, 0.4);
+    }
+
+    /* NEON POT CIRCLE (PVP ARENA) */
+    .pvp-circle-stage {
+      background: radial-gradient(circle, rgba(184, 41, 255, 0.15) 0%, rgba(11, 7, 19, 0.95) 75%);
+      border: 1px solid #3d1d66;
+      border-radius: 24px;
+      padding: 24px 16px;
+      text-align: center;
+      position: relative;
+      margin-bottom: 16px;
+      box-shadow: inset 0 0 30px rgba(184, 41, 255, 0.2);
+    }
+    .neon-outer-ring {
+      width: 170px;
+      height: 170px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      border: 3px dashed #b829ff;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: rotateGlow 14s linear infinite;
+      box-shadow: 0 0 25px rgba(184, 41, 255, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+    .neon-inner-core {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #12091f;
+      border: 2px solid #00ff88;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+    }
+    @keyframes rotateGlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* 3D COIN FLIP */
+    .coin-3d-box {
+      perspective: 800px;
+      margin: 16px auto;
+      width: 90px;
+      height: 90px;
+    }
+    .coin-3d {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.5s ease-out;
+    }
+    .coin-side {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      border: 2px solid #ffd700;
+    }
+    .coin-head { background: radial-gradient(circle, #ffe600, #b28900); }
+    .coin-tail { background: radial-gradient(circle, #ff007f, #800040); transform: rotateY(180deg); }
+    .coin-flipping { animation: flipSpin 1.4s ease-out forwards; }
+    @keyframes flipSpin {
+      0% { transform: rotateY(0) scale(1); }
+      50% { transform: rotateY(1080deg) scale(1.3); }
+      100% { transform: rotateY(1800deg) scale(1); }
+    }
+
+    /* SPIN WHEEL */
+    .wheel-container {
+      position: relative;
+      width: 190px;
+      height: 190px;
+      margin: 10px auto 16px;
+    }
+    .wheel-pointer {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 18px solid #00ff88;
+      z-index: 10;
+      filter: drop-shadow(0 0 6px #00ff88);
+    }
+    .wheel-canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid #b829ff;
+      box-shadow: 0 0 20px rgba(184, 41, 255, 0.6);
+      transition: transform 3.5s cubic-bezier(0.15, 0.9, 0.25, 1);
+    }
+
+    .chip-selector {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 6px;
-      margin: 10px 0;
+      margin: 12px 0;
     }
-    .pvp-chip {
+    .bet-chip {
       background: #09050d;
       border: 1px solid #2f1c4e;
-      border-radius: 10px;
-      padding: 8px 0;
-      text-align: center;
+      border-radius: 8px;
+      padding: 9px 0;
       font-size: 11px;
       font-weight: 800;
       color: #9c8eaf;
       cursor: pointer;
+      text-align: center;
     }
-    .pvp-chip.active {
+    .bet-chip.active {
       border-color: #00ff88;
       color: #00ff88;
       background: rgba(0, 255, 136, 0.15);
-    }
-    .coin-choice-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 10px 0;
-    }
-    .coin-opt {
-      border: 1px solid #2f1c4e;
-      background: #09050d;
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 800;
-    }
-    .coin-opt.active {
-      border-color: #b829ff;
-      background: rgba(184, 41, 255, 0.25);
-      color: #fff;
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
     }
 
     .invite-box {
@@ -361,7 +470,7 @@
 </head>
 <body>
 
-  <!-- IP Anti-Cheat Screen -->
+  <!-- Dynamic IP Conflict Overlay -->
   <div id="ip-block-screen">
     <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
     <h2>IP တူညီနေပါသည်</h2>
@@ -369,6 +478,7 @@
     <button class="action-btn btn-purple" style="padding: 12px 24px;" onclick="location.reload()">ပြန်လည်စစ်ဆေးမည်</button>
   </div>
 
+  <!-- Header -->
   <div class="header-bar">
     <div class="user-profile">
       <div class="avatar-icon">⚡</div>
@@ -380,6 +490,7 @@
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
   </div>
 
+  <!-- Balance -->
   <div class="balance-box">
     <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
@@ -401,7 +512,7 @@
     </div>
   </div>
 
-  <!-- VIEW: TASK -->
+  <!-- TAB: TASK -->
   <div class="tab-view" id="view-task">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
     <div id="tasks-container">
@@ -409,62 +520,85 @@
     </div>
   </div>
 
-  <!-- VIEW: GAME & PVP ARENA -->
+  <!-- TAB: GAME (CYBER ARENA WITH VISUALS) -->
   <div class="tab-view" id="view-game">
-    <!-- Coin Flip PvP Arena -->
-    <div class="arena-banner">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h4 style="font-size:15px; font-weight:900; color:#00ff88;">⚔️ Coin Flip PvP Arena</h4>
-        <span style="font-size:10px; background:rgba(0,255,136,0.15); border:1px solid #00ff88; color:#00ff88; padding:3px 8px; border-radius:6px; font-weight:800;">Fee: 10%</span>
-      </div>
-      <p style="font-size:11px; color:#9c8eaf; margin-top:4px;">Real Player အချင်းချင်း အနည်းဆုံး $0.01 ဖြင့် ယှဉ်ပြိုင်ပါ</p>
-
-      <div class="coin-choice-row">
-        <div class="coin-opt active" id="opt-head" onclick="selectCoinSide('HEAD')">🪙 HEAD (ခေါင်း)</div>
-        <div class="coin-opt" id="opt-tail" onclick="selectCoinSide('TAIL')">🦅 TAIL (ပန်း)</div>
-      </div>
-
-      <div style="font-size:11px; color:#9c8eaf; font-weight:700;">လောင်းကြေး ($):</div>
-      <div class="pvp-chip-row">
-        <div class="pvp-chip active" onclick="selectBet(0.01, this)">$0.01</div>
-        <div class="pvp-chip" onclick="selectBet(0.05, this)">$0.05</div>
-        <div class="pvp-chip" onclick="selectBet(0.10, this)">$0.10</div>
-        <div class="pvp-chip" onclick="selectBet(0.50, this)">$0.50</div>
-      </div>
-
-      <button class="action-btn btn-purple" style="width:100%; padding:12px; font-size:13px;" id="btn-create-pvp">⚔️ Create Room ($<span id="ui-bet-display">0.01</span>)</button>
+    <!-- Sub-Game Switcher -->
+    <div class="game-nav-bar">
+      <div class="gnav-btn active" id="gtab-pvp" onclick="switchGameSub('sub-pvp', this)">⚔️ PvP Pot</div>
+      <div class="gnav-btn" id="gtab-flip" onclick="switchGameSub('sub-flip', this)">🪙 3D Flip</div>
+      <div class="gnav-btn" id="gtab-spin" onclick="switchGameSub('sub-spin', this)">🎡 Double Spin</div>
     </div>
 
-    <!-- Active Rooms -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; text-transform: uppercase;">🎮 စိန်ခေါ်ထားသော အခန်းများ</div>
-      <button onclick="loadPvPRooms()" style="background:none; border:none; color:#00ff88; font-size:11px; font-weight:800; cursor:pointer;">🔄 Refresh</button>
-    </div>
-    <div id="pvp-rooms-container" style="margin-bottom:18px;">
-      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">အခန်းများကို ဆွဲယူနေပါသည်...</p>
+    <!-- 1. NEON ROUND POT PVP -->
+    <div id="sub-pvp" class="sub-game-view">
+      <div class="pvp-circle-stage">
+        <div style="font-size:11px; color:#b829ff; font-weight:800; letter-spacing:1px; margin-bottom:6px;">ROUND POT ARENA</div>
+        <div class="neon-outer-ring">
+          <div class="neon-inner-core">
+            <span style="font-size:10px; color:#9c8eaf; text-transform:uppercase;">TOTAL POT</span>
+            <div style="font-size:24px; font-weight:900; color:#00ff88; margin:2px 0;">$<span id="ui-pot-val">0.02</span></div>
+            <span style="font-size:9px; color:#b829ff; font-weight:700;">10% Fee</span>
+          </div>
+        </div>
+
+        <div style="font-size:11px; color:#9c8eaf; font-weight:700;">လောင်းကြေးရွေးပါ ($0.01 မှစတင်):</div>
+        <div class="chip-selector">
+          <div class="bet-chip active" onclick="setArenaBet(0.01, this)">$0.01</div>
+          <div class="bet-chip" onclick="setArenaBet(0.05, this)">$0.05</div>
+          <div class="bet-chip" onclick="setArenaBet(0.10, this)">$0.10</div>
+          <div class="bet-chip" onclick="setArenaBet(0.50, this)">$0.50</div>
+        </div>
+
+        <button class="action-btn btn-purple" style="width:100%; padding:13px;" id="btn-create-arena-room">⚔️ Place a Bet ($<span id="ui-arena-btn-amt">0.01</span>)</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; text-transform: uppercase;">🎮 စိန်ခေါ်ထားသော အခန်းများ</div>
+        <button onclick="loadPvPRooms()" style="background:none; border:none; color:#00ff88; font-size:11px; font-weight:800; cursor:pointer;">🔄 Refresh</button>
+      </div>
+      <div id="pvp-rooms-container">
+        <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">အခန်းများကို ဆွဲယူနေပါသည်...</p>
+      </div>
     </div>
 
-    <!-- Instant Bot Games (Win Rate 20% ~ 25%) -->
-    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">⚡ Instant Games (AI)</div>
-    
-    <div class="card-item">
-      <div>
-        <h4>Cyber Dice Roll</h4>
-        <p>အန်စာတုံး လှိမ့်၍ 2x ဆုကြေးရယူပါ (Win Rate: 25%)</p>
+    <!-- 2. 3D COIN FLIP (25% WIN RATE) -->
+    <div id="sub-flip" class="sub-game-view" style="display:none;">
+      <div class="pvp-circle-stage">
+        <div style="font-size:11px; color:#00ff88; font-weight:800; letter-spacing:1px;">3D CYBER FLIP (HEAD / TAIL)</div>
+        
+        <div class="coin-3d-box">
+          <div class="coin-3d" id="anim-coin">
+            <div class="coin-side coin-head">🪙</div>
+            <div class="coin-side coin-tail">🦅</div>
+          </div>
+        </div>
+        <p id="ui-flip-status" style="font-size:12px; color:#9c8eaf; margin-bottom:8px;">ခေါင်း (သို့) ပန်း ရွေးချယ်ပါ</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+          <button class="action-btn" style="background:#24163d; border:1px solid #b829ff; color:#fff;" id="btn-side-head" onclick="chooseSide('HEAD')">🪙 HEAD</button>
+          <button class="action-btn" style="background:#140d21; border:1px solid #2f1c4e; color:#9c8eaf;" id="btn-side-tail" onclick="chooseSide('TAIL')">🦅 TAIL</button>
+        </div>
+
+        <button class="action-btn btn-green" style="width:100%; padding:13px;" id="btn-play-flip" onclick="play3DCoinFlip()">⚡ Flip Now ($0.01)</button>
       </div>
-      <button class="btn-sub" onclick="playDiceRoll()">Roll ($0.01)</button>
     </div>
 
-    <div class="card-item">
-      <div>
-        <h4>Lucky Cyber Wheel</h4>
-        <p>နေ့စဉ် ကံစမ်းဘီးလှည့်ပါ</p>
+    <!-- 3. DOUBLE SPIN WHEEL (20% WIN RATE) -->
+    <div id="sub-spin" class="sub-game-view" style="display:none;">
+      <div class="pvp-circle-stage">
+        <div style="font-size:11px; color:#b829ff; font-weight:800; letter-spacing:1px;">LUCKY CYBER SPIN</div>
+
+        <div class="wheel-container">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheel-canvas" class="wheel-canvas" width="220" height="220"></canvas>
+        </div>
+
+        <button class="action-btn btn-purple" style="width:100%; padding:13px;" id="btn-spin-wheel" onclick="spinCyberWheel()">🎡 Spin ($0.01)</button>
       </div>
-      <button class="btn-sub" onclick="playLuckyWheel()">Spin</button>
     </div>
   </div>
 
-  <!-- VIEW: HOME -->
+  <!-- TAB: HOME -->
   <div class="tab-view active-view" id="view-home">
     <div class="card-item">
       <div>
@@ -482,7 +616,7 @@
     </div>
   </div>
 
-  <!-- VIEW: INVITE -->
+  <!-- TAB: INVITE -->
   <div class="tab-view" id="view-invite">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
     <div class="card-item">
@@ -502,7 +636,7 @@
     </div>
   </div>
 
-  <!-- VIEW: PROFILE -->
+  <!-- TAB: PROFILE -->
   <div class="tab-view" id="view-profile">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
     <div class="card-item" style="margin-bottom:14px;">
@@ -576,7 +710,6 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
-    // Adsgram Unit ID
     const ADSGRAM_BLOCK_ID = "58146";
     const MAX_DAILY_ADS = 500;
 
@@ -598,23 +731,41 @@
     let lastDaily = 0;
     let completedTasks = [];
 
-    // PvP Settings
-    let selectedSide = 'HEAD';
-    let selectedBetAmount = 0.01;
+    // Game Variables
+    let arenaBetAmount = 0.01;
+    let chosenFlipSide = 'HEAD';
+    let isFlipping = false;
+    let isSpinning = false;
+    let wheelDeg = 0;
 
-    function selectCoinSide(side) {
-      selectedSide = side;
-      document.getElementById('opt-head').classList.toggle('active', side === 'HEAD');
-      document.getElementById('opt-tail').classList.toggle('active', side === 'TAIL');
+    function switchGameSub(subId, el) {
+      document.querySelectorAll('.sub-game-view').forEach(v => v.style.display = 'none');
+      document.querySelectorAll('.gnav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(subId).style.display = 'block';
+      if (el) el.classList.add('active');
+      if (subId === 'sub-spin') drawWheel();
     }
 
-    function selectBet(amt, el) {
-      selectedBetAmount = amt;
-      document.querySelectorAll('.pvp-chip').forEach(c => c.classList.remove('active'));
+    function setArenaBet(amt, el) {
+      arenaBetAmount = amt;
+      document.querySelectorAll('.bet-chip').forEach(c => c.classList.remove('active'));
       el.classList.add('active');
-      document.getElementById('ui-bet-display').innerText = amt.toFixed(2);
+      document.getElementById('ui-arena-btn-amt').innerText = amt.toFixed(2);
+      document.getElementById('ui-pot-val').innerText = (amt * 2).toFixed(2);
     }
 
+    function chooseSide(side) {
+      chosenFlipSide = side;
+      document.getElementById('btn-side-head').style.background = side === 'HEAD' ? '#24163d' : '#140d21';
+      document.getElementById('btn-side-head').style.borderColor = side === 'HEAD' ? '#b829ff' : '#2f1c4e';
+      document.getElementById('btn-side-head').style.color = side === 'HEAD' ? '#fff' : '#9c8eaf';
+
+      document.getElementById('btn-side-tail').style.background = side === 'TAIL' ? '#24163d' : '#140d21';
+      document.getElementById('btn-side-tail').style.borderColor = side === 'TAIL' ? '#b829ff' : '#2f1c4e';
+      document.getElementById('btn-side-tail').style.color = side === 'TAIL' ? '#fff' : '#9c8eaf';
+    }
+
+    // IP Anti-Cheat Check
     async function checkDynamicIP() {
       if (IS_ADMIN) return true;
       try {
@@ -638,9 +789,7 @@
             body: JSON.stringify({ current_ip: clientIP })
           });
         }
-      } catch (err) {
-        console.error("IP Check Error:", err);
-      }
+      } catch (err) {}
       return true;
     }
 
@@ -735,15 +884,6 @@
     document.getElementById("alert-ok-btn").addEventListener("click", () => document.getElementById("modal-alert").classList.remove("active"));
     document.getElementById("btn-close-withdraw").addEventListener("click", () => document.getElementById("modal-withdraw").classList.remove("active"));
 
-    function showWithdrawNotice(text, isError = true) {
-      const box = document.getElementById("withdraw-msg-box");
-      box.style.display = "block";
-      box.innerText = text;
-      box.style.background = isError ? "rgba(255, 51, 102, 0.15)" : "rgba(0, 255, 136, 0.15)";
-      box.style.color = isError ? "#ff3366" : "#00ff88";
-      box.style.border = isError ? "1px solid #ff3366" : "1px solid #00ff88";
-    }
-
     function renderUI() {
       document.getElementById("ui-username").innerText = userData.first_name;
       document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
@@ -828,9 +968,7 @@
         });
 
         renderUI();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
     }
 
     async function updateBalanceInDB(newBal) {
@@ -843,7 +981,9 @@
       });
     }
 
-    // --- PVP ARENA LOGIC (COIN FLIP / MIN $0.01 / 10% FEE) ---
+    // ============================================
+    // 1. NEON ROUND POT PVP LOGIC
+    // ============================================
     async function loadPvPRooms() {
       const container = document.getElementById("pvp-rooms-container");
       container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>အခန်းများကို ဆွဲယူနေပါသည်...</p>";
@@ -884,13 +1024,13 @@
       }
     }
 
-    document.getElementById("btn-create-pvp").addEventListener("click", async () => {
-      if (currentBalance < selectedBetAmount) {
-        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `PvP အခန်းဖွင့်ရန် လက်ကျန်ငွေ အနည်းဆုံး $${selectedBetAmount} USDT ရှိရပါမည်။`);
+    document.getElementById("btn-create-arena-room").addEventListener("click", async () => {
+      if (currentBalance < arenaBetAmount) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `လောင်းကြေး $${arenaBetAmount} USDT ရှိရပါမည်။`);
         return;
       }
 
-      const newBal = Number((currentBalance - selectedBetAmount).toFixed(4));
+      const newBal = Number((currentBalance - arenaBetAmount).toFixed(4));
       await updateBalanceInDB(newBal);
 
       await fetch(`${SB_URL}/rest/v1/cyber_pvp_matches`, {
@@ -899,13 +1039,13 @@
         body: JSON.stringify({
           creator_id: userData.id,
           creator_name: userData.first_name,
-          creator_choice: selectedSide,
-          bet_amount: selectedBetAmount,
+          creator_choice: "HEAD",
+          bet_amount: arenaBetAmount,
           status: "WAITING"
         })
       });
 
-      showAlert("⚔️ အခန်းဖွင့်ပြီးပါပြီ", `လောင်းကြေး $${selectedBetAmount} ဖြင့် အခန်းဖွင့်လိုက်ပါပြီ။ တခြားသူ လာရောက်ယှဉ်ပြိုင်ပါက အနိုင်ရလဒ်ကို ချက်ချင်း ဆုံးဖြတ်ပေးပါမည်။`);
+      showAlert("⚔️ အခန်းဖွင့်ပြီးပါပြီ", `လောင်းကြေး $${arenaBetAmount} ဖြင့် အခန်းဖွင့်လိုက်ပါပြီ။ တခြားသူ လာရောက်ယှဉ်ပြိုင်သည်နှင့် ဆုကြေးခွဲဝေပေးပါမည်။`);
       loadPvPRooms();
     });
 
@@ -917,26 +1057,24 @@
       });
       const refunded = Number((currentBalance + Number(betAmt)).toFixed(4));
       await updateBalanceInDB(refunded);
-      showAlert("ဖျက်သိမ်းပြီး", `အခန်းကို ဖျက်လိုက်ပြီး လောင်းကြေး $${betAmt} ကို လက်ကျန်ငွေထဲ ပြန်ထည့်ပေးလိုက်ပါပြီ။`);
+      showAlert("ဖျက်သိမ်းပြီး", `လောင်းကြေး $${betAmt} ကို လက်ကျန်ထဲ ပြန်ထည့်ပေးလိုက်ပါပြီ။`);
       loadPvPRooms();
     }
 
     async function joinPvPRoom(roomId, betAmt, creatorChoice, creatorId) {
       if (currentBalance < Number(betAmt)) {
-        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `ဤအခန်းတွင် ဝင်ရောက်ယှဉ်ပြိုင်ရန် အနည်းဆုံး $${betAmt} USDT ရှိရပါမည်။`);
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `အခန်းတွင် ဝင်ကစားရန် အနည်းဆုံး $${betAmt} USDT လိုအပ်ပါသည်။`);
         return;
       }
 
       const newBal = Number((currentBalance - Number(betAmt)).toFixed(4));
       await updateBalanceInDB(newBal);
 
-      // PvP Flip Win-rate Logic: 25% အနိုင်ရနှုန်း သတ်မှတ်ချက်
+      // Win Rate 25% အောက် ထိန်းချုပ်ချက်
       const isJoinerWinner = (Math.random() < 0.25);
       const winnerId = isJoinerWinner ? userData.id : creatorId;
-      const flipResult = isJoinerWinner ? (creatorChoice === 'HEAD' ? 'TAIL' : 'HEAD') : creatorChoice;
-
       const totalPot = Number(betAmt) * 2;
-      const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Platform Fee
+      const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Fee
 
       await fetch(`${SB_URL}/rest/v1/cyber_pvp_matches?id=eq.${roomId}`, {
         method: "PATCH",
@@ -953,7 +1091,7 @@
       if (winnerId === userData.id) {
         const winBal = Number((currentBalance + payout).toFixed(4));
         await updateBalanceInDB(winBal);
-        showAlert("🎉 သင် အနိုင်ရပါသည်!", `ဒင်္ဂါးပြားရလဒ်မှာ [${flipResult}] ဖြစ်ပါသည်!\n10% Fee နှုတ်ပြီး ဆုငွေ +$${payout} USDT ကို လက်ကျန်ထဲ ထည့်ပေးလိုက်ပါပြီ!`);
+        showAlert("🎉 အနိုင်ရပါသည်!", `10% Fee နှုတ်ပြီး ဆုငွေ +$${payout} USDT ကို လက်ကျန်ထဲ ထည့်ပေးလိုက်ပါပြီ!`);
       } else {
         const cRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${creatorId}&select=balance`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -967,52 +1105,142 @@
             body: JSON.stringify({ balance: cBal })
           });
         }
-        showAlert("😢 သင် အရေးနိမ့်ပါသည်", `ဒင်္ဂါးပြားရလဒ်မှာ [${flipResult}] ဖြစ်ပြီး အခန်းဖွင့်သူ အနိုင်ရရှိသွားပါသည်။`);
+        showAlert("😢 အရေးနိမ့်ပါသည်", "အခန်းဖွင့်သူ အနိုင်ရရှိသွားပါသည်။ နောက်တစ်ကြိမ် ထပ်မံကြိုးစားပါ!");
       }
 
       loadPvPRooms();
     }
 
-    // --- INSTANT BOT GAMES (DICE & WHEEL / WIN RATE 20% ~ 25%) ---
-    async function playDiceRoll() {
+    // ============================================
+    // 2. 3D COIN FLIP ANIMATION & LOGIC (25% WIN)
+    // ============================================
+    async function play3DCoinFlip() {
+      if (isFlipping) return;
       const bet = 0.01;
       if (currentBalance < bet) {
-        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", "Dice Roll ကစားရန် အနည်းဆုံး $0.01 လိုအပ်ပါသည်။");
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", "Coin Flip ကစားရန် အနည်းဆုံး $0.01 USDT လိုအပ်ပါသည်။");
         return;
       }
 
       let nBal = Number((currentBalance - bet).toFixed(4));
       await updateBalanceInDB(nBal);
 
-      // Win Rate: 25% သတ်မှတ်ချက်
-      const isWin = Math.random() < 0.25;
-      const userDice = isWin ? 6 : Math.floor(Math.random() * 3) + 1;
-      const botDice = isWin ? Math.floor(Math.random() * 4) + 1 : 6;
+      isFlipping = true;
+      const coin = document.getElementById('anim-coin');
+      const statusText = document.getElementById('ui-flip-status');
+      statusText.innerText = "🌀 လှည့်ပတ်နေပါသည်...";
 
-      if (isWin) {
-        const winAmt = Number((bet * 2 * 0.90).toFixed(4));
-        nBal = Number((nBal + winAmt).toFixed(4));
-        await updateBalanceInDB(nBal);
-        showAlert("🎲 သင် အနိုင်ရပါသည်!", `သင့်အမှတ်: ${userDice} vs Bot အမှတ်: ${botDice}\n10% Fee နှုတ်ပြီး +$${winAmt} ရရှိပါသည်!`);
-      } else {
-        showAlert("🎲 သင် အရှုံးပေါ်ပါသည်", `သင့်အမှတ်: ${userDice} vs Bot အမှတ်: ${botDice}\nထပ်မံကြိုးစားကြည့်ပါ!`);
+      coin.classList.remove('coin-flipping');
+      void coin.offsetWidth;
+      coin.classList.add('coin-flipping');
+
+      // 25% အနိုင်ရနှုန်း သတ်မှတ်ချက်
+      const isWin = (Math.random() < 0.25);
+      const actualResult = isWin ? chosenFlipSide : (chosenFlipSide === 'HEAD' ? 'TAIL' : 'HEAD');
+
+      setTimeout(async () => {
+        coin.classList.remove('coin-flipping');
+        coin.style.transform = actualResult === 'HEAD' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+        isFlipping = false;
+
+        if (isWin) {
+          const winPrize = Number((bet * 2 * 0.90).toFixed(4)); // 10% Fee
+          nBal = Number((nBal + winPrize).toFixed(4));
+          await updateBalanceInDB(nBal);
+          statusText.innerText = `🎉 အနိုင်ရပါသည်! ရလဒ်: ${actualResult}`;
+          showAlert("🎉 ဂုဏ်ယူပါသည်!", `ဒင်္ဂါးပြားရလဒ်မှာ [${actualResult}] ဖြစ်ပါသည်!\n10% Fee နှုတ်ပြီး +$${winPrize} USDT ရရှိပါသည်!`);
+        } else {
+          statusText.innerText = `😢 အရှုံးပေါ်ပါသည်! ရလဒ်: ${actualResult}`;
+          showAlert("😢 နောက်တစ်ကြိမ် စမ်းပါ", `ဒင်္ဂါးပြားရလဒ်မှာ [${actualResult}] ဖြစ်ပြီး အရှုံးပေါ်သွားပါသည်!`);
+        }
+      }, 1400);
+    }
+
+    // ============================================
+    // 3. DOUBLE SPIN WHEEL LOGIC (20% WIN)
+    // ============================================
+    const wheelSegments = [
+      { text: "0x", color: "#1b0b2e" },
+      { text: "2x", color: "#00ff88" },
+      { text: "0x", color: "#140a24" },
+      { text: "5x", color: "#b829ff" },
+      { text: "0x", color: "#1b0b2e" },
+      { text: "1.5x", color: "#00c8ff" }
+    ];
+
+    function drawWheel() {
+      const canvas = document.getElementById("wheel-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const numSegments = wheelSegments.length;
+      const angleStep = (2 * Math.PI) / numSegments;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < numSegments; i++) {
+        const startAngle = i * angleStep;
+        const endAngle = startAngle + angleStep;
+
+        ctx.beginPath();
+        ctx.moveTo(110, 110);
+        ctx.arc(110, 110, 105, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = wheelSegments[i].color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#2f1c4e";
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(110, 110);
+        ctx.rotate(startAngle + angleStep / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = wheelSegments[i].color === "#00ff88" ? "#000" : "#fff";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText(wheelSegments[i].text, 90, 5);
+        ctx.restore();
       }
     }
 
-    async function playLuckyWheel() {
-      // Win Rate 20% အောက် ထိန်းချုပ်ထားသော စနစ်
-      const isWin = Math.random() < 0.20;
-      if (isWin) {
-        const reward = 0.005;
-        const nBal = Number((currentBalance + reward).toFixed(4));
-        await updateBalanceInDB(nBal);
-        showAlert("🎡 Lucky Spin!", `ဂုဏ်ယူပါသည်! Spin Wheel မှ +$${reward} USDT ကံထူးသွားပါသည်!`);
-      } else {
-        showAlert("🎡 Lucky Spin", "နောက်တစ်ကြိမ်တွင် ထပ်မံကံစမ်းပါခင်ဗျာ!");
+    async function spinCyberWheel() {
+      if (isSpinning) return;
+      const bet = 0.01;
+      if (currentBalance < bet) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", "Spin Wheel လှည့်ရန် အနည်းဆုံး $0.01 USDT လိုအပ်ပါသည်။");
+        return;
       }
+
+      let nBal = Number((currentBalance - bet).toFixed(4));
+      await updateBalanceInDB(nBal);
+
+      isSpinning = true;
+      const canvas = document.getElementById("wheel-canvas");
+
+      // 20% အနိုင်ရနှုန်း သတ်မှတ်ချက်
+      const isWin = (Math.random() < 0.20);
+      const targetIndex = isWin ? 1 : 0; // 1: 2x, 0: 0x
+      const segAngle = 360 / wheelSegments.length;
+      
+      const extraRounds = 5 * 360;
+      wheelDeg += extraRounds + (360 - (targetIndex * segAngle) - (segAngle / 2));
+      canvas.style.transform = `rotate(${wheelDeg}deg)`;
+
+      setTimeout(async () => {
+        isSpinning = false;
+        if (isWin) {
+          const winPrize = Number((bet * 2 * 0.90).toFixed(4));
+          nBal = Number((nBal + winPrize).toFixed(4));
+          await updateBalanceInDB(nBal);
+          showAlert("🎡 ဂုဏ်ယူပါသည်!", `Spin Wheel တွင် 2x ပေါက်သွားပါသည်!\n+$${winPrize} USDT ရရှိပါသည်!`);
+        } else {
+          showAlert("🎡 ကံမကောင်းပါ", "Spin Wheel တွင် 0x ကျသွားပါသည်။ နောက်တစ်ကြိမ် ထပ်မံကံစမ်းပါခင်ဗျာ!");
+        }
+      }, 3600);
     }
 
-    // --- ADS & TASKS LOGIC ---
+    // ============================================
+    // ADS, BONUS & TASKS SYSTEM
+    // ============================================
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       if (!IS_ADMIN && config.bot_status === 'OFF') {
