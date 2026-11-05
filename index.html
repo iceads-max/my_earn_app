@@ -290,7 +290,6 @@
     }
     .modal-box input:focus { border-color: #00ff88; }
 
-    /* IP Ban Overlay */
     #ban-screen {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -309,11 +308,10 @@
 </head>
 <body>
 
-  <!-- Ban Screen Fullscreen View -->
   <div id="ban-screen">
     <div style="font-size: 60px; margin-bottom: 16px;">🚫</div>
     <h2>အကောင့် ပိတ်ပင်ခံရပါသည်</h2>
-    <p>စက်တစ်ခုတည်း သို့မဟုတ် IP တစ်ခုတည်းမှ အကောင့်များစွာ ဖွင့်လှစ်အသုံးပြုထားသည်ကို စနစ်မှ တွေ့ရှိသဖြင့် သင့်အကောင့်အား ပိတ်ပင်လိုက်ပါသည်။</p>
+    <p>စက်တစ်ခုတည်း သို့မဟုတ် IP တစ်ခုတည်းမှ အကောင့်များစွာ ဖွင့်လှစ်အသုံးပြုထားသည်ကို တွေ့ရှိသဖြင့် သင့်အကောင့်အား ပိတ်ပင်လိုက်ပါသည်။</p>
   </div>
 
   <div class="header-bar">
@@ -500,14 +498,12 @@
     let lastDaily = 0;
     let completedTasks = [];
 
-    // IP စစ်ဆေးပြီး Anti-Cheat စနစ် လည်ပတ်ခြင်း
     async function checkAntiCheatIP() {
       try {
         const ipRes = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipRes.json();
         const clientIP = ipData.ip;
 
-        // အဆိုပါ IP ဖြင့် တခြား User ID ရှိမရှိ Supabase တွင် စစ်ဆေးခြင်း
         const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?ip_address=eq.${clientIP}&select=id,is_banned`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -515,14 +511,12 @@
 
         const anotherUser = usersWithSameIP.find(u => Number(u.id) !== Number(userData.id));
         if (anotherUser) {
-          // IP တူသော တခြား အကောင့်တွေ့ပါက လက်ရှိ User ကို Ban စာရင်းသွင်းပြီး Screen ပိတ်ချမည်
           await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
             method: "PATCH",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ is_banned: true, ip_address: clientIP })
           });
 
-          // Admin ထံ Alert ပို့မည်
           const banAlert = `🚨 <b>Anti-Cheat: Multi-Account တွေ့ရှိ၍ Ban လိုက်ပါပြီ!</b>\n\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n🌐 <b>IP Address:</b> <code>${clientIP}</code>\n⚠️ <b>တူညီသော မူရင်း User:</b> <code>${anotherUser.id}</code>\n\nပြန်ဖွင့်ရန်: <code>/unban ${userData.id}</code>`;
           fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: "POST",
@@ -533,7 +527,6 @@
           showBanScreen();
           return false;
         } else {
-          // တခြားအကောင့် မရှိပါက ပထမဆုံးအကြိမ်အဖြစ် လက်ရှိ User ၏ IP ကို DB တွင် မှတ်သားမည်
           await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
             method: "PATCH",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -919,7 +912,7 @@
       renderUI();
 
       const isAuto = (amt <= 0.5);
-      const withdrawStatus = isAuto ? "Approved" : "Pending";
+      const withdrawStatus = isAuto ? "Pending_Auto" : "Pending";
 
       const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
@@ -929,11 +922,10 @@
       const data = await res.json();
       const orderId = data[0]?.id || "New";
 
-      if (isAuto) {
-        showWithdrawNotice(`⚡ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ ပမာဏ $0.5 အောက်ဖြစ်သဖြင့် အလိုအလျောက် အတည်ပြုပြီးပါပြီ။`, false);
-      } else {
-        showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ ပမာဏ $0.5 ထက်ကြီးသဖြင့် Admin စစ်ဆေးပြီး လွှဲပေးပါမည်။`, false);
-        
+      // 0.5 ကျော်ရင် မရဘူး ဟု လုံးဝ မပြဘဲ သဘာဝကျကျ အသိပေးထားပါသည်
+      showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ စနစ်မှ စစ်ဆေးပြီး လွှဲပြောင်းပေးပါမည်။`, false);
+
+      if (!isAuto) {
         const alertText = `🔔 <b>ငွေထုတ်တောင်းဆိုမှု အသစ် (Admin Approve လိုအပ်)!</b>\n\n🆔 <b>Order ID:</b> <code>${orderId}</code>\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n💰 <b>ပမာဏ:</b> <code>$${amt} USDT</code>\n🔗 <b>Address (BEP-20):</b>\n<code>${addr}</code>\n\n👉 အတည်ပြုရန်: <code>/approve ${orderId}</code>`;
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: "POST",
@@ -968,7 +960,6 @@
       }
     });
 
-    // App စတင်ဖွင့်ချိန်တွင် IP Anti-Cheat စစ်ဆေးပြီးမှ DB Sync လုပ်မည်
     checkAntiCheatIP().then(ok => {
       if (ok) syncDataFromDB();
     });
