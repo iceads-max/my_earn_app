@@ -6,9 +6,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn v6.0</title>
+  <title>Cyber Earn Arena</title>
   
-  <script src="https://telegram.org/js/telegram-web-app.js?v=6.0"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
@@ -181,9 +181,7 @@
     .tab-view { display: none; }
     .tab-view.active-view { display: block; }
 
-    /* =========================================
-       GAME ARENA & ROULETTE STYLES
-       ========================================= */
+    /* GAME SECTION */
     .game-nav-bar {
       display: flex;
       gap: 8px;
@@ -246,7 +244,6 @@
       transition: transform 4.5s cubic-bezier(0.12, 0.8, 0.2, 1);
     }
 
-    /* COUNTDOWN BADGE */
     .timer-badge {
       display: inline-flex;
       align-items: center;
@@ -262,7 +259,6 @@
       margin: 6px 0;
     }
 
-    /* CUSTOM BET INPUT BOX */
     .custom-bet-wrap {
       display: flex;
       align-items: center;
@@ -421,7 +417,7 @@
 </head>
 <body>
 
-  <!-- Header Bar -->
+  <!-- Header -->
   <div class="header-bar">
     <div class="user-profile">
       <div class="avatar-icon">⚡</div>
@@ -477,12 +473,10 @@
           <span style="font-size:10px; background:rgba(0,255,136,0.15); border:1px solid #00ff88; color:#00ff88; padding:2px 6px; border-radius:6px; font-weight:800;">Fee: 10%</span>
         </div>
 
-        <!-- 30s Countdown Display -->
         <div>
           <div class="timer-badge" id="pot-timer-badge">⏳ စောင့်ဆိုင်းနေသည် (လူ ၂ ယောက်လိုပါသည်)</div>
         </div>
 
-        <!-- Roulette Wheel -->
         <div class="roulette-container">
           <div class="roulette-pointer"></div>
           <canvas id="roulette-canvas" class="roulette-wheel" width="220" height="220"></canvas>
@@ -499,7 +493,6 @@
           </div>
         </div>
 
-        <!-- Custom Bet Input Box -->
         <div class="custom-bet-wrap">
           <span style="font-size:12px; color:#9c8eaf; font-weight:800;">Bet ($):</span>
           <input type="number" id="input-pvp-bet" class="custom-bet-input" value="0.01" step="0.01" min="0.01">
@@ -538,7 +531,6 @@
           <button class="action-btn" style="background:#140d21; border:1px solid #2f1c4e; color:#9c8eaf;" id="btn-side-tail" onclick="chooseSide('TAIL')">🦅 TAIL</button>
         </div>
 
-        <!-- Custom Bet Input for Flip -->
         <div class="custom-bet-wrap">
           <span style="font-size:12px; color:#9c8eaf; font-weight:800;">Bet ($):</span>
           <input type="number" id="input-flip-bet" class="custom-bet-input" value="0.01" step="0.01" min="0.01">
@@ -557,7 +549,6 @@
           <canvas id="double-canvas" class="roulette-wheel" width="220" height="220"></canvas>
         </div>
 
-        <!-- Custom Bet Input for Spin -->
         <div class="custom-bet-wrap">
           <span style="font-size:12px; color:#9c8eaf; font-weight:800;">Bet ($):</span>
           <input type="number" id="input-spin-bet" class="custom-bet-input" value="0.01" step="0.01" min="0.01">
@@ -666,7 +657,6 @@
     let currentBalance = 0.000;
     let lastDaily = 0;
 
-    // Solo Win-rate Tracker (၃ ကြိမ်အထိ 50%, ၄ ကြိမ်မှစ၍ 30%)
     let soloPlayCount = parseInt(localStorage.getItem(`cyber_solo_plays_${userData.id}`) || "0", 10);
     function getSoloWinRate() {
       soloPlayCount++;
@@ -674,12 +664,10 @@
       return soloPlayCount <= 3 ? 0.50 : 0.30;
     }
 
-    // ============================================
-    // PVP MULTI-PLAYER JACKPOT (ONE COLOR PER USER & 30s COUNTDOWN)
-    // ============================================
+    // PVP LOGIC
     let jackpotBets = [];
     const colorPalette = ['#00ff88', '#b829ff', '#ff007f', '#00e5ff', '#ffaa00', '#ffd700', '#00ffcc', '#ff3366'];
-    let userColorMap = {}; // လူတစ်ယောက်လျှင် တိုက်ရိုက် အရောင်တစ်ရောင်တည်း သတ်မှတ်ခြင်း
+    let userColorMap = {};
 
     let potTimer = null;
     let potSecondsLeft = 30;
@@ -702,7 +690,6 @@
 
     function initRoulette() {
       if (jackpotBets.length === 0) {
-        // စမ်းသပ်ရန် Bot တစ်ဦး ထည့်သွင်းထားပေးခြင်း
         const botId = 1001;
         jackpotBets = [
           { user_id: botId, user_name: "CyberBot_Alpha", bet_amount: 0.02, color: getUserColor(botId) }
@@ -719,7 +706,6 @@
       const myChance = totalPot > 0 ? ((myTotal / totalPot) * 100).toFixed(1) : 0;
       document.getElementById('ui-my-chance').innerText = `${myChance}%`;
 
-      // Draw Roulette Wheel Canvas
       const canvas = document.getElementById("roulette-canvas");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -740,7 +726,6 @@
         currentAngle += sliceAngle;
       });
 
-      // Player List
       const container = document.getElementById("jackpot-players-container");
       container.innerHTML = "";
       jackpotBets.forEach(b => {
@@ -777,7 +762,6 @@
       const existingBet = jackpotBets.find(b => Number(b.user_id) === Number(userData.id));
 
       if (existingBet) {
-        // အရောင်မပြောင်းဘဲ ရှိပြီးသား ပမာဏထဲသို့ ပေါင်းထည့်ပေးခြင်း
         existingBet.bet_amount = Number((Number(existingBet.bet_amount) + betAmt).toFixed(4));
       } else {
         jackpotBets.push({
@@ -791,7 +775,6 @@
       renderJackpotUI();
       showAlert("လောင်းကြေးထည့်ပြီးပါပြီ", `$${betAmt} ထည့်သွင်းလိုက်ပြီး သင့်အရောင်မှာ [${myColor}] ဖြစ်ပါသည်!`);
 
-      // လူ ၂ ယောက်ပြည့်သည်နှင့် စက္ကန့် ၃၀ စတင်ရေတွက်ခြင်း
       if (jackpotBets.length >= 2 && !potTimer && !isPotSpinning) {
         startPotCountdown();
       }
@@ -840,7 +823,7 @@
 
       setTimeout(async () => {
         isPotSpinning = false;
-        const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Platform Fee
+        const payout = Number((totalPot * 0.90).toFixed(4));
 
         if (Number(winner.user_id) === Number(userData.id)) {
           const winBal = Number((currentBalance + payout).toFixed(4));
@@ -850,10 +833,9 @@
           showAlert("😢 အခြားသူ အနိုင်ရပါသည်", `ကံထူးရှင်မှာ [${winner.user_name}] ဖြစ်ပါသည်!`);
         }
 
-        // Round အသစ် ပြန်စတင်ခြင်း
         document.getElementById('pot-timer-badge').innerText = "⏳ စောင့်ဆိုင်းနေသည် (လူ ၂ ယောက်လိုပါသည်)";
         const nextBotId = 1002;
-        userColorMap = {}; // Reset Color Mapping
+        userColorMap = {};
         jackpotBets = [
           { user_id: nextBotId, user_name: "CyberBot_Beta", bet_amount: 0.02, color: getUserColor(nextBotId) }
         ];
@@ -861,9 +843,7 @@
       }, 4600);
     }
 
-    // ============================================
-    // SOLO GAMES (CUSTOM BET & DYNAMIC WIN RATE)
-    // ============================================
+    // SOLO LOGIC
     let chosenFlipSide = 'HEAD';
     let isFlipping = false;
 
@@ -894,7 +874,6 @@
       void coin.offsetWidth;
       coin.classList.add('coin-flipping');
 
-      // ပထမ ၃ ကြိမ် 50%၊ နောက်ပိုင်း 30%
       const rate = getSoloWinRate();
       const isWin = (Math.random() < rate);
       const actualResult = isWin ? chosenFlipSide : (chosenFlipSide === 'HEAD' ? 'TAIL' : 'HEAD');
@@ -905,7 +884,7 @@
         isFlipping = false;
 
         if (isWin) {
-          const winPrize = Number((betAmt * 2 * 0.90).toFixed(4)); // 10% Fee
+          const winPrize = Number((betAmt * 2 * 0.90).toFixed(4));
           nBal = Number((nBal + winPrize).toFixed(4));
           await updateBalanceInDB(nBal);
           showAlert("🎉 အနိုင်ရပါသည်!", `ရလဒ်: [${actualResult}]\n10% Fee နှုတ်ပြီး +$${winPrize} USDT ရရှိပါသည်!`);
@@ -961,7 +940,7 @@
       setTimeout(async () => {
         isDoubleSpinning = false;
         if (isWin) {
-          const winPrize = Number((betAmt * 2 * 0.90).toFixed(4)); // 10% Fee
+          const winPrize = Number((betAmt * 2 * 0.90).toFixed(4));
           nBal = Number((nBal + winPrize).toFixed(4));
           await updateBalanceInDB(nBal);
           showAlert("🎡 ဂုဏ်ယူပါသည်!", `2x ပေါက်သွားပါသည်!\n+$${winPrize} USDT ရရှိပါသည်!`);
