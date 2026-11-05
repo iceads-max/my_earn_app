@@ -200,6 +200,59 @@
     .tab-view { display: none; }
     .tab-view.active-view { display: block; }
 
+    /* PVP ARENA STYLES */
+    .arena-banner {
+      background: linear-gradient(135deg, rgba(184, 41, 255, 0.2), rgba(0, 255, 136, 0.12));
+      border: 1px solid #b829ff;
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(184, 41, 255, 0.25);
+    }
+    .pvp-chip-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 10px 0;
+    }
+    .pvp-chip {
+      background: #09050d;
+      border: 1px solid #2f1c4e;
+      border-radius: 10px;
+      padding: 8px 0;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #9c8eaf;
+      cursor: pointer;
+    }
+    .pvp-chip.active {
+      border-color: #00ff88;
+      color: #00ff88;
+      background: rgba(0, 255, 136, 0.15);
+    }
+    .coin-choice-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .coin-opt {
+      border: 1px solid #2f1c4e;
+      background: #09050d;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .coin-opt.active {
+      border-color: #b829ff;
+      background: rgba(184, 41, 255, 0.25);
+      color: #fff;
+    }
+
     .invite-box {
       background: #140d21;
       border: 1px solid #2f1c4e;
@@ -308,7 +361,7 @@
 </head>
 <body>
 
-  <!-- Dynamic IP Conflict Overlay -->
+  <!-- IP Anti-Cheat Screen -->
   <div id="ip-block-screen">
     <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
     <h2>IP တူညီနေပါသည်</h2>
@@ -348,6 +401,7 @@
     </div>
   </div>
 
+  <!-- VIEW: TASK -->
   <div class="tab-view" id="view-task">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
     <div id="tasks-container">
@@ -355,24 +409,62 @@
     </div>
   </div>
 
+  <!-- VIEW: GAME & PVP ARENA -->
   <div class="tab-view" id="view-game">
-    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">🎮 Earning Games</div>
-    <div class="card-item">
-      <div>
-        <h4>Lucky Spin Wheel</h4>
-        <p>နေ့စဉ် ကံစမ်းပြီး ဒေါ်လာဆုများ ရယူပါ</p>
+    <!-- Coin Flip PvP Arena -->
+    <div class="arena-banner">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="font-size:15px; font-weight:900; color:#00ff88;">⚔️ Coin Flip PvP Arena</h4>
+        <span style="font-size:10px; background:rgba(0,255,136,0.15); border:1px solid #00ff88; color:#00ff88; padding:3px 8px; border-radius:6px; font-weight:800;">Fee: 10%</span>
       </div>
-      <button class="btn-sub" onclick="showAlert('Lucky Spin', 'Lucky Spin Game ကို မကြာမီ ဖွင့်လှစ်ပေးပါမည်။')">Play</button>
+      <p style="font-size:11px; color:#9c8eaf; margin-top:4px;">Real Player အချင်းချင်း အနည်းဆုံး $0.01 ဖြင့် ယှဉ်ပြိုင်ပါ</p>
+
+      <div class="coin-choice-row">
+        <div class="coin-opt active" id="opt-head" onclick="selectCoinSide('HEAD')">🪙 HEAD (ခေါင်း)</div>
+        <div class="coin-opt" id="opt-tail" onclick="selectCoinSide('TAIL')">🦅 TAIL (ပန်း)</div>
+      </div>
+
+      <div style="font-size:11px; color:#9c8eaf; font-weight:700;">လောင်းကြေး ($):</div>
+      <div class="pvp-chip-row">
+        <div class="pvp-chip active" onclick="selectBet(0.01, this)">$0.01</div>
+        <div class="pvp-chip" onclick="selectBet(0.05, this)">$0.05</div>
+        <div class="pvp-chip" onclick="selectBet(0.10, this)">$0.10</div>
+        <div class="pvp-chip" onclick="selectBet(0.50, this)">$0.50</div>
+      </div>
+
+      <button class="action-btn btn-purple" style="width:100%; padding:12px; font-size:13px;" id="btn-create-pvp">⚔️ Create Room ($<span id="ui-bet-display">0.01</span>)</button>
     </div>
+
+    <!-- Active Rooms -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; text-transform: uppercase;">🎮 စိန်ခေါ်ထားသော အခန်းများ</div>
+      <button onclick="loadPvPRooms()" style="background:none; border:none; color:#00ff88; font-size:11px; font-weight:800; cursor:pointer;">🔄 Refresh</button>
+    </div>
+    <div id="pvp-rooms-container" style="margin-bottom:18px;">
+      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">အခန်းများကို ဆွဲယူနေပါသည်...</p>
+    </div>
+
+    <!-- Instant Bot Games (Win Rate 20% ~ 25%) -->
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">⚡ Instant Games (AI)</div>
+    
     <div class="card-item">
       <div>
-        <h4>Tap to Earn</h4>
-        <p>အမှတ်များ စုဆောင်း၍ USDT လဲလှယ်ပါ</p>
+        <h4>Cyber Dice Roll</h4>
+        <p>အန်စာတုံး လှိမ့်၍ 2x ဆုကြေးရယူပါ (Win Rate: 25%)</p>
       </div>
-      <button class="btn-sub" onclick="showAlert('Tap Game', 'Tap Game Module ကို မကြာမီ ထည့်သွင်းပေးပါမည်။')">Play</button>
+      <button class="btn-sub" onclick="playDiceRoll()">Roll ($0.01)</button>
+    </div>
+
+    <div class="card-item">
+      <div>
+        <h4>Lucky Cyber Wheel</h4>
+        <p>နေ့စဉ် ကံစမ်းဘီးလှည့်ပါ</p>
+      </div>
+      <button class="btn-sub" onclick="playLuckyWheel()">Spin</button>
     </div>
   </div>
 
+  <!-- VIEW: HOME -->
   <div class="tab-view active-view" id="view-home">
     <div class="card-item">
       <div>
@@ -390,6 +482,7 @@
     </div>
   </div>
 
+  <!-- VIEW: INVITE -->
   <div class="tab-view" id="view-invite">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
     <div class="card-item">
@@ -409,6 +502,7 @@
     </div>
   </div>
 
+  <!-- VIEW: PROFILE -->
   <div class="tab-view" id="view-profile">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
     <div class="card-item" style="margin-bottom:14px;">
@@ -425,14 +519,15 @@
     </div>
   </div>
 
+  <!-- BOTTOM NAVIGATION -->
   <div class="custom-bottom-nav">
     <div class="cnav-item" onclick="switchNav('view-task', this)">
       <span class="nav-icon">📋</span>
       <span>Task</span>
     </div>
-    <div class="cnav-item" onclick="switchNav('view-game', this)">
+    <div class="cnav-item" onclick="switchNav('view-game', this); loadPvPRooms();">
       <span class="nav-icon">🎮</span>
-      <span>Game</span>
+      <span>PvP Arena</span>
     </div>
     <div class="cnav-item center-home active" onclick="switchNav('view-home', this)">
       <span class="nav-icon">🏠</span>
@@ -448,6 +543,7 @@
     </div>
   </div>
 
+  <!-- MODALS -->
   <div class="modal-overlay" id="modal-alert">
     <div class="modal-box" style="text-align: center;">
       <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
@@ -480,7 +576,7 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
-    // Adsgram Block ID အသစ်
+    // Adsgram Unit ID
     const ADSGRAM_BLOCK_ID = "58146";
     const MAX_DAILY_ADS = 500;
 
@@ -502,10 +598,25 @@
     let lastDaily = 0;
     let completedTasks = [];
 
-    // IP Anti-Cheat (Admin Account အတွက် ကင်းလွတ်ခွင့်)
+    // PvP Settings
+    let selectedSide = 'HEAD';
+    let selectedBetAmount = 0.01;
+
+    function selectCoinSide(side) {
+      selectedSide = side;
+      document.getElementById('opt-head').classList.toggle('active', side === 'HEAD');
+      document.getElementById('opt-tail').classList.toggle('active', side === 'TAIL');
+    }
+
+    function selectBet(amt, el) {
+      selectedBetAmount = amt;
+      document.querySelectorAll('.pvp-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('ui-bet-display').innerText = amt.toFixed(2);
+    }
+
     async function checkDynamicIP() {
       if (IS_ADMIN) return true;
-
       try {
         const ipRes = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipRes.json();
@@ -696,9 +807,7 @@
           const maxUsers = Number(t.max_users || 0);
           const completedCount = Number(t.completed_count || 0);
 
-          if (maxUsers > 0 && completedCount >= maxUsers && !isDone) {
-            return;
-          }
+          if (maxUsers > 0 && completedCount >= maxUsers && !isDone) return;
 
           const div = document.createElement("div");
           div.className = "card-item";
@@ -734,6 +843,176 @@
       });
     }
 
+    // --- PVP ARENA LOGIC (COIN FLIP / MIN $0.01 / 10% FEE) ---
+    async function loadPvPRooms() {
+      const container = document.getElementById("pvp-rooms-container");
+      container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>အခန်းများကို ဆွဲယူနေပါသည်...</p>";
+      try {
+        const res = await fetch(`${SB_URL}/rest/v1/cyber_pvp_matches?status=eq.WAITING&order=created_at.desc&limit=20`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const rooms = await res.json();
+        if (rooms.length === 0) {
+          container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>စိန်ခေါ်ထားသော အခန်းမရှိသေးပါ။ အထက်တွင် အခန်းဖွင့်၍ စတင်နိုင်ပါသည်!</p>";
+          return;
+        }
+
+        container.innerHTML = "";
+        rooms.forEach(room => {
+          const isMyRoom = Number(room.creator_id) === Number(userData.id);
+          const winPrize = (Number(room.bet_amount) * 2 * 0.90).toFixed(4);
+
+          const div = document.createElement("div");
+          div.className = "card-item";
+          div.innerHTML = `
+            <div>
+              <h4>${room.creator_name} ၏ အခန်း</h4>
+              <p>လောင်းကြေး: <b style="color:#00ff88;">$${room.bet_amount}</b> | ဆုငွေ: <b>$${winPrize} USDT</b></p>
+              <p style="font-size:10px; color:#b829ff;">ရွေးချယ်ထားချက်: ${room.creator_choice}</p>
+            </div>
+            <div>
+              ${isMyRoom ? 
+                `<button class="btn-sub" style="border-color:#ff3366; color:#ff3366;" onclick="cancelPvPRoom(${room.id}, ${room.bet_amount})">Cancel</button>` :
+                `<button class="btn-sub" style="border-color:#00ff88; color:#00ff88;" onclick="joinPvPRoom(${room.id}, ${room.bet_amount}, '${room.creator_choice}', ${room.creator_id})">⚔️ Fight</button>`
+              }
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      } catch (e) {
+        container.innerHTML = "<p style='font-size:12px; color:#ff3366;'>အခန်းများ ဆွဲယူ၍ မရပါ။</p>";
+      }
+    }
+
+    document.getElementById("btn-create-pvp").addEventListener("click", async () => {
+      if (currentBalance < selectedBetAmount) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `PvP အခန်းဖွင့်ရန် လက်ကျန်ငွေ အနည်းဆုံး $${selectedBetAmount} USDT ရှိရပါမည်။`);
+        return;
+      }
+
+      const newBal = Number((currentBalance - selectedBetAmount).toFixed(4));
+      await updateBalanceInDB(newBal);
+
+      await fetch(`${SB_URL}/rest/v1/cyber_pvp_matches`, {
+        method: "POST",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          creator_id: userData.id,
+          creator_name: userData.first_name,
+          creator_choice: selectedSide,
+          bet_amount: selectedBetAmount,
+          status: "WAITING"
+        })
+      });
+
+      showAlert("⚔️ အခန်းဖွင့်ပြီးပါပြီ", `လောင်းကြေး $${selectedBetAmount} ဖြင့် အခန်းဖွင့်လိုက်ပါပြီ။ တခြားသူ လာရောက်ယှဉ်ပြိုင်ပါက အနိုင်ရလဒ်ကို ချက်ချင်း ဆုံးဖြတ်ပေးပါမည်။`);
+      loadPvPRooms();
+    });
+
+    async function cancelPvPRoom(roomId, betAmt) {
+      await fetch(`${SB_URL}/rest/v1/cyber_pvp_matches?id=eq.${roomId}`, {
+        method: "PATCH",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CANCELLED" })
+      });
+      const refunded = Number((currentBalance + Number(betAmt)).toFixed(4));
+      await updateBalanceInDB(refunded);
+      showAlert("ဖျက်သိမ်းပြီး", `အခန်းကို ဖျက်လိုက်ပြီး လောင်းကြေး $${betAmt} ကို လက်ကျန်ငွေထဲ ပြန်ထည့်ပေးလိုက်ပါပြီ။`);
+      loadPvPRooms();
+    }
+
+    async function joinPvPRoom(roomId, betAmt, creatorChoice, creatorId) {
+      if (currentBalance < Number(betAmt)) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `ဤအခန်းတွင် ဝင်ရောက်ယှဉ်ပြိုင်ရန် အနည်းဆုံး $${betAmt} USDT ရှိရပါမည်။`);
+        return;
+      }
+
+      const newBal = Number((currentBalance - Number(betAmt)).toFixed(4));
+      await updateBalanceInDB(newBal);
+
+      // PvP Flip Win-rate Logic: 25% အနိုင်ရနှုန်း သတ်မှတ်ချက်
+      const isJoinerWinner = (Math.random() < 0.25);
+      const winnerId = isJoinerWinner ? userData.id : creatorId;
+      const flipResult = isJoinerWinner ? (creatorChoice === 'HEAD' ? 'TAIL' : 'HEAD') : creatorChoice;
+
+      const totalPot = Number(betAmt) * 2;
+      const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Platform Fee
+
+      await fetch(`${SB_URL}/rest/v1/cyber_pvp_matches?id=eq.${roomId}`, {
+        method: "PATCH",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          joiner_id: userData.id,
+          joiner_name: userData.first_name,
+          winner_id: winnerId,
+          payout_amount: payout,
+          status: "COMPLETED"
+        })
+      });
+
+      if (winnerId === userData.id) {
+        const winBal = Number((currentBalance + payout).toFixed(4));
+        await updateBalanceInDB(winBal);
+        showAlert("🎉 သင် အနိုင်ရပါသည်!", `ဒင်္ဂါးပြားရလဒ်မှာ [${flipResult}] ဖြစ်ပါသည်!\n10% Fee နှုတ်ပြီး ဆုငွေ +$${payout} USDT ကို လက်ကျန်ထဲ ထည့်ပေးလိုက်ပါပြီ!`);
+      } else {
+        const cRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${creatorId}&select=balance`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const cData = await cRes.json();
+        if (cData.length > 0) {
+          const cBal = Number((Number(cData[0].balance) + payout).toFixed(4));
+          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${creatorId}`, {
+            method: "PATCH",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ balance: cBal })
+          });
+        }
+        showAlert("😢 သင် အရေးနိမ့်ပါသည်", `ဒင်္ဂါးပြားရလဒ်မှာ [${flipResult}] ဖြစ်ပြီး အခန်းဖွင့်သူ အနိုင်ရရှိသွားပါသည်။`);
+      }
+
+      loadPvPRooms();
+    }
+
+    // --- INSTANT BOT GAMES (DICE & WHEEL / WIN RATE 20% ~ 25%) ---
+    async function playDiceRoll() {
+      const bet = 0.01;
+      if (currentBalance < bet) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", "Dice Roll ကစားရန် အနည်းဆုံး $0.01 လိုအပ်ပါသည်။");
+        return;
+      }
+
+      let nBal = Number((currentBalance - bet).toFixed(4));
+      await updateBalanceInDB(nBal);
+
+      // Win Rate: 25% သတ်မှတ်ချက်
+      const isWin = Math.random() < 0.25;
+      const userDice = isWin ? 6 : Math.floor(Math.random() * 3) + 1;
+      const botDice = isWin ? Math.floor(Math.random() * 4) + 1 : 6;
+
+      if (isWin) {
+        const winAmt = Number((bet * 2 * 0.90).toFixed(4));
+        nBal = Number((nBal + winAmt).toFixed(4));
+        await updateBalanceInDB(nBal);
+        showAlert("🎲 သင် အနိုင်ရပါသည်!", `သင့်အမှတ်: ${userDice} vs Bot အမှတ်: ${botDice}\n10% Fee နှုတ်ပြီး +$${winAmt} ရရှိပါသည်!`);
+      } else {
+        showAlert("🎲 သင် အရှုံးပေါ်ပါသည်", `သင့်အမှတ်: ${userDice} vs Bot အမှတ်: ${botDice}\nထပ်မံကြိုးစားကြည့်ပါ!`);
+      }
+    }
+
+    async function playLuckyWheel() {
+      // Win Rate 20% အောက် ထိန်းချုပ်ထားသော စနစ်
+      const isWin = Math.random() < 0.20;
+      if (isWin) {
+        const reward = 0.005;
+        const nBal = Number((currentBalance + reward).toFixed(4));
+        await updateBalanceInDB(nBal);
+        showAlert("🎡 Lucky Spin!", `ဂုဏ်ယူပါသည်! Spin Wheel မှ +$${reward} USDT ကံထူးသွားပါသည်!`);
+      } else {
+        showAlert("🎡 Lucky Spin", "နောက်တစ်ကြိမ်တွင် ထပ်မံကံစမ်းပါခင်ဗျာ!");
+      }
+    }
+
+    // --- ADS & TASKS LOGIC ---
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       if (!IS_ADMIN && config.bot_status === 'OFF') {
@@ -748,7 +1027,6 @@
       }
 
       if (isShowingAd) return;
-
       const btn = document.getElementById("btn-watch-ad");
 
       if (!AdController) {
@@ -775,11 +1053,7 @@
       }).catch((result) => {
         isShowingAd = false;
         btn.innerText = IS_ADMIN ? "⚡ Ads ကြည့်မည် (Admin)" : "⚡ Ads ကြည့်မည်";
-        if (result?.error) {
-          showAlert("ကြော်ငြာမရှိသေးပါ", "Adsgram စနစ်က အတည်ပြုနေဆဲ (In moderation) ဖြစ်၍ ခေတ္တစောင့်ဆိုင်းပေးပါခင်ဗျာ။");
-        } else {
-          showAlert("သတိပေးချက်", "ဆုကြေးရရှိရန် ကြော်ငြာဗီဒီယိုကို အဆုံးထိ ကြည့်ရှုပေးရပါမည်။");
-        }
+        showAlert("သတိပေးချက်", "ကြော်ငြာ မတက်သေးပါ (သို့မဟုတ် စနစ်မှ စစ်ဆေးနေဆဲ ဖြစ်ပါသည်)။");
       });
     });
 
