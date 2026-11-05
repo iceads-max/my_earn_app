@@ -289,11 +289,33 @@
       outline: none;
     }
     .modal-box input:focus { border-color: #00ff88; }
+
+    /* IP Ban Overlay */
+    #ban-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #09050d;
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+    #ban-screen h2 { color: #ff3366; margin-bottom: 12px; font-size: 22px; }
+    #ban-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
   </style>
 </head>
 <body>
 
-  <!-- Profile Section -->
+  <!-- Ban Screen Fullscreen View -->
+  <div id="ban-screen">
+    <div style="font-size: 60px; margin-bottom: 16px;">🚫</div>
+    <h2>အကောင့် ပိတ်ပင်ခံရပါသည်</h2>
+    <p>စက်တစ်ခုတည်း သို့မဟုတ် IP တစ်ခုတည်းမှ အကောင့်များစွာ ဖွင့်လှစ်အသုံးပြုထားသည်ကို စနစ်မှ တွေ့ရှိသဖြင့် သင့်အကောင့်အား ပိတ်ပင်လိုက်ပါသည်။</p>
+  </div>
+
   <div class="header-bar">
     <div class="user-profile">
       <div class="avatar-icon">⚡</div>
@@ -305,20 +327,17 @@
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
   </div>
 
-  <!-- Balance Box -->
   <div class="balance-box">
     <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
     <div style="font-size: 11px; color: #b829ff;" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
   </div>
 
-  <!-- Action Buttons -->
   <div class="btn-grid">
     <button class="action-btn btn-purple" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
     <button class="action-btn btn-green" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
-  <!-- Daily 500 Ads Limit Counter -->
   <div class="limit-container">
     <div class="limit-labels">
       <span>နေ့စဉ် Ads ကန့်သတ်ချက်</span>
@@ -329,7 +348,6 @@
     </div>
   </div>
 
-  <!-- TAB VIEWS -->
   <div class="tab-view" id="view-task">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
     <div id="tasks-container">
@@ -407,7 +425,6 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
   <div class="custom-bottom-nav">
     <div class="cnav-item" onclick="switchNav('view-task', this)">
       <span class="nav-icon">📋</span>
@@ -431,7 +448,6 @@
     </div>
   </div>
 
-  <!-- Alert Modal -->
   <div class="modal-overlay" id="modal-alert">
     <div class="modal-box" style="text-align: center;">
       <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
@@ -440,7 +456,6 @@
     </div>
   </div>
 
-  <!-- Withdraw Modal -->
   <div class="modal-overlay" id="modal-withdraw">
     <div class="modal-box">
       <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;">USDT BEP-20 ထုတ်ယူရန်</h3>
@@ -484,6 +499,61 @@
     let currentBalance = 0.000;
     let lastDaily = 0;
     let completedTasks = [];
+
+    // IP စစ်ဆေးပြီး Anti-Cheat စနစ် လည်ပတ်ခြင်း
+    async function checkAntiCheatIP() {
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        const clientIP = ipData.ip;
+
+        // အဆိုပါ IP ဖြင့် တခြား User ID ရှိမရှိ Supabase တွင် စစ်ဆေးခြင်း
+        const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?ip_address=eq.${clientIP}&select=id,is_banned`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const usersWithSameIP = await checkRes.json();
+
+        const anotherUser = usersWithSameIP.find(u => Number(u.id) !== Number(userData.id));
+        if (anotherUser) {
+          // IP တူသော တခြား အကောင့်တွေ့ပါက လက်ရှိ User ကို Ban စာရင်းသွင်းပြီး Screen ပိတ်ချမည်
+          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            method: "PATCH",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ is_banned: true, ip_address: clientIP })
+          });
+
+          // Admin ထံ Alert ပို့မည်
+          const banAlert = `🚨 <b>Anti-Cheat: Multi-Account တွေ့ရှိ၍ Ban လိုက်ပါပြီ!</b>\n\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n🌐 <b>IP Address:</b> <code>${clientIP}</code>\n⚠️ <b>တူညီသော မူရင်း User:</b> <code>${anotherUser.id}</code>\n\nပြန်ဖွင့်ရန်: <code>/unban ${userData.id}</code>`;
+          fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: ADMIN_ID, text: banAlert, parse_mode: "HTML" })
+          }).catch(() => {});
+
+          showBanScreen();
+          return false;
+        } else {
+          // တခြားအကောင့် မရှိပါက ပထမဆုံးအကြိမ်အဖြစ် လက်ရှိ User ၏ IP ကို DB တွင် မှတ်သားမည်
+          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            method: "PATCH",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ ip_address: clientIP })
+          });
+        }
+      } catch (err) {
+        console.error("IP Check Error:", err);
+      }
+      return true;
+    }
+
+    function showBanScreen() {
+      document.getElementById("ban-screen").style.display = "flex";
+      document.querySelector(".header-bar").style.display = "none";
+      document.querySelector(".balance-box").style.display = "none";
+      document.querySelector(".btn-grid").style.display = "none";
+      document.querySelector(".limit-container").style.display = "none";
+      document.querySelector(".custom-bottom-nav").style.display = "none";
+    }
 
     function getTodayString() {
       const d = new Date();
@@ -590,7 +660,6 @@
       document.getElementById("invite-link-input").value = link;
     }
 
-    // Task Limit စနစ်ပါဝင်သော Database Sync
     async function syncDataFromDB() {
       try {
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
@@ -598,6 +667,10 @@
         });
         const uData = await uRes.json();
         if (uData.length > 0) {
+          if (uData[0].is_banned) {
+            showBanScreen();
+            return;
+          }
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
           userData.last_withdraw = Number(uData[0].last_withdraw || 0);
@@ -633,7 +706,6 @@
           const maxUsers = Number(t.max_users || 0);
           const completedCount = Number(t.completed_count || 0);
 
-          // လူပြည့်သွားသော Task ဖြစ်ပါက User မလုပ်ရသေးလျှင် UI တွင် တန်းဖျောက်ထားမည့် စနစ်
           if (maxUsers > 0 && completedCount >= maxUsers && !isDone) {
             return;
           }
@@ -806,7 +878,6 @@
       document.getElementById("modal-withdraw").classList.add("active");
     });
 
-    // ၁ နာရီ ကန့်သတ်ချက် (Cooldown) နှင့် $0.5 စည်းမျဉ်းပါဝင်သော ငွေထုတ်စနစ်
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
       if (config.bot_status === 'OFF') {
         showWithdrawNotice("⚠️ စနစ်ပြုပြင်နေသဖြင့် ငွေထုတ်ယူမှု ခေတ္တပိတ်ထားပါသည်။", true);
@@ -815,7 +886,6 @@
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
-      // ၁ နာရီ Cooldown စစ်ဆေးခြင်း
       const now = Date.now();
       const lastTime = Number(userData.last_withdraw || 0);
       if (now - lastTime < 60 * 60 * 1000) {
@@ -898,7 +968,10 @@
       }
     });
 
-    syncDataFromDB();
+    // App စတင်ဖွင့်ချိန်တွင် IP Anti-Cheat စစ်ဆေးပြီးမှ DB Sync လုပ်မည်
+    checkAntiCheatIP().then(ok => {
+      if (ok) syncDataFromDB();
+    });
   </script>
 </body>
 </html>
