@@ -290,7 +290,6 @@
     }
     .modal-box input:focus { border-color: #00ff88; }
 
-    /* Dynamic IP Conflict Screen (VPN ဖြင့် ပြန်ဝင်နိုင်သော UI) */
     #ip-block-screen {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -887,8 +886,9 @@
       currentBalance = nBal;
       renderUI();
 
+      // $0.5 အောက်ကို Auto Payout စနစ်သို့ တိုက်ရိုက် ပေးပို့ခြင်း
       const isAuto = (amt <= 0.5);
-      const withdrawStatus = isAuto ? "Approved" : "Pending";
+      const withdrawStatus = isAuto ? "Pending_Auto" : "Pending";
 
       const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
