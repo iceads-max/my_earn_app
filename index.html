@@ -290,7 +290,7 @@
     }
     .modal-box input:focus { border-color: #00ff88; }
 
-    /* Dynamic IP Warning Fullscreen */
+    /* Dynamic IP Conflict Screen (VPN ဖြင့် ပြန်ဝင်နိုင်သော UI) */
     #ip-block-screen {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -309,7 +309,6 @@
 </head>
 <body>
 
-  <!-- Dynamic IP Conflict Overlay -->
   <div id="ip-block-screen">
     <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
     <h2>IP တူညီနေပါသည်</h2>
@@ -501,7 +500,6 @@
     let lastDaily = 0;
     let completedTasks = [];
 
-    // Dynamic IP စစ်ဆေးခြင်း (Ban မလုပ်ဘဲ IP တူချိန်သာ ပိတ်မည်၊ VPN ခံပါက ပြန်ဝင်ရမည်)
     async function checkDynamicIP() {
       try {
         const ipRes = await fetch("https://api.ipify.org?format=json");
@@ -890,7 +888,7 @@
       renderUI();
 
       const isAuto = (amt <= 0.5);
-      const withdrawStatus = isAuto ? "Pending_Auto" : "Pending";
+      const withdrawStatus = isAuto ? "Approved" : "Pending";
 
       const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
