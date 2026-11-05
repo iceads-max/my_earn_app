@@ -3,452 +3,952 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Cyber Earn</title>
   
-  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Supabase Client SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Original Adsgram SDK -->
-  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <!-- Monetag Ad Tag SDK (Zone: 12199733) -->
+  <script src="//libtl.com/sdk.js" data-zone="12199733" data-sdk="show_12199733"></script>
 
   <style>
-    :root {
-      --bg: #0d061a;
-      --card-bg: #150d2a;
-      --card-border: #2c1a52;
-      --accent-purple: #9b51e0;
-      --accent-green: #00e676;
-      --text: #ffffff;
-      --text-muted: #8b80a8;
-      --danger: #ff4757;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px 14px 85px; user-select: none; }
-    
-    .app-container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
+    body {
+      background-color: #0b0713 !important;
+      background-image: radial-gradient(circle at 0% 0%, rgba(184, 41, 255, 0.22) 0%, transparent 55%),
+                        radial-gradient(circle at 100% 100%, rgba(0, 255, 136, 0.16) 0%, transparent 55%) !important;
+      color: #ffffff !important;
+      padding: 16px;
+      padding-bottom: 95px;
+      min-height: 100vh;
+    }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #b829ff, #00ff88);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 16px rgba(184, 41, 255, 0.45);
+    }
+    .status-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 10px;
+      background: rgba(0, 255, 136, 0.12);
+      border: 1px solid #00ff88;
+      color: #00ff88;
+    }
+    .balance-box {
+      background: #140d21 !important;
+      border: 1px solid #2f1c4e !important;
+      border-radius: 20px;
+      padding: 22px 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    }
+    .balance-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #b829ff, #00ff88);
+    }
+    .balance-title {
+      font-size: 11px;
+      color: #9c8eaf;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .balance-val {
+      font-size: 38px;
+      font-weight: 900;
+      color: #00ff88 !important;
+      margin: 6px 0;
+      font-family: monospace;
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.45);
+    }
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .action-btn {
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .action-btn:active:not(:disabled) { transform: scale(0.96); }
+    .btn-purple {
+      background: linear-gradient(135deg, #8712c9, #b829ff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 18px rgba(184, 41, 255, 0.4) !important;
+    }
+    .btn-green {
+      background: linear-gradient(135deg, #009952, #00ff88) !important;
+      color: #07120a !important;
+      box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4) !important;
+    }
+    .btn-disabled-limit {
+      background: #231936 !important;
+      color: #665a7d !important;
+      border: 1px solid #3d2b59 !important;
+      box-shadow: none !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+    }
 
-    /* Top User Header */
-    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .user-profile { display: flex; align-items: center; gap: 12px; }
-    .avatar-box { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #00f2fe, #4facfe); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(0, 242, 254, 0.4); }
-    .avatar-box span { font-size: 22px; color: #ffeb3b; }
-    .user-meta-name { font-weight: 700; font-size: 15px; color: #fff; }
-    .user-meta-id { font-size: 12px; color: var(--text-muted); }
-    .badge-online { border: 1px solid var(--accent-green); color: var(--accent-green); background: rgba(0, 230, 118, 0.08); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; }
+    .limit-container {
+      background: rgba(184, 41, 255, 0.08);
+      border: 1px solid rgba(184, 41, 255, 0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .limit-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: #9c8eaf;
+    }
+    .limit-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #09050d;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .limit-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #b829ff, #00ff88);
+      transition: width 0.3s ease;
+    }
 
-    /* Balance Card */
-    .balance-box { background: radial-gradient(circle at top, #1e113b 0%, #120824 100%); border: 1.5px solid var(--card-border); border-radius: 20px; padding: 22px; text-align: center; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    .balance-box::before { content: ""; position: absolute; top: -1px; left: 15%; width: 70%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent-green), transparent); }
-    .balance-title { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
-    .balance-val { font-size: 40px; font-weight: 900; color: var(--accent-green); text-shadow: 0 0 20px rgba(0, 230, 118, 0.4); margin-bottom: 6px; }
-    .balance-rate { font-size: 12px; color: #d18bf5; }
+    .card-item {
+      background: #140d21 !important;
+      border: 1px solid #2f1c4e !important;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-item h4 {
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    .card-item p {
+      font-size: 11px;
+      color: #9c8eaf;
+    }
+    .btn-sub {
+      background: rgba(184, 41, 255, 0.12) !important;
+      border: 1px solid #b829ff !important;
+      color: #b829ff !important;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-sub:disabled {
+      border-color: #2b203d !important;
+      color: #5d536e !important;
+      background: transparent !important;
+      cursor: not-allowed;
+    }
 
-    /* Action Buttons (Ads ကြည့်မည် / Withdraw) */
-    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .btn-watch-primary { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: #fff; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35); }
-    .btn-withdraw-primary { background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%); color: #000; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(0, 230, 118, 0.3); }
-    .btn-watch-primary:active, .btn-withdraw-primary:active { transform: scale(0.97); }
+    .tab-view { display: none; }
+    .tab-view.active-view { display: block; }
 
-    /* Daily Limit Progress */
-    .limit-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px 16px; }
-    .limit-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
-    .limit-lbl { color: #fff; }
-    .limit-count { color: var(--accent-green); }
-    .progress-track { width: 100%; height: 6px; background: #080312; border-radius: 10px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-green)); border-radius: 10px; transition: width 0.3s ease; }
+    .invite-box {
+      background: #140d21;
+      border: 1px solid #2f1c4e;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+    .invite-input-wrap {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .invite-input {
+      flex: 1;
+      padding: 11px;
+      background: #09050d;
+      border: 1px solid #2f1c4e;
+      border-radius: 10px;
+      color: #ddd;
+      font-size: 12px;
+      outline: none;
+      font-family: monospace;
+    }
 
-    /* Daily Bonus & Quick Earn Rows */
-    .earn-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
-    .earn-info-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-    .earn-info-sub { font-size: 12px; color: var(--text-muted); }
-    .btn-pill { border: 1.5px solid var(--accent-purple); background: transparent; color: #fff; border-radius: 20px; padding: 8px 22px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .btn-pill:active { background: rgba(155, 81, 224, 0.2); }
+    .custom-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 74px;
+      background: #100a1b !important;
+      border-top: 1px solid #2b1a45 !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 999;
+      padding: 0 4px;
+      box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.85);
+    }
+    .cnav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: #9c8eaf;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+    .cnav-item .nav-icon { font-size: 20px; line-height: 1; }
+    .cnav-item.active { color: #00ff88 !important; }
+    .cnav-item.active .nav-icon { filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.7)); }
+    .cnav-item.center-home.active { color: #b829ff !important; }
+    .cnav-item.center-home.active .nav-icon { filter: drop-shadow(0 0 8px rgba(184, 41, 255, 0.8)); }
 
-    /* Navigation Sections Container */
-    .tab-section { display: none; width: 100%; }
-    .tab-section.active-section { display: flex; flex-direction: column; gap: 14px; }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      opacity: 0; visibility: hidden;
+      transition: all 0.2s ease;
+      padding: 20px;
+      backdrop-filter: blur(6px);
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-box {
+      background: #170e24;
+      border: 1px solid #b829ff;
+      border-radius: 20px;
+      padding: 22px;
+      width: 100%; max-width: 350px;
+    }
+    .modal-box input {
+      width: 100%;
+      padding: 12px;
+      background: #09050d;
+      border: 1px solid #2f1c4e;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      margin: 6px 0 14px;
+      outline: none;
+    }
+    .modal-box input:focus { border-color: #00ff88; }
 
-    /* Bottom Navigation Bar */
-    .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 68px; background: #0b0517; border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-    .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; cursor: pointer; text-decoration: none; }
-    .nav-tab.active { color: #d18bf5; font-weight: 700; }
-    .nav-icon { font-size: 20px; }
-
-    /* Custom Popup Overlays */
-    .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 999999; padding: 20px; }
-    .popup-sheet { background: #180e33; border: 1px solid var(--accent-purple); border-radius: 18px; width: 100%; max-width: 350px; padding: 22px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .popup-sheet-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: #fff; }
-    .popup-sheet-msg { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 18px; word-break: break-all; }
-    .popup-sheet-btn { background: var(--accent-green); color: #000; font-weight: 800; border: none; border-radius: 10px; padding: 12px 24px; cursor: pointer; width: 100%; }
-    .input-ctrl { width: 100%; background: #0c051a; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; color: #fff; margin-bottom: 12px; font-size: 13px; outline: none; }
-    .input-ctrl:focus { border-color: var(--accent-green); }
+    #ban-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #09050d;
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+    #ban-screen h2 { color: #ff3366; margin-bottom: 12px; font-size: 22px; }
+    #ban-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
   </style>
 </head>
 <body>
 
-  <div class="app-container">
-
-    <!-- Top Header -->
-    <div class="top-header">
-      <div class="user-profile">
-        <div class="avatar-box"><span>⚡</span></div>
-        <div>
-          <div class="user-meta-name" id="u-name">Cyber Player</div>
-          <div class="user-meta-id" id="u-id">ID: ...</div>
-        </div>
-      </div>
-      <div class="badge-online">ONLINE</div>
-    </div>
-
-    <!-- HOME TAB -->
-    <div class="tab-section active-section" id="section-home">
-      <!-- Balance Card -->
-      <div class="balance-box">
-        <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
-        <div class="balance-val">$<span id="bal-val">0.0000</span></div>
-        <div class="balance-rate">ဆုကြေး: $<span id="cfg-reward">0.003</span> / Ad</div>
-      </div>
-
-      <!-- Action Row -->
-      <div class="action-row">
-        <button class="btn-watch-primary" id="btn-watch-ad">
-          <span>⚡ Ads ကြည့်မည်</span>
-        </button>
-        <button class="btn-withdraw-primary" id="btn-withdraw-modal">
-          <span>💳 Withdraw</span>
-        </button>
-      </div>
-
-      <!-- Daily Limit Progress -->
-      <div class="limit-card">
-        <div class="limit-header">
-          <span class="limit-lbl">နေ့စဉ် Ads ကန့်သတ်ချက်</span>
-          <span class="limit-count"><span id="st-watched">0</span> / 500 Ads</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progress-bar"></div>
-        </div>
-      </div>
-
-      <!-- Daily Bonus Row -->
-      <div class="earn-row">
-        <div>
-          <div class="earn-info-title">Daily Bonus</div>
-          <div class="earn-info-sub">၂၄ နာရီတစ်ကြိမ် ရယူပါ</div>
-        </div>
-        <button class="btn-pill" id="btn-daily-bonus">Claim</button>
-      </div>
-
-      <!-- Ads Quick Earn Row -->
-      <div class="earn-row">
-        <div>
-          <div class="earn-info-title">Ads Quick Earn</div>
-          <div class="earn-info-sub" style="color: var(--accent-green);">တကယ့်ဗီဒီယိုကြော်ငြာ ကြည့်၍ ဆုကြေးယူပါ</div>
-        </div>
-        <button class="btn-pill" id="btn-quick-ad">Watch</button>
-      </div>
-    </div>
-
-    <!-- TASK TAB -->
-    <div class="tab-section" id="section-task">
-      <div class="earn-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
-        <div class="earn-info-title" style="color: var(--accent-green);">📋 Official Tasks</div>
-        <div style="font-size: 13px; color: var(--text-muted);">Official Telegram Channel သို့ Join ပြီး ဆုကြေးရယူပါ</div>
-        <button class="btn-watch-primary" style="width: 100%;" onclick="openChannel()">Join Channel (+ $0.005)</button>
-      </div>
-    </div>
-
-    <!-- GAME TAB -->
-    <div class="tab-section" id="section-game">
-      <div class="earn-row" style="flex-direction: column; text-align: center; gap: 12px; padding: 30px 16px;">
-        <div style="font-size: 32px;">🎮</div>
-        <div class="earn-info-title">Cyber Arena PvP Game</div>
-        <div style="font-size: 13px; color: var(--text-muted);">အရောင်ရွေးကစားပွဲကို လာမည့် Update တွင် ဖွင့်လှစ်ပေးပါမည်။</div>
-      </div>
-    </div>
-
-    <!-- INVITE TAB -->
-    <div class="tab-section" id="section-invite">
-      <div class="earn-row" style="flex-direction: column; gap: 14px; text-align: center; padding: 24px 16px;">
-        <div style="font-size: 32px;">👥</div>
-        <div class="earn-info-title">Invite Friends & Earn</div>
-        <div style="font-size: 13px; color: var(--text-muted);">သူငယ်ချင်းတစ်ဦးကို ဖိတ်ခေါ်တိုင်း ကော်မရှင်ဆုကြေး ရရှိမည် ဖြစ်ပါသည်။</div>
-        <button class="btn-watch-primary" style="width: 100%;" id="btn-copy-ref">🔗 Invite Link ကူးယူမည်</button>
-      </div>
-    </div>
-
-    <!-- PROFILE TAB -->
-    <div class="tab-section" id="section-profile">
-      <div class="earn-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-        <div class="earn-info-title">👤 Player Information</div>
-        <div style="font-size: 13px;">Name: <span id="prof-name" style="color: #fff;">Cyber Player</span></div>
-        <div style="font-size: 13px;">User ID: <span id="prof-id" style="color: #fff;">...</span></div>
-        <div style="font-size: 13px;">Network: <span style="color: var(--accent-green);">BSC (BEP-20)</span></div>
-      </div>
-    </div>
-
+  <div id="ban-screen">
+    <div style="font-size: 60px; margin-bottom: 16px;">🚫</div>
+    <h2>အကောင့် ပိတ်ပင်ခံရပါသည်</h2>
+    <p>စက်တစ်ခုတည်း သို့မဟုတ် IP တစ်ခုတည်းမှ အကောင့်များစွာ ဖွင့်လှစ်အသုံးပြုထားသည်ကို တွေ့ရှိသဖြင့် သင့်အကောင့်အား ပိတ်ပင်လိုက်ပါသည်။</p>
   </div>
 
-  <!-- Bottom Navigation Bar -->
-  <div class="nav-bar">
-    <div class="nav-tab" onclick="switchTab('task', this)">
-      <div class="nav-icon">📋</div>
-      <div>Task</div>
+  <div class="header-bar">
+    <div class="user-profile">
+      <div class="avatar-icon">⚡</div>
+      <div>
+        <h3 id="ui-username" style="font-size:15px; font-weight:800;">...</h3>
+        <p id="ui-userid" style="font-size: 11px; color: #9c8eaf; font-family: monospace;">ID: ...</p>
+      </div>
     </div>
-    <div class="nav-tab" onclick="switchTab('game', this)">
-      <div class="nav-icon">🎮</div>
-      <div>Game</div>
+    <div class="status-badge" id="bot-status-tag">ONLINE</div>
+  </div>
+
+  <div class="balance-box">
+    <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
+    <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
+    <div style="font-size: 11px; color: #b829ff;" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
+  </div>
+
+  <div class="btn-grid">
+    <button class="action-btn btn-purple" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
+    <button class="action-btn btn-green" id="btn-open-withdraw">💳 Withdraw</button>
+  </div>
+
+  <div class="limit-container">
+    <div class="limit-labels">
+      <span>နေ့စဉ် Ads ကန့်သတ်ချက်</span>
+      <span><strong id="ads-watched-count" style="color:#00ff88;">0</strong> / 500 Ads</span>
     </div>
-    <div class="nav-tab active" onclick="switchTab('home', this)">
-      <div class="nav-icon">🏠</div>
-      <div>Home</div>
-    </div>
-    <div class="nav-tab" onclick="switchTab('invite', this)">
-      <div class="nav-icon">👥</div>
-      <div>Invite</div>
-    </div>
-    <div class="nav-tab" onclick="switchTab('profile', this)">
-      <div class="nav-icon">👤</div>
-      <div>Profile</div>
+    <div class="limit-bar-bg">
+      <div class="limit-bar-fill" id="ads-progress-fill"></div>
     </div>
   </div>
 
-  <!-- Alert Modal -->
-  <div class="popup-overlay" id="popup-box">
-    <div class="popup-sheet">
-      <div class="popup-sheet-title" id="pop-title">သတိပေးချက်</div>
-      <div class="popup-sheet-msg" id="pop-msg">...</div>
-      <button class="popup-sheet-btn" id="pop-ok-btn">OK</button>
+  <div class="tab-view" id="view-task">
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
+    <div id="tasks-container">
+      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
     </div>
   </div>
 
-  <!-- Withdraw Modal -->
-  <div class="popup-overlay" id="withdraw-modal">
-    <div class="popup-sheet">
-      <div class="popup-sheet-title" style="color: var(--accent-green);">USDT BEP-20 ထုတ်ယူရန်</div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">$0.03 မှ $0.50 အထိ Auto စနစ်ဖြင့် တိုက်ရိုက် ထုတ်ပေးပါသည်</div>
-      <input type="text" class="input-ctrl" id="wd-address" placeholder="BEP-20 Address (0x...)">
-      <input type="number" step="0.001" class="input-ctrl" id="wd-amount" placeholder="ထုတ်ယူမည့်ပမာဏ (e.g. 0.05)">
-      <div style="display: flex; gap: 8px;">
-        <button class="popup-sheet-btn" style="background: #2c1a52; color: #fff; flex: 1;" id="wd-cancel-btn">ပယ်ဖျက်</button>
-        <button class="popup-sheet-btn" style="flex: 1;" id="wd-confirm-btn">ငွေထုတ်မည်</button>
+  <div class="tab-view" id="view-game">
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">🎮 Earning Games</div>
+    <div class="card-item">
+      <div>
+        <h4>Lucky Spin Wheel</h4>
+        <p>နေ့စဉ် ကံစမ်းပြီး ဒေါ်လာဆုများ ရယူပါ</p>
       </div>
+      <button class="btn-sub" onclick="showAlert('Lucky Spin', 'Lucky Spin Game ကို မကြာမီ ဖွင့်လှစ်ပေးပါမည်။')">Play</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <h4>Tap to Earn</h4>
+        <p>အမှတ်များ စုဆောင်း၍ USDT လဲလှယ်ပါ</p>
+      </div>
+      <button class="btn-sub" onclick="showAlert('Tap Game', 'Tap Game Module ကို မကြာမီ ထည့်သွင်းပေးပါမည်။')">Play</button>
+    </div>
+  </div>
+
+  <div class="tab-view active-view" id="view-home">
+    <div class="card-item">
+      <div>
+        <h4>Daily Bonus</h4>
+        <p id="daily-text">၂၄ နာရီတစ်ကြိမ် ရယူပါ</p>
+      </div>
+      <button class="btn-sub" id="btn-daily">Claim</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <h4>Ads Quick Earn</h4>
+        <p style="color:#00ff88;">တကယ့်ဗီဒီယိုကြော်ငြာ ကြည့်၍ ဆုကြေးယူပါ</p>
+      </div>
+      <button class="btn-sub" id="btn-home-quick-ad" style="border-color:#00ff88; color:#00ff88;" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
+    </div>
+  </div>
+
+  <div class="tab-view" id="view-invite">
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
+    <div class="card-item">
+      <div>
+        <h4>Invite Commission (<span id="ref-percent-text">20</span>%)</h4>
+        <p>သူငယ်ချင်းများ ကြည့်ရှုသည့် Ads မှ 20% ရရှိပါမည်</p>
+      </div>
+      <button class="btn-sub" id="btn-share">Share</button>
+    </div>
+
+    <div class="invite-box">
+      <div style="font-size:12px; color:#9c8eaf; font-weight:700;">သင်၏ Invite Link</div>
+      <div class="invite-input-wrap">
+        <input type="text" id="invite-link-input" class="invite-input" readonly>
+        <button class="action-btn btn-purple" style="padding: 0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-view" id="view-profile">
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
+    <div class="card-item" style="margin-bottom:14px;">
+      <div>
+        <h4 id="profile-name">...</h4>
+        <p id="profile-uid" style="font-family: monospace;">ID: ...</p>
+      </div>
+      <span style="font-size:11px; font-weight:800; color:#00ff88;">VERIFIED</span>
+    </div>
+
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
+    <div id="history-container">
+      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">မှတ်တမ်း ဆွဲယူနေပါသည်...</p>
+    </div>
+  </div>
+
+  <div class="custom-bottom-nav">
+    <div class="cnav-item" onclick="switchNav('view-task', this)">
+      <span class="nav-icon">📋</span>
+      <span>Task</span>
+    </div>
+    <div class="cnav-item" onclick="switchNav('view-game', this)">
+      <span class="nav-icon">🎮</span>
+      <span>Game</span>
+    </div>
+    <div class="cnav-item center-home active" onclick="switchNav('view-home', this)">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </div>
+    <div class="cnav-item" onclick="switchNav('view-invite', this)">
+      <span class="nav-icon">👥</span>
+      <span>Invite</span>
+    </div>
+    <div class="cnav-item" onclick="switchNav('view-profile', this); loadWithdrawHistory();">
+      <span class="nav-icon">👤</span>
+      <span>Profile</span>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-alert">
+    <div class="modal-box" style="text-align: center;">
+      <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
+      <p id="alert-msg" style="color: #9c8eaf; font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
+      <button class="action-btn btn-purple" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-withdraw">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;">USDT BEP-20 ထုတ်ယူရန်</h3>
+      <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
+      <div id="withdraw-msg-box" style="display: none; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 12px; font-weight: bold;"></div>
+
+      <label style="font-size: 11px; color: #9c8eaf;">ထုတ်ယူမည့် ပမာဏ ($)</label>
+      <input type="number" id="input-amount" step="0.001" placeholder="0.03">
+
+      <label style="font-size: 11px; color: #9c8eaf;">BEP-20 Wallet Address (0x...)</label>
+      <input type="text" id="input-wallet" placeholder="0x...">
+
+      <button class="action-btn btn-green" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
+      <button class="action-btn" style="width: 100%; background: #26193b; color: #9c8eaf; padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
     </div>
   </div>
 
   <script>
-    // Supabase Connection
-    const SUPABASE_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oaHpiZWF5ZmNjb2lxZXZ5ZGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2Mzg4NzYsImV4cCI6MjA2MjIxNDg3Nn0.7bWv8WkI-KzXpWbXW1iJ5o0V7xH7L9iJ0kK1lM2nO3p";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // Bot Configuration
-    const BOT_USERNAME = "CyberEarns_bot";
+    const SB_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
+    const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
+    const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
+    const BOT_USERNAME = "CyberEarns_bot";
+
     const MAX_DAILY_ADS = 500;
-    const OFFICIAL_CHANNEL = "https://t.me/Tonsarsar";
-    const ADSGRAM_BLOCK_ID = "58146";
 
-    let tg = window.Telegram?.WebApp;
-    if (tg) { tg.ready(); tg.expand(); }
+    const tg = window.Telegram?.WebApp;
+    if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
-    const user = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Cyber Player" };
-    const IS_ADMIN = (Number(user.id) === Number(ADMIN_ID));
+    const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
 
-    let currentBalance = 0.0000;
-    let config = { ad_reward: 0.003, min_withdraw: 0.03, daily_bonus: 0.005 };
+    let config = { bot_status: 'ON', ad_reward: 0.003, min_withdraw: 0.03, daily_bonus: 0.005, ref_percent: 20 };
+    let currentBalance = 0.000;
+    let lastDaily = 0;
+    let completedTasks = [];
 
-    // Adsgram Controller Init
-    let adController = null;
-    if (window.Adsgram) {
-      adController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
-    }
-
-    // Tab Switcher
-    function switchTab(tabName, elem) {
-      document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active-section'));
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      
-      const targetSec = document.getElementById(`section-${tabName}`);
-      if (targetSec) targetSec.classList.add('active-section');
-      if (elem) elem.classList.add('active');
-    }
-
-    // Modal Alert
-    function showAlert(title, msg) {
-      document.getElementById('pop-title').innerText = title;
-      document.getElementById('pop-msg').innerText = msg;
-      document.getElementById('popup-box').style.display = 'flex';
-    }
-    document.getElementById('pop-ok-btn').addEventListener('click', () => {
-      document.getElementById('popup-box').style.display = 'none';
-    });
-
-    // Local Daily Storage Counter
-    function getDailyAdCount() {
-      const today = new Date().toISOString().slice(0, 10);
-      const data = JSON.parse(localStorage.getItem(`ads_${user.id}`) || '{}');
-      return data.date === today ? (data.count || 0) : 0;
-    }
-    function updateProgressUI() {
-      const count = getDailyAdCount();
-      document.getElementById('st-watched').innerText = count;
-      const pct = Math.min((count / MAX_DAILY_ADS) * 100, 100);
-      document.getElementById('progress-bar').style.width = `${pct}%`;
-    }
-    function incrementDailyAdCount() {
-      const today = new Date().toISOString().slice(0, 10);
-      const count = getDailyAdCount() + 1;
-      localStorage.setItem(`ads_${user.id}`, JSON.stringify({ date: today, count }));
-      updateProgressUI();
-    }
-
-    // Initialize User Data
-    async function initUser() {
-      document.getElementById('u-name').innerText = user.first_name || "Cyber Player";
-      document.getElementById('u-id').innerText = `ID: ${user.id}`;
-      document.getElementById('prof-name').innerText = user.first_name || "Cyber Player";
-      document.getElementById('prof-id').innerText = user.id;
-      updateProgressUI();
-
+    async function checkAntiCheatIP() {
       try {
-        const { data: cfg } = await supabase.from('cyber_settings').select('*').limit(1).maybeSingle();
-        if (cfg) {
-          config.ad_reward = Number(cfg.ad_reward) || 0.003;
-          config.min_withdraw = Number(cfg.min_withdraw) || 0.03;
-          config.daily_bonus = Number(cfg.daily_bonus) || 0.005;
-          document.getElementById('cfg-reward').innerText = config.ad_reward;
-        }
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        const clientIP = ipData.ip;
 
-        const { data: uData } = await supabase.from('cyber_users').select('*').eq('user_id', user.id).maybeSingle();
-        if (uData) {
-          currentBalance = Number(uData.balance) || 0.0000;
-          document.getElementById('bal-val').innerText = currentBalance.toFixed(4);
+        const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?ip_address=eq.${clientIP}&select=id,is_banned`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const usersWithSameIP = await checkRes.json();
+
+        const anotherUser = usersWithSameIP.find(u => Number(u.id) !== Number(userData.id));
+        if (anotherUser) {
+          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            method: "PATCH",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ is_banned: true, ip_address: clientIP })
+          });
+
+          const banAlert = `🚨 <b>Anti-Cheat: Multi-Account တွေ့ရှိ၍ Ban လိုက်ပါပြီ!</b>\n\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n🌐 <b>IP Address:</b> <code>${clientIP}</code>\n⚠️ <b>တူညီသော မူရင်း User:</b> <code>${anotherUser.id}</code>\n\nပြန်ဖွင့်ရန်: <code>/unban ${userData.id}</code>`;
+          fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: ADMIN_ID, text: banAlert, parse_mode: "HTML" })
+          }).catch(() => {});
+
+          showBanScreen();
+          return false;
         } else {
-          await supabase.from('cyber_users').insert([{ user_id: user.id, username: user.username || '', first_name: user.first_name || '', balance: 0.0000 }]);
+          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            method: "PATCH",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ ip_address: clientIP })
+          });
         }
       } catch (err) {
-        console.error("Init Error:", err);
+        console.error("IP Check Error:", err);
+      }
+      return true;
+    }
+
+    function showBanScreen() {
+      document.getElementById("ban-screen").style.display = "flex";
+      document.querySelector(".header-bar").style.display = "none";
+      document.querySelector(".balance-box").style.display = "none";
+      document.querySelector(".btn-grid").style.display = "none";
+      document.querySelector(".limit-container").style.display = "none";
+      document.querySelector(".custom-bottom-nav").style.display = "none";
+    }
+
+    function getTodayString() {
+      const d = new Date();
+      return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+    }
+
+    function getDailyAdCount() {
+      const recordKey = `cyber_ads_${userData.id}_date`;
+      const countKey = `cyber_ads_${userData.id}_count`;
+      const savedDate = localStorage.getItem(recordKey);
+      const today = getTodayString();
+
+      if (savedDate !== today) {
+        localStorage.setItem(recordKey, today);
+        localStorage.setItem(countKey, "0");
+        return 0;
+      }
+      return parseInt(localStorage.getItem(countKey) || "0", 10);
+    }
+
+    function incrementDailyAdCount() {
+      const countKey = `cyber_ads_${userData.id}_count`;
+      const current = getDailyAdCount();
+      const updated = current + 1;
+      localStorage.setItem(countKey, updated.toString());
+      renderAdLimitUI(updated);
+      return updated;
+    }
+
+    function renderAdLimitUI(count) {
+      document.getElementById("ads-watched-count").innerText = count;
+      const pct = Math.min(100, Math.round((count / MAX_DAILY_ADS) * 100));
+      document.getElementById("ads-progress-fill").style.width = `${pct}%`;
+
+      const mainAdBtn = document.getElementById("btn-watch-ad");
+      const quickAdBtn = document.getElementById("btn-home-quick-ad");
+
+      if (count >= MAX_DAILY_ADS) {
+        mainAdBtn.disabled = true;
+        mainAdBtn.classList.remove("btn-purple");
+        mainAdBtn.classList.add("btn-disabled-limit");
+        mainAdBtn.innerText = "🛑 Ads Limit ပြည့်ပါပြီ (500/500)";
+
+        if (quickAdBtn) {
+          quickAdBtn.disabled = true;
+          quickAdBtn.innerText = "Limit Reached";
+          quickAdBtn.style.color = "#5d536e";
+          quickAdBtn.style.borderColor = "#2b203d";
+        }
+      } else {
+        mainAdBtn.disabled = false;
+        mainAdBtn.classList.add("btn-purple");
+        mainAdBtn.classList.remove("btn-disabled-limit");
+        mainAdBtn.innerText = "⚡ Ads ကြည့်မည်";
+
+        if (quickAdBtn) {
+          quickAdBtn.disabled = false;
+          quickAdBtn.innerText = "Watch";
+          quickAdBtn.style.color = "#00ff88";
+          quickAdBtn.style.borderColor = "#00ff88";
+        }
       }
     }
 
-    async function updateBalanceInDB(nBal) {
-      currentBalance = nBal;
-      document.getElementById('bal-val').innerText = currentBalance.toFixed(4);
-      await supabase.from('cyber_users').update({ balance: nBal }).eq('user_id', user.id);
+    function switchNav(viewId, el) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
+      document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active-view');
+      if (el) el.classList.add('active');
     }
 
-    // Original Adsgram Trigger
-    function handleWatchAd() {
-      const watched = getDailyAdCount();
-      if (!IS_ADMIN && watched >= MAX_DAILY_ADS) {
-        showAlert("သတိပေးချက်", `ယနေ့အတွက် Ads ${MAX_DAILY_ADS} ကြိမ် ပြည့်သွားပါပြီ။`);
-        return;
-      }
+    function showAlert(title, msg) {
+      document.getElementById("alert-title").innerText = title;
+      document.getElementById("alert-msg").innerText = msg;
+      document.getElementById("modal-alert").classList.add("active");
+    }
 
-      if (adController) {
-        adController.show().then((result) => {
-          incrementDailyAdCount();
-          const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
-          updateBalanceInDB(nBal);
-          showAlert("🎉 အောင်မြင်ပါသည်", `ကြော်ငြာကြည့်ရှုမှုအတွက် +$${config.ad_reward} USDT ရရှိပါသည်!`);
-        }).catch((err) => {
-          console.error("Adsgram Error:", err);
-          showAlert("Adsgram Error", err?.description || "ကြော်ငြာဖွင့်၍ မရသေးပါခင်ဗျာ။");
+    document.getElementById("alert-ok-btn").addEventListener("click", () => document.getElementById("modal-alert").classList.remove("active"));
+    document.getElementById("btn-close-withdraw").addEventListener("click", () => document.getElementById("modal-withdraw").classList.remove("active"));
+
+    function showWithdrawNotice(text, isError = true) {
+      const box = document.getElementById("withdraw-msg-box");
+      box.style.display = "block";
+      box.innerText = text;
+      box.style.background = isError ? "rgba(255, 51, 102, 0.15)" : "rgba(0, 255, 136, 0.15)";
+      box.style.color = isError ? "#ff3366" : "#00ff88";
+      box.style.border = isError ? "1px solid #ff3366" : "1px solid #00ff88";
+    }
+
+    function renderUI() {
+      document.getElementById("ui-username").innerText = userData.first_name;
+      document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
+      document.getElementById("profile-name").innerText = userData.first_name;
+      document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
+      document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+      document.getElementById("ui-rate-info").innerText = `ဆုကြေး: $${config.ad_reward} / Ad`;
+      document.getElementById("withdraw-hint").innerText = `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
+      document.getElementById("daily-text").innerText = `၂၄ နာရီတစ်ကြိမ် $${config.daily_bonus} ရယူပါ`;
+      document.getElementById("ref-percent-text").innerText = config.ref_percent;
+
+      renderAdLimitUI(getDailyAdCount());
+
+      const link = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
+      document.getElementById("invite-link-input").value = link;
+    }
+
+    async function syncDataFromDB() {
+      try {
+        const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
-      } else {
-        showAlert("ခေတ္တစောင့်ပါ", "Adsgram SDK ချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
+        const uData = await uRes.json();
+        if (uData.length > 0) {
+          if (uData[0].is_banned) {
+            showBanScreen();
+            return;
+          }
+          currentBalance = Number(uData[0].balance || 0);
+          lastDaily = Number(uData[0].last_daily || 0);
+          userData.last_withdraw = Number(uData[0].last_withdraw || 0);
+        }
+
+        const sRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const sData = await sRes.json();
+        sData.forEach(item => {
+          if (item.key === 'bot_status') config.bot_status = item.value;
+          if (item.key === 'ad_reward') config.ad_reward = Number(item.value);
+          if (item.key === 'min_withdraw') config.min_withdraw = Number(item.value);
+          if (item.key === 'daily_bonus') config.daily_bonus = Number(item.value);
+          if (item.key === 'ref_percent') config.ref_percent = Number(item.value);
+        });
+
+        const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const cData = await cRes.json();
+        completedTasks = cData.map(c => c.task_id);
+
+        const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const tasks = await tRes.json();
+        const container = document.getElementById("tasks-container");
+        container.innerHTML = "";
+
+        tasks.forEach(t => {
+          const isDone = completedTasks.includes(t.id);
+          const maxUsers = Number(t.max_users || 0);
+          const completedCount = Number(t.completed_count || 0);
+
+          if (maxUsers > 0 && completedCount >= maxUsers && !isDone) {
+            return;
+          }
+
+          const div = document.createElement("div");
+          div.className = "card-item";
+          div.innerHTML = `
+            <div>
+              <h4>${t.title}</h4>
+              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
+            </div>
+            <button class="btn-sub" id="task-btn-${t.id}" ${isDone ? "disabled" : ""}>
+              ${isDone ? "Done" : "Start"}
+            </button>
+          `;
+          container.appendChild(div);
+
+          if (!isDone) {
+            div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => handleDynamicTask(t));
+          }
+        });
+
+        renderUI();
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    // Event Listeners
-    document.getElementById("btn-watch-ad").addEventListener("click", handleWatchAd);
-    document.getElementById("btn-quick-ad").addEventListener("click", handleWatchAd);
+    async function updateBalanceInDB(newBal) {
+      currentBalance = newBal;
+      renderUI();
+      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        method: "PATCH",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ balance: newBal })
+      });
+    }
 
-    // Daily Bonus Button
-    document.getElementById("btn-daily-bonus").addEventListener("click", async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const lastClaim = localStorage.getItem(`bonus_${user.id}`);
-      if (lastClaim === today) {
-        showAlert("သတိပေးချက်", "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။ မနက်ဖြန်မှ ပြန်လာခဲ့ပါ။");
+    // Monetag Rewarded Ad Call Integration (Zone 12199733)
+    let isShowingAd = false;
+    document.getElementById("btn-watch-ad").addEventListener("click", () => {
+      if (config.bot_status === 'OFF') {
+        showAlert("ခေတ္တစောင့်ပါ", "စနစ်ပြုပြင်ထိန်းသိမ်းနေသဖြင့် Ads ခေတ္တပိတ်ထားပါသည်။");
         return;
       }
-      localStorage.setItem(`bonus_${user.id}`, today);
+
+      const watched = getDailyAdCount();
+      if (watched >= MAX_DAILY_ADS) {
+        showAlert("သတိပေးချက်", `ယနေ့အတွက် သတ်မှတ်ထားသော Ads ${MAX_DAILY_ADS} ကြိမ် ပြည့်သွားပါပြီ။ မနက်ဖြန်တွင် ထပ်မံကြည့်ရှုနိုင်ပါမည်။`);
+        return;
+      }
+
+      if (isShowingAd) return;
+
+      const btn = document.getElementById("btn-watch-ad");
+
+      if (typeof show_12199733 !== 'function') {
+        showAlert("ခေတ္တစောင့်ပါ", "Ads Network နှင့် ချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
+        return;
+      }
+
+      isShowingAd = true;
+      btn.innerText = "⏳ ကြော်ငြာဖွင့်နေသည်...";
+
+      show_12199733().then(() => {
+        isShowingAd = false;
+        btn.innerText = "⚡ Ads ကြည့်မည်";
+
+        const newCount = incrementDailyAdCount();
+        const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
+        updateBalanceInDB(nBal);
+
+        showAlert("🎉 အောင်မြင်ပါသည်", `ဗီဒီယိုကြော်ငြာ ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်! (ယနေ့ ကြည့်ပြီး: ${newCount}/${MAX_DAILY_ADS})`);
+      }).catch((err) => {
+        isShowingAd = false;
+        btn.innerText = "⚡ Ads ကြည့်မည်";
+        console.error("Monetag Ad Error:", err);
+        showAlert("သတိပေးချက်", "ကြော်ငြာ ရယူ၍ မရသေးပါခင်ဗျာ။ ခဏအကြာမှ ပြန်စမ်းပေးပါ။");
+      });
+    });
+
+    document.getElementById("btn-daily").addEventListener("click", async () => {
+      const now = Date.now();
+      if (now - lastDaily < 24 * 60 * 60 * 1000) {
+        showAlert("ခေတ္တစောင့်ပါ", "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။");
+        return;
+      }
       const nBal = Number((currentBalance + config.daily_bonus).toFixed(4));
-      await updateBalanceInDB(nBal);
-      showAlert("🎉 ဂုဏ်ယူပါသည်", `နေ့စဉ် Bonus +$${config.daily_bonus} USDT ရရှိပါသည်!`);
+      lastDaily = now;
+      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        method: "PATCH",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ balance: nBal, last_daily: now })
+      });
+      currentBalance = nBal;
+      renderUI();
+      showAlert("🎁 နေ့စဉ်ဆု", `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`);
     });
 
-    // Invite Link Copy
-    document.getElementById("btn-copy-ref").addEventListener("click", () => {
-      const link = `https://t.me/${BOT_USERNAME}?start=${user.id}`;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(link);
-        showAlert("🔗 Invite Link", `သင့် ဖိတ်ခေါ်လင့်ခ်ကို ကူးယူပြီးပါပြီ:\n\n${link}`);
-      } else {
-        showAlert("🔗 Invite Link", link);
-      }
-    });
+    function handleDynamicTask(task) {
+      if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
+      const b = document.getElementById(`task-btn-${task.id}`);
+      b.innerText = "စစ်ဆေးနေသည်...";
 
-    // Channel Task
-    function openChannel() {
-      if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(OFFICIAL_CHANNEL);
-      } else {
-        window.open(OFFICIAL_CHANNEL, '_blank');
+      setTimeout(async () => {
+        completedTasks.push(task.id);
+        const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
+        b.innerText = "Done";
+        b.disabled = true;
+
+        await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
+          method: "POST",
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userData.id, task_id: task.id })
+        });
+
+        const nextCount = Number(task.completed_count || 0) + 1;
+        await fetch(`${SB_URL}/rest/v1/cyber_tasks?id=eq.${task.id}`, {
+          method: "PATCH",
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ completed_count: nextCount })
+        });
+
+        updateBalanceInDB(nBal);
+        showAlert("✅ Task အောင်မြင်ပါသည်", `ဆုကြေး +$${Number(task.reward).toFixed(3)} ရရှိပါသည်!`);
+      }, 3500);
+    }
+
+    async function loadWithdrawHistory() {
+      const container = document.getElementById("history-container");
+      container.innerHTML = "<p style='font-size:12px; color:#9c8eaf;'>မှတ်တမ်း ဆွဲယူနေပါသည်...</p>";
+      try {
+        const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals?user_id=eq.${userData.id}&order=created_at.desc`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const list = await res.json();
+        if (list.length === 0) {
+          container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>ငွေထုတ်မှတ်တမ်း မရှိသေးပါ။</p>";
+          return;
+        }
+        container.innerHTML = "";
+        list.forEach(item => {
+          const isApp = (item.status === 'Approved');
+          const div = document.createElement("div");
+          div.className = "card-item";
+          div.innerHTML = `
+            <div>
+              <h4>$${item.amount} USDT</h4>
+              <p style="font-size:10px; color:#9c8eaf; font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
+            </div>
+            <span style="font-size:11px; font-weight:800; color: ${isApp ? '#00ff88' : '#b829ff'};">${item.status}</span>
+          `;
+          container.appendChild(div);
+        });
+      } catch (e) {
+        container.innerHTML = "<p style='font-size:12px; color:#ff3366;'>မှတ်တမ်းဆွဲယူ၍ မရပါ။</p>";
       }
     }
 
-    // Withdraw Controls
-    document.getElementById("btn-withdraw-modal").addEventListener("click", () => {
-      document.getElementById('withdraw-modal').style.display = 'flex';
-    });
-    document.getElementById("wd-cancel-btn").addEventListener("click", () => {
-      document.getElementById('withdraw-modal').style.display = 'none';
+    document.getElementById("btn-open-withdraw").addEventListener("click", () => {
+      document.getElementById("withdraw-msg-box").style.display = "none";
+      document.getElementById("input-amount").value = "";
+      document.getElementById("input-wallet").value = "";
+      document.getElementById("modal-withdraw").classList.add("active");
     });
 
-    // Withdraw Confirmation
-    document.getElementById("wd-confirm-btn").addEventListener("click", async () => {
-      const addr = document.getElementById('wd-address').value.trim();
-      const amt = Number(document.getElementById('wd-amount').value);
-
-      if (!addr.startsWith("0x") || addr.length !== 42) {
-        showAlert("မှားယွင်းမှု", "မှန်ကန်သော BEP-20 (0x...) Wallet Address ကို ထည့်ပေးပါ။");
+    document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
+      if (config.bot_status === 'OFF') {
+        showWithdrawNotice("⚠️ စနစ်ပြုပြင်နေသဖြင့် ငွေထုတ်ယူမှု ခေတ္တပိတ်ထားပါသည်။", true);
         return;
       }
-      if (amt < config.min_withdraw) {
-        showAlert("သတိပေးချက်", `အနည်းဆုံး ငွေထုတ်ယူခွင့်မှာ $${config.min_withdraw} ဖြစ်ပါသည်။`);
+      const amt = Number(document.getElementById("input-amount").value);
+      const addr = document.getElementById("input-wallet").value.trim();
+
+      const now = Date.now();
+      const lastTime = Number(userData.last_withdraw || 0);
+      if (now - lastTime < 60 * 60 * 1000) {
+        const remainingMinutes = Math.ceil((60 * 60 * 1000 - (now - lastTime)) / (60 * 1000));
+        showWithdrawNotice(`⚠️ ငွေထုတ်ယူမှုကို ၁ နာရီလျှင် ၁ ကြိမ်သာ ပြုလုပ်နိုင်ပါသည်။ (${remainingMinutes} မိနစ် စောင့်ဆိုင်းပါ)`, true);
+        return;
+      }
+
+      if (!amt || amt < config.min_withdraw) {
+        showWithdrawNotice(`⚠️ အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်ယူနိုင်ပါမည်။`, true);
         return;
       }
       if (amt > currentBalance) {
-        showAlert("လက်ကျန်ငွေမလုံလောက်ပါ", `သင့်လက်ကျန်ငွေမှာ $${currentBalance.toFixed(4)} သာ ရှိပါသည်။`);
+        showWithdrawNotice("⚠️ လက်ကျန်ငွေ မလုံလောက်ပါ။", true);
+        return;
+      }
+      if (!addr.startsWith("0x") || addr.length < 40) {
+        showWithdrawNotice("⚠️ မှန်ကန်သော BEP-20 (0x...) Address ထည့်ပါ။", true);
         return;
       }
 
-      const status = (amt <= 0.50) ? "Pending_Auto" : "Pending";
       const nBal = Number((currentBalance - amt).toFixed(4));
-      
-      await updateBalanceInDB(nBal);
-      await supabase.from('cyber_withdrawals').insert([{
-        user_id: user.id,
-        amount: amt,
-        wallet_address: addr,
-        status: status,
-        created_at: new Date().toISOString()
-      }]);
+      userData.last_withdraw = now;
 
-      document.getElementById('withdraw-modal').style.display = 'none';
-      if (status === "Pending_Auto") {
-        showAlert("✅ တောင်းဆိုမှု အောင်မြင်သည်", `$${amt} USDT ကို Auto စနစ်ဖြင့် Wallet သို့ လွှဲပြောင်းပေးနေပါပြီ။`);
+      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        method: "PATCH",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ balance: nBal, last_withdraw: now })
+      });
+      currentBalance = nBal;
+      renderUI();
+
+      const isAuto = (amt <= 0.5);
+      const withdrawStatus = isAuto ? "Pending_Auto" : "Pending";
+
+      const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
+        method: "POST",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" },
+        body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: withdrawStatus })
+      });
+      const data = await res.json();
+      const orderId = data[0]?.id || "New";
+
+      showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ စနစ်မှ စစ်ဆေးပြီး လွှဲပြောင်းပေးပါမည်။`, false);
+
+      if (!isAuto) {
+        const alertText = `🔔 <b>ငွေထုတ်တောင်းဆိုမှု အသစ် (Admin Approve လိုအပ်)!</b>\n\n🆔 <b>Order ID:</b> <code>${orderId}</code>\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n💰 <b>ပမာဏ:</b> <code>$${amt} USDT</code>\n🔗 <b>Address (BEP-20):</b>\n<code>${addr}</code>\n\n👉 အတည်ပြုရန်: <code>/approve ${orderId}</code>`;
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: ADMIN_ID, text: alertText, parse_mode: "HTML" })
+        }).catch(() => {});
+      }
+
+      document.getElementById("input-amount").value = "";
+      document.getElementById("input-wallet").value = "";
+      setTimeout(() => {
+        document.getElementById("modal-withdraw").classList.remove("active");
+      }, 2500);
+    });
+
+    document.getElementById("btn-copy-link").addEventListener("click", () => {
+      const link = document.getElementById("invite-link-input").value;
+      navigator.clipboard.writeText(link).then(() => {
+        showAlert("အောင်မြင်ပါသည်", "Invite Link ကို Copy ကူးယူပြီးပါပြီ!");
+      }).catch(() => {
+        showAlert("Invite Link", link);
+      });
+    });
+
+    document.getElementById("btn-share").addEventListener("click", () => {
+      const link = document.getElementById("invite-link-input").value;
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Cyber Earn မှာ Ads ကြည့်ပြီး USDT ဒေါ်လာတွေ အတူတူ ရှာဖွေကြစို့!")}`);
       } else {
-        showAlert("⏳ စောင့်ဆိုင်းဆဲ", `$${amt} USDT သည် ပမာဏများပြားသဖြင့် Admin စစ်ဆေးပြီးမှ လွှဲပြောင်းပေးပါမည်။`);
+        navigator.clipboard.writeText(link);
+        showAlert("Invite Link", link);
       }
     });
 
-    // Run Initialization
-    initUser();
+    checkAntiCheatIP().then(ok => {
+      if (ok) syncDataFromDB();
+    });
   </script>
 </body>
 </html>
