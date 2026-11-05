@@ -122,7 +122,6 @@
       color: #07120a !important;
       box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4) !important;
     }
-    /* Ads Limit ပြည့်ပါက ရပ်တန့်မည့် Style */
     .btn-disabled-limit {
       background: #231936 !important;
       color: #665a7d !important;
@@ -466,7 +465,6 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
-    // မူရင်း အမှန်ကန်ဆုံး Block ID
     const ADSGRAM_BLOCK_ID = "58116";
     const MAX_DAILY_ADS = 500;
 
@@ -517,7 +515,6 @@
       return updated;
     }
 
-    // Ads Limit 500 ပြည့်ပါက ခလုတ်ကိုပါ တစ်ခါတည်း ရပ်တန့် (Disable) သည့် စနစ်
     function renderAdLimitUI(count) {
       document.getElementById("ads-watched-count").innerText = count;
       const pct = Math.min(100, Math.round((count / MAX_DAILY_ADS) * 100));
@@ -595,6 +592,7 @@
       document.getElementById("invite-link-input").value = link;
     }
 
+    // Task Limit စနစ်ပါဝင်သော Database Sync Function
     async function syncDataFromDB() {
       try {
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
@@ -633,6 +631,14 @@
 
         tasks.forEach(t => {
           const isDone = completedTasks.includes(t.id);
+          const maxUsers = Number(t.max_users || 0);
+          const completedCount = Number(t.completed_count || 0);
+
+          // လူပြည့်သွားသော Task ဖြစ်ပါက User မလုပ်ရသေးလျှင် UI ပေါ်တွင် တန်းဖျောက်ထားမည့် စနစ်
+          if (maxUsers > 0 && completedCount >= maxUsers && !isDone) {
+            return;
+          }
+
           const div = document.createElement("div");
           div.className = "card-item";
           div.innerHTML = `
@@ -750,6 +756,14 @@
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({ user_id: userData.id, task_id: task.id })
         });
+
+        const nextCount = Number(task.completed_count || 0) + 1;
+        await fetch(`${SB_URL}/rest/v1/cyber_tasks?id=eq.${task.id}`, {
+          method: "PATCH",
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ completed_count: nextCount })
+        });
+
         updateBalanceInDB(nBal);
         showAlert("✅ Task အောင်မြင်ပါသည်", `ဆုကြေး +$${Number(task.reward).toFixed(3)} ရရှိပါသည်!`);
       }, 3500);
@@ -825,11 +839,11 @@
       const data = await res.json();
       const orderId = data[0]?.id || "New";
 
-      const alertText = `🔔 *ငွေထုတ်တောင်းဆိုမှု အသစ် ရရှိပါသည်!*\n\n🆔 *Order ID:* \`${orderId}\`\n👤 *User:* ${userData.first_name} (\`${userData.id}\`)\n💰 *ပမာဏ:* \`$${amt} USDT\`\n🔗 *Address (BEP-20):*\n\`${addr}\`\n\n👉 အတည်ပြုရန်: \`/approve ${orderId}\``;
+      const alertText = `🔔 <b>ငွေထုတ်တောင်းဆိုမှု အသစ် ရရှိပါသည်!</b>\n\n🆔 <b>Order ID:</b> <code>${orderId}</code>\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n💰 <b>ပမာဏ:</b> <code>$${amt} USDT</code>\n🔗 <b>Address (BEP-20):</b>\n<code>${addr}</code>\n\n👉 အတည်ပြုရန်: <code>/approve ${orderId}</code>`;
       fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: ADMIN_ID, text: alertText, parse_mode: "Markdown" })
+        body: JSON.stringify({ chat_id: ADMIN_ID, text: alertText, parse_mode: "HTML" })
       }).catch(() => {});
 
       showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Admin ဆီသို့ စာပို့လိုက်ပါပြီ။`, false);
