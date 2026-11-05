@@ -293,7 +293,7 @@
 </head>
 <body>
 
-  <!-- Top Header Profile -->
+  <!-- Profile Section -->
   <div class="header-bar">
     <div class="user-profile">
       <div class="avatar-icon">⚡</div>
@@ -305,7 +305,7 @@
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
   </div>
 
-  <!-- Balance Section -->
+  <!-- Balance Box -->
   <div class="balance-box">
     <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
@@ -318,7 +318,7 @@
     <button class="action-btn btn-green" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
-  <!-- Daily 500 Ads Limit Counter Display -->
+  <!-- Daily 500 Ads Limit Counter -->
   <div class="limit-container">
     <div class="limit-labels">
       <span>နေ့စဉ် Ads ကန့်သတ်ချက်</span>
@@ -329,7 +329,7 @@
     </div>
   </div>
 
-  <!-- 5 TAB VIEWS -->
+  <!-- TAB VIEWS -->
   <div class="tab-view" id="view-task">
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
     <div id="tasks-container">
@@ -407,7 +407,7 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation Buttons -->
+  <!-- Bottom Navigation -->
   <div class="custom-bottom-nav">
     <div class="cnav-item" onclick="switchNav('view-task', this)">
       <span class="nav-icon">📋</span>
@@ -478,9 +478,7 @@
       if (window.Adsgram) {
         AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
       }
-    } catch (e) {
-      console.error("Adsgram init error:", e);
-    }
+    } catch (e) {}
 
     let config = { bot_status: 'ON', ad_reward: 0.003, min_withdraw: 0.03, daily_bonus: 0.005, ref_percent: 20 };
     let currentBalance = 0.000;
@@ -592,7 +590,7 @@
       document.getElementById("invite-link-input").value = link;
     }
 
-    // Task Limit စနစ်ပါဝင်သော Database Sync Function
+    // Task Limit စနစ်ပါဝင်သော Database Sync
     async function syncDataFromDB() {
       try {
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
@@ -602,6 +600,7 @@
         if (uData.length > 0) {
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
+          userData.last_withdraw = Number(uData[0].last_withdraw || 0);
         }
 
         const sRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
@@ -634,7 +633,7 @@
           const maxUsers = Number(t.max_users || 0);
           const completedCount = Number(t.completed_count || 0);
 
-          // လူပြည့်သွားသော Task ဖြစ်ပါက User မလုပ်ရသေးလျှင် UI ပေါ်တွင် တန်းဖျောက်ထားမည့် စနစ်
+          // လူပြည့်သွားသော Task ဖြစ်ပါက User မလုပ်ရသေးလျှင် UI တွင် တန်းဖျောက်ထားမည့် စနစ်
           if (maxUsers > 0 && completedCount >= maxUsers && !isDone) {
             return;
           }
@@ -807,6 +806,7 @@
       document.getElementById("modal-withdraw").classList.add("active");
     });
 
+    // ၁ နာရီ ကန့်သတ်ချက် (Cooldown) နှင့် $0.5 စည်းမျဉ်းပါဝင်သော ငွေထုတ်စနစ်
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
       if (config.bot_status === 'OFF') {
         showWithdrawNotice("⚠️ စနစ်ပြုပြင်နေသဖြင့် ငွေထုတ်ယူမှု ခေတ္တပိတ်ထားပါသည်။", true);
@@ -814,6 +814,15 @@
       }
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
+
+      // ၁ နာရီ Cooldown စစ်ဆေးခြင်း
+      const now = Date.now();
+      const lastTime = Number(userData.last_withdraw || 0);
+      if (now - lastTime < 60 * 60 * 1000) {
+        const remainingMinutes = Math.ceil((60 * 60 * 1000 - (now - lastTime)) / (60 * 1000));
+        showWithdrawNotice(`⚠️ ငွေထုတ်ယူမှုကို ၁ နာရီလျှင် ၁ ကြိမ်သာ ပြုလုပ်နိုင်ပါသည်။ (${remainingMinutes} မိနစ် စောင့်ဆိုင်းပါ)`, true);
+        return;
+      }
 
       if (!amt || amt < config.min_withdraw) {
         showWithdrawNotice(`⚠️ အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်ယူနိုင်ပါမည်။`, true);
@@ -829,27 +838,42 @@
       }
 
       const nBal = Number((currentBalance - amt).toFixed(4));
-      updateBalanceInDB(nBal);
+      userData.last_withdraw = now;
+
+      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        method: "PATCH",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ balance: nBal, last_withdraw: now })
+      });
+      currentBalance = nBal;
+      renderUI();
+
+      const isAuto = (amt <= 0.5);
+      const withdrawStatus = isAuto ? "Approved" : "Pending";
 
       const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" },
-        body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: "Pending" })
+        body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: withdrawStatus })
       });
       const data = await res.json();
       const orderId = data[0]?.id || "New";
 
-      const alertText = `🔔 <b>ငွေထုတ်တောင်းဆိုမှု အသစ် ရရှိပါသည်!</b>\n\n🆔 <b>Order ID:</b> <code>${orderId}</code>\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n💰 <b>ပမာဏ:</b> <code>$${amt} USDT</code>\n🔗 <b>Address (BEP-20):</b>\n<code>${addr}</code>\n\n👉 အတည်ပြုရန်: <code>/approve ${orderId}</code>`;
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: ADMIN_ID, text: alertText, parse_mode: "HTML" })
-      }).catch(() => {});
+      if (isAuto) {
+        showWithdrawNotice(`⚡ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ ပမာဏ $0.5 အောက်ဖြစ်သဖြင့် အလိုအလျောက် အတည်ပြုပြီးပါပြီ။`, false);
+      } else {
+        showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ ပမာဏ $0.5 ထက်ကြီးသဖြင့် Admin စစ်ဆေးပြီး လွှဲပေးပါမည်။`, false);
+        
+        const alertText = `🔔 <b>ငွေထုတ်တောင်းဆိုမှု အသစ် (Admin Approve လိုအပ်)!</b>\n\n🆔 <b>Order ID:</b> <code>${orderId}</code>\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n💰 <b>ပမာဏ:</b> <code>$${amt} USDT</code>\n🔗 <b>Address (BEP-20):</b>\n<code>${addr}</code>\n\n👉 အတည်ပြုရန်: <code>/approve ${orderId}</code>`;
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: ADMIN_ID, text: alertText, parse_mode: "HTML" })
+        }).catch(() => {});
+      }
 
-      showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Admin ဆီသို့ စာပို့လိုက်ပါပြီ။`, false);
       document.getElementById("input-amount").value = "";
       document.getElementById("input-wallet").value = "";
-
       setTimeout(() => {
         document.getElementById("modal-withdraw").classList.remove("active");
       }, 2500);
