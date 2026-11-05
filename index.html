@@ -6,9 +6,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn v5.0</title>
+  <title>Cyber Earn v6.0</title>
   
-  <script src="https://telegram.org/js/telegram-web-app.js?v=5.0"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js?v=6.0"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
@@ -122,13 +122,6 @@
       color: #07120a !important;
       box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4) !important;
     }
-    .btn-disabled-limit {
-      background: #231936 !important;
-      color: #665a7d !important;
-      border: 1px solid #3d2b59 !important;
-      box-shadow: none !important;
-      cursor: not-allowed !important;
-    }
 
     .limit-container {
       background: rgba(184, 41, 255, 0.08);
@@ -189,7 +182,7 @@
     .tab-view.active-view { display: block; }
 
     /* =========================================
-       EXCLUSIVE GAME MENU & VISUAL STYLES
+       GAME ARENA & ROULETTE STYLES
        ========================================= */
     .game-nav-bar {
       display: flex;
@@ -219,7 +212,7 @@
       background: radial-gradient(circle, rgba(184, 41, 255, 0.18) 0%, rgba(11, 7, 19, 0.98) 75%);
       border: 1px solid #5a2696;
       border-radius: 24px;
-      padding: 20px 14px;
+      padding: 18px 14px;
       text-align: center;
       margin-bottom: 16px;
       box-shadow: inset 0 0 30px rgba(184, 41, 255, 0.25);
@@ -229,7 +222,7 @@
       position: relative;
       width: 210px;
       height: 210px;
-      margin: 10px auto 16px;
+      margin: 10px auto 14px;
     }
     .roulette-pointer {
       position: absolute;
@@ -250,7 +243,68 @@
       border-radius: 50%;
       border: 3px solid #b829ff;
       box-shadow: 0 0 25px rgba(184, 41, 255, 0.6);
-      transition: transform 4s cubic-bezier(0.12, 0.8, 0.2, 1);
+      transition: transform 4.5s cubic-bezier(0.12, 0.8, 0.2, 1);
+    }
+
+    /* COUNTDOWN BADGE */
+    .timer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      background: rgba(255, 51, 102, 0.15);
+      border: 1px solid #ff3366;
+      color: #ff3366;
+      font-size: 12px;
+      font-weight: 800;
+      font-family: monospace;
+      margin: 6px 0;
+    }
+
+    /* CUSTOM BET INPUT BOX */
+    .custom-bet-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #09050d;
+      border: 1px solid #2f1c4e;
+      border-radius: 12px;
+      padding: 4px 10px;
+      margin: 10px 0;
+    }
+    .custom-bet-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #00ff88;
+      font-size: 15px;
+      font-weight: 900;
+      font-family: monospace;
+      outline: none;
+    }
+
+    .chip-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .bet-chip {
+      background: #140d21;
+      border: 1px solid #2f1c4e;
+      border-radius: 8px;
+      padding: 7px 0;
+      font-size: 11px;
+      font-weight: 800;
+      color: #9c8eaf;
+      cursor: pointer;
+      text-align: center;
+    }
+    .bet-chip.active {
+      border-color: #00ff88;
+      color: #00ff88;
+      background: rgba(0, 255, 136, 0.15);
     }
 
     .bet-player-row {
@@ -265,6 +319,7 @@
       font-size: 11px;
     }
 
+    /* 3D COIN */
     .coin-3d-box {
       perspective: 800px;
       margin: 16px auto;
@@ -299,30 +354,6 @@
       0% { transform: rotateY(0) scale(1); }
       50% { transform: rotateY(1080deg) scale(1.3); }
       100% { transform: rotateY(1800deg) scale(1); }
-    }
-
-    .chip-selector {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin: 12px 0;
-    }
-    .bet-chip {
-      background: #09050d;
-      border: 1px solid #2f1c4e;
-      border-radius: 8px;
-      padding: 9px 0;
-      font-size: 11px;
-      font-weight: 800;
-      color: #9c8eaf;
-      cursor: pointer;
-      text-align: center;
-    }
-    .bet-chip.active {
-      border-color: #00ff88;
-      color: #00ff88;
-      background: rgba(0, 255, 136, 0.15);
-      box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
     }
 
     .custom-bottom-nav {
@@ -386,30 +417,9 @@
       margin: 6px 0 14px;
       outline: none;
     }
-
-    #ip-block-screen {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #09050d;
-      z-index: 99999;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 30px;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
-
-  <!-- Dynamic IP Conflict Screen -->
-  <div id="ip-block-screen">
-    <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
-    <h2 style="color:#ff3366; margin-bottom:12px;">IP တူညီနေပါသည်</h2>
-    <p style="color:#9c8eaf; font-size:13px; line-height:1.6; margin-bottom:20px;">ဤ IP ဖြင့် အခြားအကောင့်တစ်ခု ဝင်ရောက်ထားပြီး ဖြစ်ပါသည်ခင်ဗျာ။<br><br><b>VPN ဖွင့်၍</b> ချက်ချင်း ပြန်လည်ဝင်ရောက်နိုင်ပါသည်။</p>
-    <button class="action-btn btn-purple" style="padding: 12px 24px;" onclick="location.reload()">ပြန်လည်စစ်ဆေးမည်</button>
-  </div>
 
   <!-- Header Bar -->
   <div class="header-bar">
@@ -462,11 +472,15 @@
     <!-- 1. MULTI-PLAYER COLOR JACKPOT ROULETTE (PVP) -->
     <div id="sub-pvp" class="sub-game-view">
       <div class="pvp-circle-stage">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
           <span style="font-size:11px; color:#b829ff; font-weight:800;">JACKPOT POT WHEEL</span>
           <span style="font-size:10px; background:rgba(0,255,136,0.15); border:1px solid #00ff88; color:#00ff88; padding:2px 6px; border-radius:6px; font-weight:800;">Fee: 10%</span>
         </div>
-        <p style="font-size:11px; color:#9c8eaf;">များများလောင်းလေ မိမိအရောင် အကွက်ကျယ်လေ၊ နိုင်ခြေများလေ!</p>
+
+        <!-- 30s Countdown Display -->
+        <div>
+          <div class="timer-badge" id="pot-timer-badge">⏳ စောင့်ဆိုင်းနေသည် (လူ ၂ ယောက်လိုပါသည်)</div>
+        </div>
 
         <!-- Roulette Wheel -->
         <div class="roulette-container">
@@ -474,7 +488,7 @@
           <canvas id="roulette-canvas" class="roulette-wheel" width="220" height="220"></canvas>
         </div>
 
-        <div style="display:flex; justify-content:space-around; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-around; margin-bottom:6px;">
           <div>
             <div style="font-size:10px; color:#9c8eaf;">TOTAL POT</div>
             <div style="font-size:18px; font-weight:900; color:#00ff88;">$<span id="ui-jackpot-pot">0.00</span></div>
@@ -485,27 +499,29 @@
           </div>
         </div>
 
-        <div class="chip-selector">
-          <div class="bet-chip active" onclick="setJackpotBet(0.01, this)">$0.01</div>
-          <div class="bet-chip" onclick="setJackpotBet(0.05, this)">$0.05</div>
-          <div class="bet-chip" onclick="setJackpotBet(0.10, this)">$0.10</div>
-          <div class="bet-chip" onclick="setJackpotBet(0.50, this)">$0.50</div>
+        <!-- Custom Bet Input Box -->
+        <div class="custom-bet-wrap">
+          <span style="font-size:12px; color:#9c8eaf; font-weight:800;">Bet ($):</span>
+          <input type="number" id="input-pvp-bet" class="custom-bet-input" value="0.01" step="0.01" min="0.01">
         </div>
 
-        <div style="display:flex; gap:8px;">
-          <button class="action-btn btn-purple" style="flex:2; padding:12px;" id="btn-join-pot" onclick="placeJackpotBet()">➕ Bet ထည့်မည် ($<span id="ui-bet-val">0.01</span>)</button>
-          <button class="action-btn btn-green" style="flex:1; padding:12px;" id="btn-spin-pot" onclick="spinJackpotPot()">🎲 လှည့်မည်</button>
+        <div class="chip-selector">
+          <div class="bet-chip active" onclick="setQuickPvPBet(0.01, this)">$0.01</div>
+          <div class="bet-chip" onclick="setQuickPvPBet(0.05, this)">$0.05</div>
+          <div class="bet-chip" onclick="setQuickPvPBet(0.10, this)">$0.10</div>
+          <div class="bet-chip" onclick="setQuickPvPBet(0.50, this)">$0.50</div>
         </div>
+
+        <button class="action-btn btn-purple" style="width:100%; padding:12px;" onclick="placeJackpotBet()">➕ Place Bet</button>
       </div>
 
-      <!-- Current Players in Round -->
       <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">👥 လက်ရှိ ကစားသမားများနှင့် အချိုးအစား</div>
       <div id="jackpot-players-container">
         <p style="font-size:11px; color:#9c8eaf; padding:8px 0;">လောင်းကြေးထည့်သွင်း၍ စတင်ပါ...</p>
       </div>
     </div>
 
-    <!-- 2. 3D COIN FLIP (SOLO / 3 ကြိမ်အထိ 50%, 4 ကြိမ်မှစ၍ 30%) -->
+    <!-- 2. 3D COIN FLIP (SOLO) -->
     <div id="sub-flip" class="sub-game-view" style="display:none;">
       <div class="pvp-circle-stage">
         <div style="font-size:11px; color:#00ff88; font-weight:800;">3D CYBER FLIP (HEAD / TAIL)</div>
@@ -517,16 +533,22 @@
         </div>
         <p id="ui-flip-status" style="font-size:12px; color:#9c8eaf; margin-bottom:8px;">ခေါင်း (သို့) ပန်း ရွေးပါ</p>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
           <button class="action-btn" style="background:#24163d; border:1px solid #b829ff; color:#fff;" id="btn-side-head" onclick="chooseSide('HEAD')">🪙 HEAD</button>
           <button class="action-btn" style="background:#140d21; border:1px solid #2f1c4e; color:#9c8eaf;" id="btn-side-tail" onclick="chooseSide('TAIL')">🦅 TAIL</button>
         </div>
 
-        <button class="action-btn btn-green" style="width:100%; padding:13px;" onclick="play3DCoinFlip()">⚡ Flip Now ($0.01)</button>
+        <!-- Custom Bet Input for Flip -->
+        <div class="custom-bet-wrap">
+          <span style="font-size:12px; color:#9c8eaf; font-weight:800;">Bet ($):</span>
+          <input type="number" id="input-flip-bet" class="custom-bet-input" value="0.01" step="0.01" min="0.01">
+        </div>
+
+        <button class="action-btn btn-green" style="width:100%; padding:13px;" onclick="play3DCoinFlip()">⚡ Flip Now</button>
       </div>
     </div>
 
-    <!-- 3. DOUBLE SPIN WHEEL (SOLO / 3 ကြိမ်အထိ 50%, 4 ကြိမ်မှစ၍ 30%) -->
+    <!-- 3. DOUBLE SPIN WHEEL (SOLO) -->
     <div id="sub-spin" class="sub-game-view" style="display:none;">
       <div class="pvp-circle-stage">
         <div style="font-size:11px; color:#b829ff; font-weight:800;">LUCKY DOUBLE SPIN</div>
@@ -534,7 +556,14 @@
           <div class="roulette-pointer"></div>
           <canvas id="double-canvas" class="roulette-wheel" width="220" height="220"></canvas>
         </div>
-        <button class="action-btn btn-purple" style="width:100%; padding:13px;" onclick="spinDoubleWheel()">🎡 Spin ($0.01)</button>
+
+        <!-- Custom Bet Input for Spin -->
+        <div class="custom-bet-wrap">
+          <span style="font-size:12px; color:#9c8eaf; font-weight:800;">Bet ($):</span>
+          <input type="number" id="input-spin-bet" class="custom-bet-input" value="0.01" step="0.01" min="0.01">
+        </div>
+
+        <button class="action-btn btn-purple" style="width:100%; padding:13px;" onclick="spinDoubleWheel()">🎡 Spin Now</button>
       </div>
     </div>
   </div>
@@ -571,7 +600,6 @@
 
   <!-- TAB: PROFILE -->
   <div class="tab-view" id="view-profile">
-    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px;">👤 Profile & မှတ်တမ်းများ</div>
     <div class="card-item">
       <div>
         <h4 id="profile-name">...</h4>
@@ -638,9 +666,8 @@
     let currentBalance = 0.000;
     let lastDaily = 0;
 
-    // Solo Game Count Tracker (၃ ကြိမ်အထိ 50%, ၄ ကြိမ်မှစ၍ 30%)
+    // Solo Win-rate Tracker (၃ ကြိမ်အထိ 50%, ၄ ကြိမ်မှစ၍ 30%)
     let soloPlayCount = parseInt(localStorage.getItem(`cyber_solo_plays_${userData.id}`) || "0", 10);
-
     function getSoloWinRate() {
       soloPlayCount++;
       localStorage.setItem(`cyber_solo_plays_${userData.id}`, soloPlayCount.toString());
@@ -648,25 +675,37 @@
     }
 
     // ============================================
-    // MULTI-PLAYER COLOR JACKPOT ROULETTE LOGIC
+    // PVP MULTI-PLAYER JACKPOT (ONE COLOR PER USER & 30s COUNTDOWN)
     // ============================================
-    let jackpotSelectedBet = 0.01;
     let jackpotBets = [];
-    let jackpotColors = ['#00ff88', '#b829ff', '#ff007f', '#00e5ff', '#ffaa00', '#ffff00'];
-    let rouletteDeg = 0;
-    let isRouletteSpinning = false;
+    const colorPalette = ['#00ff88', '#b829ff', '#ff007f', '#00e5ff', '#ffaa00', '#ffd700', '#00ffcc', '#ff3366'];
+    let userColorMap = {}; // လူတစ်ယောက်လျှင် တိုက်ရိုက် အရောင်တစ်ရောင်တည်း သတ်မှတ်ခြင်း
 
-    function setJackpotBet(amt, el) {
-      jackpotSelectedBet = amt;
+    let potTimer = null;
+    let potSecondsLeft = 30;
+    let isPotSpinning = false;
+    let rouletteDeg = 0;
+
+    function getUserColor(userId) {
+      if (!userColorMap[userId]) {
+        const assignedIdx = Object.keys(userColorMap).length % colorPalette.length;
+        userColorMap[userId] = colorPalette[assignedIdx];
+      }
+      return userColorMap[userId];
+    }
+
+    function setQuickPvPBet(amt, el) {
+      document.getElementById('input-pvp-bet').value = amt.toFixed(2);
       document.querySelectorAll('.bet-chip').forEach(c => c.classList.remove('active'));
       el.classList.add('active');
-      document.getElementById('ui-bet-val').innerText = amt.toFixed(2);
     }
 
     function initRoulette() {
       if (jackpotBets.length === 0) {
+        // စမ်းသပ်ရန် Bot တစ်ဦး ထည့်သွင်းထားပေးခြင်း
+        const botId = 1001;
         jackpotBets = [
-          { user_id: 1001, user_name: "CyberBot_Alpha", bet_amount: 0.02, color: '#b829ff' }
+          { user_id: botId, user_name: "CyberBot_Alpha", bet_amount: 0.02, color: getUserColor(botId) }
         ];
       }
       renderJackpotUI();
@@ -680,6 +719,7 @@
       const myChance = totalPot > 0 ? ((myTotal / totalPot) * 100).toFixed(1) : 0;
       document.getElementById('ui-my-chance').innerText = `${myChance}%`;
 
+      // Draw Roulette Wheel Canvas
       const canvas = document.getElementById("roulette-canvas");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -700,6 +740,7 @@
         currentAngle += sliceAngle;
       });
 
+      // Player List
       const container = document.getElementById("jackpot-players-container");
       container.innerHTML = "";
       jackpotBets.forEach(b => {
@@ -719,36 +760,67 @@
     }
 
     async function placeJackpotBet() {
-      if (currentBalance < jackpotSelectedBet) {
-        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `လောင်းကြေး $${jackpotSelectedBet} USDT မပြည့်မီပါ။`);
+      const betAmt = Number(document.getElementById('input-pvp-bet').value);
+      if (!betAmt || betAmt < 0.01) {
+        showAlert("မှားယွင်းနေပါသည်", "အနည်းဆုံး $0.01 မှစ၍ လောင်းကြေးထည့်သွင်းပေးပါ။");
+        return;
+      }
+      if (currentBalance < betAmt) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `သင့်တွင် $${betAmt} USDT မရှိပါ။`);
         return;
       }
 
-      const newBal = Number((currentBalance - jackpotSelectedBet).toFixed(4));
+      const newBal = Number((currentBalance - betAmt).toFixed(4));
       await updateBalanceInDB(newBal);
 
-      const userColor = jackpotColors[jackpotBets.length % jackpotColors.length];
-      jackpotBets.push({
-        user_id: userData.id,
-        user_name: userData.first_name,
-        bet_amount: jackpotSelectedBet,
-        color: userColor
-      });
+      const myColor = getUserColor(userData.id);
+      const existingBet = jackpotBets.find(b => Number(b.user_id) === Number(userData.id));
+
+      if (existingBet) {
+        // အရောင်မပြောင်းဘဲ ရှိပြီးသား ပမာဏထဲသို့ ပေါင်းထည့်ပေးခြင်း
+        existingBet.bet_amount = Number((Number(existingBet.bet_amount) + betAmt).toFixed(4));
+      } else {
+        jackpotBets.push({
+          user_id: userData.id,
+          user_name: userData.first_name,
+          bet_amount: betAmt,
+          color: myColor
+        });
+      }
 
       renderJackpotUI();
-      showAlert("လောင်းကြေးထည့်ပြီးပါပြီ", `$${jackpotSelectedBet} ထည့်သွင်းလိုက်ပြီး သင့်အရောင်မှာ [${userColor}] ဖြစ်ပါသည်!`);
+      showAlert("လောင်းကြေးထည့်ပြီးပါပြီ", `$${betAmt} ထည့်သွင်းလိုက်ပြီး သင့်အရောင်မှာ [${myColor}] ဖြစ်ပါသည်!`);
+
+      // လူ ၂ ယောက်ပြည့်သည်နှင့် စက္ကန့် ၃၀ စတင်ရေတွက်ခြင်း
+      if (jackpotBets.length >= 2 && !potTimer && !isPotSpinning) {
+        startPotCountdown();
+      }
+    }
+
+    function startPotCountdown() {
+      potSecondsLeft = 30;
+      const badge = document.getElementById('pot-timer-badge');
+      badge.innerText = `⏳ လှည့်ရန် ကျန်ချိန်: ${potSecondsLeft}s`;
+
+      if (potTimer) clearInterval(potTimer);
+      potTimer = setInterval(() => {
+        potSecondsLeft--;
+        if (potSecondsLeft > 0) {
+          badge.innerText = `⏳ လှည့်ရန် ကျန်ချိန်: ${potSecondsLeft}s`;
+        } else {
+          clearInterval(potTimer);
+          potTimer = null;
+          badge.innerText = `🎲 လှည့်ပတ်နေပါသည်...`;
+          spinJackpotPot();
+        }
+      }, 1000);
     }
 
     async function spinJackpotPot() {
-      if (isRouletteSpinning) return;
-      if (jackpotBets.length < 2) {
-        showAlert("ကစားသမား မလုံလောက်ပါ", "Pot လှည့်ရန် အနည်းဆုံး ကစားသမား ၂ ဦး လောင်းကြေးရှိရပါမည်။");
-        return;
-      }
+      if (isPotSpinning) return;
+      isPotSpinning = true;
 
-      isRouletteSpinning = true;
       const totalPot = jackpotBets.reduce((sum, b) => sum + Number(b.bet_amount), 0);
-
       const randVal = Math.random() * totalPot;
       let cumulative = 0;
       let winner = jackpotBets[0];
@@ -767,7 +839,7 @@
       canvas.style.transform = `rotate(${rouletteDeg}deg)`;
 
       setTimeout(async () => {
-        isRouletteSpinning = false;
+        isPotSpinning = false;
         const payout = Number((totalPot * 0.90).toFixed(4)); // 10% Platform Fee
 
         if (Number(winner.user_id) === Number(userData.id)) {
@@ -775,18 +847,22 @@
           await updateBalanceInDB(winBal);
           showAlert("🎉 သင် အနိုင်ရပါသည်!", `Jackpot Total Pot: $${totalPot.toFixed(2)}\n10% Fee နှုတ်ပြီး ဆုငွေ +$${payout} USDT ရရှိပါသည်!`);
         } else {
-          showAlert("😢 အခြားသူ အနိုင်ရပါသည်", `ကံထူးရှင်မှာ [${winner.user_name}] ဖြစ်ပါသည်! နောက်တစ်ကြိမ် ကံစမ်းပါခင်ဗျာ။`);
+          showAlert("😢 အခြားသူ အနိုင်ရပါသည်", `ကံထူးရှင်မှာ [${winner.user_name}] ဖြစ်ပါသည်!`);
         }
 
+        // Round အသစ် ပြန်စတင်ခြင်း
+        document.getElementById('pot-timer-badge').innerText = "⏳ စောင့်ဆိုင်းနေသည် (လူ ၂ ယောက်လိုပါသည်)";
+        const nextBotId = 1002;
+        userColorMap = {}; // Reset Color Mapping
         jackpotBets = [
-          { user_id: 1002, user_name: "CyberBot_Beta", bet_amount: 0.02, color: '#00e5ff' }
+          { user_id: nextBotId, user_name: "CyberBot_Beta", bet_amount: 0.02, color: getUserColor(nextBotId) }
         ];
         renderJackpotUI();
-      }, 4200);
+      }, 4600);
     }
 
     // ============================================
-    // SOLO GAMES (DYNAMIC WIN RATE)
+    // SOLO GAMES (CUSTOM BET & DYNAMIC WIN RATE)
     // ============================================
     let chosenFlipSide = 'HEAD';
     let isFlipping = false;
@@ -799,13 +875,17 @@
 
     async function play3DCoinFlip() {
       if (isFlipping) return;
-      const bet = 0.01;
-      if (currentBalance < bet) {
-        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", "Coin Flip အတွက် အနည်းဆုံး $0.01 လိုအပ်ပါသည်။");
+      const betAmt = Number(document.getElementById('input-flip-bet').value);
+      if (!betAmt || betAmt < 0.01) {
+        showAlert("မှားယွင်းနေပါသည်", "အနည်းဆုံး $0.01 မှစ၍ လောင်းကြေးထည့်ပါ။");
+        return;
+      }
+      if (currentBalance < betAmt) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `သင့်တွင် $${betAmt} USDT မရှိပါ။`);
         return;
       }
 
-      let nBal = Number((currentBalance - bet).toFixed(4));
+      let nBal = Number((currentBalance - betAmt).toFixed(4));
       await updateBalanceInDB(nBal);
 
       isFlipping = true;
@@ -814,6 +894,7 @@
       void coin.offsetWidth;
       coin.classList.add('coin-flipping');
 
+      // ပထမ ၃ ကြိမ် 50%၊ နောက်ပိုင်း 30%
       const rate = getSoloWinRate();
       const isWin = (Math.random() < rate);
       const actualResult = isWin ? chosenFlipSide : (chosenFlipSide === 'HEAD' ? 'TAIL' : 'HEAD');
@@ -824,7 +905,7 @@
         isFlipping = false;
 
         if (isWin) {
-          const winPrize = Number((bet * 2 * 0.90).toFixed(4));
+          const winPrize = Number((betAmt * 2 * 0.90).toFixed(4)); // 10% Fee
           nBal = Number((nBal + winPrize).toFixed(4));
           await updateBalanceInDB(nBal);
           showAlert("🎉 အနိုင်ရပါသည်!", `ရလဒ်: [${actualResult}]\n10% Fee နှုတ်ပြီး +$${winPrize} USDT ရရှိပါသည်!`);
@@ -855,13 +936,17 @@
 
     async function spinDoubleWheel() {
       if (isDoubleSpinning) return;
-      const bet = 0.01;
-      if (currentBalance < bet) {
-        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", "အနည်းဆုံး $0.01 လိုအပ်ပါသည်။");
+      const betAmt = Number(document.getElementById('input-spin-bet').value);
+      if (!betAmt || betAmt < 0.01) {
+        showAlert("မှားယွင်းနေပါသည်", "အနည်းဆုံး $0.01 မှစ၍ လောင်းကြေးထည့်ပါ။");
+        return;
+      }
+      if (currentBalance < betAmt) {
+        showAlert("လက်ကျန်ငွေ မလုံလောက်ပါ", `သင့်တွင် $${betAmt} USDT မရှိပါ။`);
         return;
       }
 
-      let nBal = Number((currentBalance - bet).toFixed(4));
+      let nBal = Number((currentBalance - betAmt).toFixed(4));
       await updateBalanceInDB(nBal);
 
       isDoubleSpinning = true;
@@ -876,7 +961,7 @@
       setTimeout(async () => {
         isDoubleSpinning = false;
         if (isWin) {
-          const winPrize = Number((bet * 2 * 0.90).toFixed(4));
+          const winPrize = Number((betAmt * 2 * 0.90).toFixed(4)); // 10% Fee
           nBal = Number((nBal + winPrize).toFixed(4));
           await updateBalanceInDB(nBal);
           showAlert("🎡 ဂုဏ်ယူပါသည်!", `2x ပေါက်သွားပါသည်!\n+$${winPrize} USDT ရရှိပါသည်!`);
