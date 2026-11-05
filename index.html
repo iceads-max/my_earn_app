@@ -290,7 +290,8 @@
     }
     .modal-box input:focus { border-color: #00ff88; }
 
-    #ban-screen {
+    /* Dynamic IP Warning Fullscreen */
+    #ip-block-screen {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
       background: #09050d;
@@ -302,16 +303,18 @@
       padding: 30px;
       text-align: center;
     }
-    #ban-screen h2 { color: #ff3366; margin-bottom: 12px; font-size: 22px; }
-    #ban-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
+    #ip-block-screen h2 { color: #ff3366; margin-bottom: 12px; font-size: 20px; }
+    #ip-block-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
   </style>
 </head>
 <body>
 
-  <div id="ban-screen">
-    <div style="font-size: 60px; margin-bottom: 16px;">🚫</div>
-    <h2>အကောင့် ပိတ်ပင်ခံရပါသည်</h2>
-    <p>စက်တစ်ခုတည်း သို့မဟုတ် IP တစ်ခုတည်းမှ အကောင့်များစွာ ဖွင့်လှစ်အသုံးပြုထားသည်ကို တွေ့ရှိသဖြင့် သင့်အကောင့်အား ပိတ်ပင်လိုက်ပါသည်။</p>
+  <!-- Dynamic IP Conflict Overlay -->
+  <div id="ip-block-screen">
+    <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
+    <h2>IP တူညီနေပါသည်</h2>
+    <p>ဤ IP ဖြင့် အခြားအကောင့်တစ်ခု ဝင်ရောက်ထားပြီး ဖြစ်ပါသည်ခင်ဗျာ။<br><br><b>VPN ဖွင့်၍ (သို့မဟုတ် VPN Server ပြောင်း၍)</b> ချက်ချင်း ပြန်လည်ဝင်ရောက်နိုင်ပါသည်။</p>
+    <button class="action-btn btn-purple" style="padding: 12px 24px;" onclick="location.reload()">ပြန်လည်စစ်ဆေးမည်</button>
   </div>
 
   <div class="header-bar">
@@ -498,54 +501,33 @@
     let lastDaily = 0;
     let completedTasks = [];
 
-    async function checkAntiCheatIP() {
+    // Dynamic IP စစ်ဆေးခြင်း (Ban မလုပ်ဘဲ IP တူချိန်သာ ပိတ်မည်၊ VPN ခံပါက ပြန်ဝင်ရမည်)
+    async function checkDynamicIP() {
       try {
         const ipRes = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipRes.json();
         const clientIP = ipData.ip;
 
-        const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?ip_address=eq.${clientIP}&select=id,is_banned`, {
+        const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?current_ip=eq.${clientIP}&select=id`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const usersWithSameIP = await checkRes.json();
 
         const anotherUser = usersWithSameIP.find(u => Number(u.id) !== Number(userData.id));
         if (anotherUser) {
-          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
-            method: "PATCH",
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ is_banned: true, ip_address: clientIP })
-          });
-
-          const banAlert = `🚨 <b>Anti-Cheat: Multi-Account တွေ့ရှိ၍ Ban လိုက်ပါပြီ!</b>\n\n👤 <b>User:</b> ${userData.first_name} (<code>${userData.id}</code>)\n🌐 <b>IP Address:</b> <code>${clientIP}</code>\n⚠️ <b>တူညီသော မူရင်း User:</b> <code>${anotherUser.id}</code>\n\nပြန်ဖွင့်ရန်: <code>/unban ${userData.id}</code>`;
-          fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: ADMIN_ID, text: banAlert, parse_mode: "HTML" })
-          }).catch(() => {});
-
-          showBanScreen();
+          document.getElementById("ip-block-screen").style.display = "flex";
           return false;
         } else {
           await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
             method: "PATCH",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ ip_address: clientIP })
+            body: JSON.stringify({ current_ip: clientIP })
           });
         }
       } catch (err) {
         console.error("IP Check Error:", err);
       }
       return true;
-    }
-
-    function showBanScreen() {
-      document.getElementById("ban-screen").style.display = "flex";
-      document.querySelector(".header-bar").style.display = "none";
-      document.querySelector(".balance-box").style.display = "none";
-      document.querySelector(".btn-grid").style.display = "none";
-      document.querySelector(".limit-container").style.display = "none";
-      document.querySelector(".custom-bottom-nav").style.display = "none";
     }
 
     function getTodayString() {
@@ -660,10 +642,6 @@
         });
         const uData = await uRes.json();
         if (uData.length > 0) {
-          if (uData[0].is_banned) {
-            showBanScreen();
-            return;
-          }
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
           userData.last_withdraw = Number(uData[0].last_withdraw || 0);
@@ -922,7 +900,6 @@
       const data = await res.json();
       const orderId = data[0]?.id || "New";
 
-      // 0.5 ကျော်ရင် မရဘူး ဟု လုံးဝ မပြဘဲ သဘာဝကျကျ အသိပေးထားပါသည်
       showWithdrawNotice(`✅ $${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ စနစ်မှ စစ်ဆေးပြီး လွှဲပြောင်းပေးပါမည်။`, false);
 
       if (!isAuto) {
@@ -960,7 +937,7 @@
       }
     });
 
-    checkAntiCheatIP().then(ok => {
+    checkDynamicIP().then(ok => {
       if (ok) syncDataFromDB();
     });
   </script>
