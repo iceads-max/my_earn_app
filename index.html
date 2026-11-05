@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cyber Earn - Official Mini App</title>
+  <title>Cyber Earn</title>
   
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -15,179 +15,200 @@
 
   <style>
     :root {
-      --bg: #0b0f19;
-      --card-bg: #121927;
-      --accent: #00ffcc;
-      --accent-glow: rgba(0, 255, 204, 0.25);
+      --bg: #0d061a;
+      --card-bg: #160d2e;
+      --card-border: #2c1a52;
+      --accent-purple: #9b51e0;
+      --accent-green: #00e676;
+      --accent-cyan: #00f2fe;
       --text: #ffffff;
-      --text-muted: #8b9bb4;
+      --text-muted: #8b80a8;
       --danger: #ff4757;
-      --success: #2ed573;
-      --gold: #ffa502;
-      --purple: #8e44ad;
-      --border-color: rgba(255, 255, 255, 0.08);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 14px 14px 40px; user-select: none; }
+    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px 14px 85px; user-select: none; }
     
     /* Top Header */
-    .header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 14px; }
-    .user-info { display: flex; align-items: center; gap: 10px; }
-    .avatar { width: 42px; height: 42px; border-radius: 50%; background: #162235; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; color: var(--accent); }
-    .badge { font-size: 11px; color: var(--accent); background: rgba(0,255,204,0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(0,255,204,0.3); font-weight: 600; }
+    .top-header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .user-profile { display: flex; align-items: center; gap: 12px; }
+    .lightning-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #00f2fe, #4facfe); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(0, 242, 254, 0.4); }
+    .lightning-avatar span { font-size: 22px; color: #ffeb3b; }
+    .user-meta-name { font-weight: 700; font-size: 15px; color: #fff; }
+    .user-meta-id { font-size: 12px; color: var(--text-muted); }
+    .badge-online { border: 1px solid var(--accent-green); color: var(--accent-green); background: rgba(0, 230, 118, 0.08); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; letter-spacing: 0.5px; }
 
-    /* Total Balance Card */
-    .balance-card { width: 100%; max-width: 450px; background: linear-gradient(135deg, #131b2e 0%, #090e18 100%); border: 1px solid rgba(0,255,204,0.25); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 14px; box-shadow: 0 8px 24px var(--accent-glow); }
-    .balance-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-    .balance-amount { font-size: 36px; font-weight: 800; color: var(--accent); margin: 6px 0; }
-    .balance-sub { font-size: 11px; color: var(--text-muted); }
+    /* Total Balance Box */
+    .balance-box { width: 100%; max-width: 450px; background: radial-gradient(circle at top, #1c1138 0%, #120924 100%); border: 1.5px solid var(--card-border); border-radius: 20px; padding: 22px; text-align: center; margin-bottom: 16px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .balance-box::before { content: ""; position: absolute; top: -1px; left: 15%; width: 70%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent-green), transparent); }
+    .balance-title { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .balance-val { font-size: 40px; font-weight: 900; color: var(--accent-green); text-shadow: 0 0 20px rgba(0, 230, 118, 0.4); margin-bottom: 6px; }
+    .balance-rate { font-size: 12px; color: #d18bf5; }
 
-    /* Stats Grid */
-    .stats-card { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 14px; padding: 12px; display: flex; justify-content: space-around; margin-bottom: 14px; border: 1px solid var(--border-color); }
-    .stat-item { text-align: center; }
-    .stat-val { font-size: 15px; font-weight: 700; color: #fff; }
-    .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    /* Dual Action Buttons */
+    .action-row { width: 100%; max-width: 450px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .btn-watch-primary { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: #fff; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35); }
+    .btn-withdraw-primary { background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%); color: #000; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(0, 230, 118, 0.3); }
+    .btn-watch-primary:active, .btn-withdraw-primary:active { transform: scale(0.97); }
 
-    /* Action Buttons Grid */
-    .btn-grid { width: 100%; max-width: 450px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .btn { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; transition: transform 0.1s, background 0.2s; }
-    .btn:active { transform: scale(0.97); }
-    .btn-main { grid-column: span 2; background: linear-gradient(90deg, #00cec9, #00b894); color: #000; border: none; font-size: 16px; font-weight: 800; padding: 16px; box-shadow: 0 4px 15px rgba(0, 206, 201, 0.3); }
-    .btn-gold { background: linear-gradient(90deg, #f39c12, #e67e22); color: #000; border: none; }
-    .btn-danger { border-color: rgba(255, 71, 87, 0.4); }
+    /* Limit Progress Bar Card */
+    .limit-card { width: 100%; max-width: 450px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+    .limit-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+    .limit-lbl { color: #fff; }
+    .limit-count { color: var(--accent-green); }
+    .progress-track { width: 100%; height: 6px; background: #080312; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-green)); border-radius: 10px; transition: width 0.3s ease; }
 
-    /* Section Containers */
-    .section-card { width: 100%; max-width: 450px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 15px; margin-bottom: 14px; }
-    .section-title { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    /* Earn Rows (Daily Bonus & Quick Earn) */
+    .earn-row { width: 100%; max-width: 450px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .earn-info-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .earn-info-sub { font-size: 12px; color: var(--text-muted); }
+    .btn-pill { border: 1.5px solid var(--accent-purple); background: transparent; color: #fff; border-radius: 20px; padding: 8px 22px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-pill:active { background: rgba(155, 81, 224, 0.2); }
 
-    /* Tasks List */
-    .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .task-item:last-child { border-bottom: none; }
-    .task-desc { font-size: 13px; font-weight: 500; }
-    .task-reward { font-size: 11px; color: var(--accent); }
-    .task-btn { background: rgba(0,255,204,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    /* Custom Alert Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 999999; padding: 20px; }
+    .modal-sheet { background: #180e33; border: 1px solid var(--accent-purple); border-radius: 18px; width: 100%; max-width: 350px; padding: 22px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+    .modal-sheet-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: #fff; }
+    .modal-sheet-msg { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 18px; word-break: break-all; }
+    .modal-sheet-btn { background: var(--accent-green); color: #000; font-weight: 800; border: none; border-radius: 10px; padding: 12px 24px; cursor: pointer; width: 100%; }
+    .input-ctrl { width: 100%; background: #0c051a; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; color: #fff; margin-bottom: 12px; font-size: 13px; outline: none; }
+    .input-ctrl:focus { border-color: var(--accent-green); }
 
-    /* Custom Popup Overlays */
-    .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 999999; padding: 20px; }
-    .popup-box { background: #131a29; border: 1px solid var(--accent); border-radius: 16px; width: 100%; max-width: 350px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .popup-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; }
-    .popup-msg { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; word-break: break-all; }
-    .popup-btn { background: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; width: 100%; }
-    .input-box { width: 100%; background: #0b1019; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 11px; color: #fff; margin-bottom: 12px; font-size: 13px; outline: none; }
-    .input-box:focus { border-color: var(--accent); }
+    /* Bottom Navigation Bar */
+    .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 68px; background: #0b0517; border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+    .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; text-decoration: none; cursor: pointer; }
+    .nav-tab.active { color: #d18bf5; font-weight: 700; }
+    .nav-icon { font-size: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <div class="header">
-    <div class="user-info">
-      <div class="avatar" id="u-avatar">U</div>
+  <!-- Top Header Profile -->
+  <div class="top-header">
+    <div class="user-profile">
+      <div class="lightning-avatar"><span>⚡</span></div>
       <div>
-        <div style="font-weight: 700; font-size: 14px;" id="u-name">Cyber Player</div>
-        <div style="font-size: 11px; color: var(--text-muted);" id="u-id">ID: ...</div>
+        <div class="user-meta-name" id="u-name">...</div>
+        <div class="user-meta-id" id="u-id">ID: ...</div>
       </div>
     </div>
-    <div class="badge">BEP-20 Live</div>
+    <div class="badge-online">ONLINE</div>
   </div>
 
-  <!-- Total Balance Display -->
-  <div class="balance-card">
-    <div class="balance-label">Total Balance</div>
-    <div class="balance-amount">$<span id="bal-val">0.0000</span></div>
-    <div class="balance-sub">Tether USD (USDT BEP-20)</div>
+  <!-- Wallet Balance Box -->
+  <div class="balance-box">
+    <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
+    <div class="balance-val">$<span id="bal-val">0.0000</span></div>
+    <div class="balance-rate">ဆုကြေး: $<span id="cfg-reward">0.003</span> / Ad</div>
   </div>
 
-  <!-- User Stats -->
-  <div class="stats-card">
-    <div class="stat-item">
-      <div class="stat-val" id="st-watched">0 / 500</div>
-      <div class="stat-lbl">Today Ads</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-val" id="st-refs">0</div>
-      <div class="stat-lbl">Referrals</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-val" id="st-min-wd">$0.03</div>
-      <div class="stat-lbl">Min Withdraw</div>
-    </div>
-  </div>
-
-  <!-- Primary Earn Actions -->
-  <div class="btn-grid">
-    <button class="btn btn-main" id="btn-watch-ad">
-      <span style="font-size: 20px;">⚡</span>
-      <span>Watch Ad & Earn ($<span id="cfg-reward">0.003</span>)</span>
+  <!-- Dual Action Buttons -->
+  <div class="action-row">
+    <button class="btn-watch-primary" id="btn-watch-ad">
+      <span>⚡ Ads ကြည့်မည်</span>
     </button>
-    <button class="btn btn-gold" id="btn-daily-bonus">
-      <span>🎁 Daily Bonus</span>
-    </button>
-    <button class="btn" id="btn-invite">
-      <span>👥 Invite Friends</span>
-    </button>
-    <button class="btn btn-danger" id="btn-withdraw-modal">
-      <span style="color: var(--danger);">💳 Withdraw USDT</span>
+    <button class="btn-withdraw-primary" id="btn-withdraw-modal">
+      <span>💳 Withdraw</span>
     </button>
   </div>
 
-  <!-- Official Tasks Section -->
-  <div class="section-card">
-    <div class="section-title">📋 Official Channel Tasks</div>
-    <div class="task-item">
-      <div>
-        <div class="task-desc">Join Official Telegram Channel</div>
-        <div class="task-reward">+ $0.005 USDT</div>
-      </div>
-      <button class="task-btn" onclick="openChannel()">Join</button>
+  <!-- Daily Progress Bar -->
+  <div class="limit-card">
+    <div class="limit-header">
+      <span class="limit-lbl">နေ့စဉ် Ads ကန့်သတ်ချက်</span>
+      <span class="limit-count"><span id="st-watched">0</span> / 500 Ads</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-bar"></div>
     </div>
   </div>
 
-  <!-- Alert Modal -->
-  <div class="popup-overlay" id="popup-box">
-    <div class="popup-box">
-      <div class="popup-title" id="pop-title">သတိပေးချက်</div>
-      <div class="popup-msg" id="pop-msg">...</div>
-      <button class="popup-btn" id="pop-ok-btn">OK</button>
+  <!-- Daily Bonus Row -->
+  <div class="earn-row">
+    <div>
+      <div class="earn-info-title">Daily Bonus</div>
+      <div class="earn-info-sub">၂၄ နာရီတစ်ကြိမ် ရယူပါ</div>
+    </div>
+    <button class="btn-pill" id="btn-daily-bonus">Claim</button>
+  </div>
+
+  <!-- Ads Quick Earn Row -->
+  <div class="earn-row">
+    <div>
+      <div class="earn-info-title">Ads Quick Earn</div>
+      <div class="earn-info-sub" style="color: var(--accent-green);">တကယ့်ဗီဒီယိုကြော်ငြာ ကြည့်၍ ဆုကြေးယူပါ</div>
+    </div>
+    <button class="btn-pill" id="btn-quick-ad">Watch</button>
+  </div>
+
+  <!-- Modal Dialog -->
+  <div class="modal-overlay" id="popup-box">
+    <div class="modal-sheet">
+      <div class="modal-sheet-title" id="pop-title">သတိပေးချက်</div>
+      <div class="modal-sheet-msg" id="pop-msg">...</div>
+      <button class="modal-sheet-btn" id="pop-ok-btn">OK</button>
     </div>
   </div>
 
-  <!-- Withdraw Modal -->
-  <div class="popup-overlay" id="withdraw-modal">
-    <div class="popup-box">
-      <div class="popup-title" style="color: var(--accent);">USDT BEP-20 ထုတ်ယူရန်</div>
+  <!-- Withdraw Sheet -->
+  <div class="modal-overlay" id="withdraw-modal">
+    <div class="modal-sheet">
+      <div class="modal-sheet-title" style="color: var(--accent-green);">USDT BEP-20 ထုတ်ယူရန်</div>
       <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">$0.03 မှ $0.50 အထိ Auto စနစ်ဖြင့် တိုက်ရိုက် ထုတ်ပေးပါသည်</div>
-      <input type="text" class="input-box" id="wd-address" placeholder="BEP-20 Address (0x...)">
-      <input type="number" step="0.001" class="input-box" id="wd-amount" placeholder="ထုတ်ယူမည့်ပမာဏ (e.g. 0.05)">
+      <input type="text" class="input-ctrl" id="wd-address" placeholder="BEP-20 Address (0x...)">
+      <input type="number" step="0.001" class="input-ctrl" id="wd-amount" placeholder="ထုတ်ယူမည့်ပမာဏ (e.g. 0.05)">
       <div style="display: flex; gap: 8px;">
-        <button class="popup-btn" style="background: #334155; color: #fff; flex: 1;" id="wd-cancel-btn">မလုပ်တော့ပါ</button>
-        <button class="popup-btn" style="flex: 1;" id="wd-confirm-btn">ငွေထုတ်မည်</button>
+        <button class="modal-sheet-btn" style="background: #2c1a52; color: #fff; flex: 1;" id="wd-cancel-btn">ပယ်ဖျက်</button>
+        <button class="modal-sheet-btn" style="flex: 1;" id="wd-confirm-btn">ငွေထုတ်မည်</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar (Tabs) -->
+  <div class="nav-bar">
+    <div class="nav-tab" onclick="showAlert('Task', 'Official Channel Tasks များကို Bot တွင် တိုက်ရိုက် စစ်ဆေးနိုင်ပါသည်။')">
+      <div class="nav-icon">📋</div>
+      <div>Task</div>
+    </div>
+    <div class="nav-tab" onclick="showAlert('Game', 'Cyber Arena PvP Game လာမည့် Update တွင် ဖွင့်လှစ်ပါမည်။')">
+      <div class="nav-icon">🎮</div>
+      <div>Game</div>
+    </div>
+    <div class="nav-tab active">
+      <div class="nav-icon">🏠</div>
+      <div>Home</div>
+    </div>
+    <div class="nav-tab" id="nav-invite">
+      <div class="nav-icon">👥</div>
+      <div>Invite</div>
+    </div>
+    <div class="nav-tab" id="nav-profile">
+      <div class="nav-icon">👤</div>
+      <div>Profile</div>
     </div>
   </div>
 
   <script>
-    // Supabase Credentials
+    // Supabase Connection
     const SUPABASE_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oaHpiZWF5ZmNjb2lxZXZ5ZGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2Mzg4NzYsImV4cCI6MjA2MjIxNDg3Nn0.7bWv8WkI-KzXpWbXW1iJ5o0V7xH7L9iJ0kK1lM2nO3p";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Bot Configuration
+    // App Configuration
     const BOT_USERNAME = "CyberEarns_bot";
     const ADMIN_ID = 6093710107;
     const MAX_DAILY_ADS = 500;
-    const OFFICIAL_CHANNEL = "https://t.me/Tonsarsar";
 
     let tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
 
-    const user = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
+    const user = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin", username: "Admin" };
     const IS_ADMIN = (Number(user.id) === Number(ADMIN_ID));
 
     let currentBalance = 0.0000;
     let config = { ad_reward: 0.003, min_withdraw: 0.03, daily_bonus: 0.005 };
 
-    // Notification Popup Logic
+    // Custom Alert Popup
     function showAlert(title, msg) {
       document.getElementById('pop-title').innerText = title;
       document.getElementById('pop-msg').innerText = msg;
@@ -197,25 +218,30 @@
       document.getElementById('popup-box').style.display = 'none';
     });
 
-    // Daily Limit Local Storage
+    // Daily Limit Local Counter
     function getDailyAdCount() {
       const today = new Date().toISOString().slice(0, 10);
       const data = JSON.parse(localStorage.getItem(`ads_${user.id}`) || '{}');
       return data.date === today ? (data.count || 0) : 0;
     }
+    function updateProgressUI() {
+      const count = getDailyAdCount();
+      document.getElementById('st-watched').innerText = count;
+      const pct = Math.min((count / MAX_DAILY_ADS) * 100, 100);
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+    }
     function incrementDailyAdCount() {
       const today = new Date().toISOString().slice(0, 10);
       const count = getDailyAdCount() + 1;
       localStorage.setItem(`ads_${user.id}`, JSON.stringify({ date: today, count }));
-      document.getElementById('st-watched').innerText = `${count} / ${MAX_DAILY_ADS}`;
+      updateProgressUI();
     }
 
     // Initialize User Data
     async function initUser() {
       document.getElementById('u-name').innerText = user.first_name || "Cyber Player";
       document.getElementById('u-id').innerText = `ID: ${user.id}`;
-      document.getElementById('u-avatar').innerText = (user.first_name || "U")[0].toUpperCase();
-      document.getElementById('st-watched').innerText = `${getDailyAdCount()} / ${MAX_DAILY_ADS}`;
+      updateProgressUI();
 
       try {
         const { data: cfg } = await supabase.from('cyber_settings').select('*').limit(1).maybeSingle();
@@ -224,14 +250,12 @@
           config.min_withdraw = Number(cfg.min_withdraw) || 0.03;
           config.daily_bonus = Number(cfg.daily_bonus) || 0.005;
           document.getElementById('cfg-reward').innerText = config.ad_reward;
-          document.getElementById('st-min-wd').innerText = `$${config.min_withdraw}`;
         }
 
         const { data: uData } = await supabase.from('cyber_users').select('*').eq('user_id', user.id).maybeSingle();
         if (uData) {
           currentBalance = Number(uData.balance) || 0.0000;
           document.getElementById('bal-val').innerText = currentBalance.toFixed(4);
-          document.getElementById('st-refs').innerText = uData.referrals_count || 0;
         } else {
           await supabase.from('cyber_users').insert([{ user_id: user.id, username: user.username || '', first_name: user.first_name || '', balance: 0.0000 }]);
         }
@@ -246,15 +270,14 @@
       await supabase.from('cyber_users').update({ balance: nBal }).eq('user_id', user.id);
     }
 
-    // Monetag Rewarded Interstitial Execution
-    document.getElementById("btn-watch-ad").addEventListener("click", () => {
+    // Monetag Rewarded Interstitial Trigger (Ads ကြည့်မည် & Ads Quick Earn)
+    function handleWatchAd() {
       const watched = getDailyAdCount();
       if (!IS_ADMIN && watched >= MAX_DAILY_ADS) {
         showAlert("သတိပေးချက်", `ယနေ့အတွက် Ads ${MAX_DAILY_ADS} ကြိမ် ပြည့်သွားပါပြီ။`);
         return;
       }
 
-      // Monetag SDK Call
       if (typeof show_12199472 === 'function') {
         show_12199472().then(() => {
           incrementDailyAdCount();
@@ -262,13 +285,15 @@
           updateBalanceInDB(nBal);
           showAlert("🎉 အောင်မြင်ပါသည်", `ကြော်ငြာကြည့်ရှုမှုအတွက် +$${config.ad_reward} USDT ရရှိပါသည်!`);
         }).catch((err) => {
-          console.error("Monetag Error:", err);
           showAlert("သတိပေးချက်", "ကြော်ငြာရယူ၍ မရသေးပါခင်ဗျာ။ ခဏအကြာမှ ထပ်စမ်းပေးပါ။");
         });
       } else {
         showAlert("ခေတ္တစောင့်ပါ", "ကြော်ငြာ SDK ချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
       }
-    });
+    }
+
+    document.getElementById("btn-watch-ad").addEventListener("click", handleWatchAd);
+    document.getElementById("btn-quick-ad").addEventListener("click", handleWatchAd);
 
     // Daily Bonus
     document.getElementById("btn-daily-bonus").addEventListener("click", async () => {
@@ -284,8 +309,8 @@
       showAlert("🎉 ဂုဏ်ယူပါသည်", `နေ့စဉ် Bonus +$${config.daily_bonus} USDT ရရှိပါသည်!`);
     });
 
-    // Referral Friends Link
-    document.getElementById("btn-invite").addEventListener("click", () => {
+    // Invite Link
+    function triggerInvite() {
       const link = `https://t.me/${BOT_USERNAME}?start=${user.id}`;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(link);
@@ -293,18 +318,15 @@
       } else {
         showAlert("🔗 Invite Link", link);
       }
+    }
+    document.getElementById("nav-invite").addEventListener("click", triggerInvite);
+
+    // Profile Click
+    document.getElementById("nav-profile").addEventListener("click", () => {
+      showAlert("👤 Player Profile", `အမည်: ${user.first_name}\nUser ID: ${user.id}\nလက်ကျန်ငွေ: $${currentBalance.toFixed(4)} USDT`);
     });
 
-    // Task Execution
-    function openChannel() {
-      if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(OFFICIAL_CHANNEL);
-      } else {
-        window.open(OFFICIAL_CHANNEL, '_blank');
-      }
-    }
-
-    // Withdraw Modal Controls
+    // Withdraw Controls
     document.getElementById("btn-withdraw-modal").addEventListener("click", () => {
       document.getElementById('withdraw-modal').style.display = 'flex';
     });
@@ -344,7 +366,7 @@
 
       document.getElementById('withdraw-modal').style.display = 'none';
       if (status === "Pending_Auto") {
-        showAlert("✅ တောင်းဆိုမှု အောင်မြင်သည်", `$${amt} USDT ကို Auto စနစ်ဖြင့် Wallet သို့ လွှဲပြောင်းပေးနေပါပြီ။ ခေတ္တစောင့်ပေးပါ။`);
+        showAlert("✅ တောင်းဆိုမှု အောင်မြင်သည်", `$${amt} USDT ကို Auto စနစ်ဖြင့် Wallet သို့ လွှဲပြောင်းပေးနေပါပြီ။`);
       } else {
         showAlert("⏳ စောင့်ဆိုင်းဆဲ", `$${amt} USDT သည် ပမာဏများပြားသဖြင့် Admin စစ်ဆေးပြီးမှ လွှဲပြောင်းပေးပါမည်။`);
       }
