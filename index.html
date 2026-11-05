@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cyber Earn</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Cyber Earn - Earth Edition</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    /* အစိမ်းနှင့် အညိုရောင်စပ် Theme သီးသန့် Palette */
     :root {
-      --bg: #12140f;
-      --card: #1b1e17;
-      --card-border: #2e3527;
-      --green-main: #38b000;
-      --green-glow: #70e000;
-      --brown-main: #b07d4f;
-      --brown-dark: #2c221a;
-      --brown-border: #4a382c;
-      --text: #f4f6f0;
-      --dim: #8b9482;
-      --danger: #d94e34;
+      --bg: #11140e !important;
+      --card-bg: #1a1e15 !important;
+      --border-color: #2e3524 !important;
+      --green-bright: #44cf06 !important;
+      --green-dark: #278000 !important;
+      --brown-accent: #c28851 !important;
+      --brown-dark: #402c1c !important;
+      --text-white: #f5f7f2 !important;
+      --text-dim: #889280 !important;
     }
     * {
       box-sizing: border-box;
@@ -28,16 +30,16 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      background: var(--bg);
-      background-image: radial-gradient(circle at 50% 0%, rgba(56, 176, 0, 0.08) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(176, 125, 79, 0.08) 0%, transparent 40%);
-      color: var(--text);
+      background-color: var(--bg) !important;
+      background-image: radial-gradient(circle at 50% 0%, rgba(68, 207, 6, 0.12) 0%, transparent 60%),
+                        radial-gradient(circle at 100% 100%, rgba(194, 136, 81, 0.1) 0%, transparent 50%) !important;
+      color: var(--text-white) !important;
       padding: 16px;
       padding-bottom: 95px;
       min-height: 100vh;
     }
 
-    /* Top Bar */
+    /* Top Profile */
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -50,69 +52,68 @@
       gap: 10px;
     }
     .avatar-icon {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, var(--brown-main), var(--green-main));
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--brown-accent), var(--green-dark));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
     .status-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 8px;
-      background: rgba(56, 176, 0, 0.12);
-      border: 1px solid var(--green-main);
-      color: var(--green-glow);
-      letter-spacing: 0.5px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 10px;
+      background: rgba(68, 207, 6, 0.15);
+      border: 1px solid var(--green-bright);
+      color: var(--green-bright);
     }
 
     /* Main Balance Box */
     .balance-box {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 22px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 22px 16px;
       text-align: center;
       margin-bottom: 16px;
       position: relative;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     }
     .balance-box::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--brown-main), var(--green-main));
-      border-radius: 18px 18px 0 0;
+      background: linear-gradient(90deg, var(--brown-accent), var(--green-bright));
     }
     .balance-title {
       font-size: 11px;
-      color: var(--dim);
+      color: var(--text-dim);
       text-transform: uppercase;
       letter-spacing: 1px;
-      font-weight: 600;
+      font-weight: 700;
     }
     .balance-val {
       font-size: 38px;
       font-weight: 900;
-      color: var(--green-glow);
+      color: var(--green-bright);
       margin: 6px 0;
       font-family: monospace;
-      text-shadow: 0 0 20px rgba(112, 224, 0, 0.25);
+      text-shadow: 0 0 20px rgba(68, 207, 6, 0.3);
     }
 
-    /* Action Buttons */
+    /* Buttons */
     .btn-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 18px;
     }
-    .base-btn {
+    .action-btn {
       border: none;
       border-radius: 14px;
       padding: 14px;
@@ -125,23 +126,23 @@
       gap: 6px;
       transition: transform 0.1s;
     }
-    .base-btn:active { transform: scale(0.97); }
+    .action-btn:active { transform: scale(0.96); }
     .btn-green {
-      background: linear-gradient(135deg, #2b8a00, #38b000);
+      background: linear-gradient(135deg, #2f9403, #44cf06);
       color: #ffffff;
-      box-shadow: 0 4px 15px rgba(56, 176, 0, 0.25);
+      box-shadow: 0 4px 15px rgba(68, 207, 6, 0.25);
     }
     .btn-brown {
-      background: linear-gradient(135deg, #7a5433, #b07d4f);
+      background: linear-gradient(135deg, #875b34, #c28851);
       color: #ffffff;
-      box-shadow: 0 4px 15px rgba(176, 125, 79, 0.25);
+      box-shadow: 0 4px 15px rgba(194, 136, 81, 0.25);
     }
 
-    /* Card Items */
+    /* Cards */
     .card-item {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
       padding: 14px;
       margin-bottom: 10px;
       display: flex;
@@ -150,16 +151,16 @@
     }
     .card-item h4 {
       font-size: 14px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     .card-item p {
       font-size: 11px;
-      color: var(--dim);
+      color: var(--text-dim);
     }
     .btn-sub {
-      background: rgba(56, 176, 0, 0.12);
-      border: 1px solid var(--green-main);
-      color: var(--green-glow);
+      background: rgba(68, 207, 6, 0.12);
+      border: 1px solid var(--green-bright);
+      color: var(--green-bright);
       padding: 8px 16px;
       border-radius: 10px;
       font-size: 12px;
@@ -167,13 +168,13 @@
       cursor: pointer;
     }
     .btn-sub:disabled {
-      border-color: #333a2c;
+      border-color: #2f3629;
       color: #555e4e;
       background: transparent;
       cursor: not-allowed;
     }
 
-    /* Tab Page Views */
+    /* 5 Page Views */
     .tab-view {
       display: none;
     }
@@ -181,10 +182,10 @@
       display: block;
     }
 
-    /* Invite Copy Box */
+    /* Invite Link Box */
     .invite-box {
-      background: var(--card);
-      border: 1px solid var(--brown-border);
+      background: var(--card-bg);
+      border: 1px solid var(--brown-dark);
       border-radius: 14px;
       padding: 14px;
       margin-top: 14px;
@@ -197,10 +198,10 @@
     .invite-input {
       flex: 1;
       padding: 11px;
-      background: #0d0f0c;
-      border: 1px solid var(--card-border);
+      background: #0b0d09;
+      border: 1px solid var(--border-color);
       border-radius: 10px;
-      color: #ccc;
+      color: #ddd;
       font-size: 12px;
       outline: none;
       font-family: monospace;
@@ -214,15 +215,15 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 72px;
-      background: #151811;
-      border-top: 1px solid var(--card-border);
+      height: 74px;
+      background: #141810;
+      border-top: 1px solid #283021;
       display: flex;
       align-items: center;
       justify-content: space-around;
       z-index: 999;
       padding: 0 4px;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.7);
     }
     .cnav-item {
       flex: 1;
@@ -231,28 +232,27 @@
       align-items: center;
       justify-content: center;
       gap: 3px;
-      color: var(--dim);
+      color: var(--text-dim);
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       padding: 8px 0;
-      transition: color 0.15s ease;
     }
     .cnav-item .nav-icon {
-      font-size: 19px;
+      font-size: 20px;
       line-height: 1;
     }
     .cnav-item.active {
-      color: var(--green-glow);
+      color: var(--green-bright);
     }
     .cnav-item.active .nav-icon {
-      filter: drop-shadow(0 0 6px rgba(112, 224, 0, 0.5));
+      filter: drop-shadow(0 0 6px rgba(68, 207, 6, 0.6));
     }
     .cnav-item.center-home.active {
-      color: var(--brown-main);
+      color: var(--brown-accent);
     }
     .cnav-item.center-home.active .nav-icon {
-      filter: drop-shadow(0 0 6px rgba(176, 125, 79, 0.6));
+      filter: drop-shadow(0 0 6px rgba(194, 136, 81, 0.7));
     }
 
     /* Modals */
@@ -269,37 +269,34 @@
     }
     .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal-box {
-      background: #171b13;
-      border: 1px solid var(--brown-main);
-      border-radius: 18px;
+      background: #161b11;
+      border: 1px solid var(--brown-accent);
+      border-radius: 20px;
       padding: 22px;
       width: 100%; max-width: 350px;
     }
     .modal-box input {
       width: 100%;
       padding: 12px;
-      background: #0d0f0c;
-      border: 1px solid var(--card-border);
+      background: #0b0d09;
+      border: 1px solid var(--border-color);
       border-radius: 10px;
       color: white;
       font-size: 14px;
       margin: 6px 0 14px;
       outline: none;
     }
-    .modal-box input:focus {
-      border-color: var(--green-main);
-    }
   </style>
 </head>
 <body>
 
-  <!-- Top Header -->
+  <!-- Top Header Profile -->
   <div class="header-bar">
     <div class="user-profile">
       <div class="avatar-icon">🌿</div>
       <div>
         <h3 id="ui-username" style="font-size:15px; font-weight:800;">...</h3>
-        <p id="ui-userid" style="font-size: 11px; color: var(--dim); font-family: monospace;">ID: ...</p>
+        <p id="ui-userid" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">ID: ...</p>
       </div>
     </div>
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
@@ -309,28 +306,28 @@
   <div class="balance-box">
     <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
-    <div style="font-size: 11px; color: var(--brown-main);" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
+    <div style="font-size: 11px; color: var(--brown-accent);" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
   </div>
 
-  <!-- Primary Buttons -->
+  <!-- Action Buttons -->
   <div class="btn-grid">
-    <button class="base-btn btn-green" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
-    <button class="base-btn btn-brown" id="btn-open-withdraw">💳 Withdraw</button>
+    <button class="action-btn btn-green" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
+    <button class="action-btn btn-brown" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
   <!-- ================= 5 TAB VIEWS ================= -->
 
   <!-- View 1: TASK -->
   <div class="tab-view" id="view-task">
-    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
+    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
     <div id="tasks-container">
-      <p style="font-size:12px; color:var(--dim); padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
+      <p style="font-size:12px; color:var(--text-dim); padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
     </div>
   </div>
 
   <!-- View 2: GAME -->
   <div class="tab-view" id="view-game">
-    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">🎮 Earning Games</div>
+    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">🎮 Earning Games</div>
     <div class="card-item">
       <div>
         <h4>Lucky Spin Wheel</h4>
@@ -356,18 +353,18 @@
       </div>
       <button class="btn-sub" id="btn-daily">Claim</button>
     </div>
-    <div class="card-item" style="border-color: var(--brown-border);">
+    <div class="card-item" style="border-color: var(--brown-dark);">
       <div>
         <h4>Ads Quick Earn</h4>
-        <p style="color:var(--green-glow);">ကြော်ငြာကြည့်၍ တိုက်ရိုက်ဆုကြေးယူပါ</p>
+        <p style="color:var(--green-bright);">ကြော်ငြာကြည့်၍ တိုက်ရိုက်ဆုကြေးယူပါ</p>
       </div>
-      <button class="btn-sub" style="border-color:var(--brown-main); color:var(--brown-main);" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
+      <button class="btn-sub" style="border-color:var(--brown-accent); color:var(--brown-accent);" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
     </div>
   </div>
 
   <!-- View 4: INVITE -->
   <div class="tab-view" id="view-invite">
-    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
+    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
     <div class="card-item">
       <div>
         <h4>Invite Commission (<span id="ref-percent-text">20</span>%)</h4>
@@ -377,70 +374,65 @@
     </div>
 
     <div class="invite-box">
-      <div style="font-size:12px; color:var(--dim); font-weight:700;">သင်၏ Invite Link</div>
+      <div style="font-size:12px; color:var(--text-dim); font-weight:700;">သင်၏ Invite Link</div>
       <div class="invite-input-wrap">
         <input type="text" id="invite-link-input" class="invite-input" readonly>
-        <button class="base-btn btn-brown" style="padding: 0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
+        <button class="action-btn btn-brown" style="padding: 0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
       </div>
     </div>
   </div>
 
   <!-- View 5: PROFILE -->
   <div class="tab-view" id="view-profile">
-    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
+    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
     <div class="card-item" style="margin-bottom:14px;">
       <div>
         <h4 id="profile-name">...</h4>
         <p id="profile-uid" style="font-family: monospace;">ID: ...</p>
       </div>
-      <span style="font-size:11px; font-weight:800; color:var(--green-glow);">VERIFIED</span>
+      <span style="font-size:11px; font-weight:800; color:var(--green-bright);">VERIFIED</span>
     </div>
 
-    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
+    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
     <div id="history-container">
-      <p style="font-size:12px; color:var(--dim); padding:10px 0;">မှတ်တမ်း ဆွဲယူနေပါသည်...</p>
+      <p style="font-size:12px; color:var(--text-dim); padding:10px 0;">မှတ်တမ်း ဆွဲယူနေပါသည်...</p>
     </div>
   </div>
 
-  <!-- ================= 5 BOTTOM NAVIGATION BUTTONS ================= -->
+  <!-- ================= 5 BOTTOM BUTTONS (Task Game Home Invite Profile) ================= -->
   <div class="custom-bottom-nav">
-    <!-- 1. Task -->
     <div class="cnav-item" onclick="switchNav('view-task', this)">
       <span class="nav-icon">📋</span>
       <span>Task</span>
     </div>
 
-    <!-- 2. Game -->
     <div class="cnav-item" onclick="switchNav('view-game', this)">
       <span class="nav-icon">🎮</span>
       <span>Game</span>
     </div>
 
-    <!-- 3. Home (Center) -->
     <div class="cnav-item center-home active" onclick="switchNav('view-home', this)">
       <span class="nav-icon">🏠</span>
       <span>Home</span>
     </div>
 
-    <!-- 4. Invite -->
     <div class="cnav-item" onclick="switchNav('view-invite', this)">
       <span class="nav-icon">👥</span>
       <span>Invite</span>
     </div>
 
-    <!-- 5. Profile -->
     <div class="cnav-item" onclick="switchNav('view-profile', this); loadWithdrawHistory();">
       <span class="nav-icon">👤</span>
       <span>Profile</span>
     </div>
   </div>
 
-  <!-- Notification Alert Modal -->
+  <!-- Alert Modal -->
   <div class="modal-overlay" id="modal-alert">
     <div class="modal-box" style="text-align: center;">
       <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
-      <p id="alert-msg" style="color: var(--dim); font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
-      <button class="base-btn btn-green" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
+      <p id="alert-msg" style="color: var(--text-dim); font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
+      <button class="action-btn btn-green" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
     </div>
   </div>
 
@@ -448,17 +440,17 @@
   <div class="modal-overlay" id="modal-withdraw">
     <div class="modal-box">
       <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;">USDT BEP-20 ထုတ်ယူရန်</h3>
-      <p style="font-size: 11px; color: var(--dim); text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
+      <p style="font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
       <div id="withdraw-msg-box" style="display: none; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 12px; font-weight: bold;"></div>
 
-      <label style="font-size: 11px; color: var(--dim);">ထုတ်ယူမည့် ပမာဏ ($)</label>
+      <label style="font-size: 11px; color: var(--text-dim);">ထုတ်ယူမည့် ပမာဏ ($)</label>
       <input type="number" id="input-amount" step="0.001" placeholder="0.03">
 
-      <label style="font-size: 11px; color: var(--dim);">BEP-20 Wallet Address (0x...)</label>
+      <label style="font-size: 11px; color: var(--text-dim);">BEP-20 Wallet Address (0x...)</label>
       <input type="text" id="input-wallet" placeholder="0x...">
 
-      <button class="base-btn btn-green" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
-      <button class="base-btn" style="width: 100%; background: #262a21; color: var(--dim); padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
+      <button class="action-btn btn-green" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
+      <button class="action-btn" style="width: 100%; background: #22281c; color: var(--text-dim); padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
     </div>
   </div>
 
@@ -479,7 +471,6 @@
     let lastDaily = 0;
     let completedTasks = [];
 
-    // Switch 5 Navs
     function switchNav(viewId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
@@ -500,9 +491,9 @@
       const box = document.getElementById("withdraw-msg-box");
       box.style.display = "block";
       box.innerText = text;
-      box.style.background = isError ? "rgba(217, 78, 52, 0.15)" : "rgba(56, 176, 0, 0.15)";
-      box.style.color = isError ? "#d94e34" : "#70e000";
-      box.style.border = isError ? "1px solid #d94e34" : "1px solid #70e000";
+      box.style.background = isError ? "rgba(217, 78, 52, 0.15)" : "rgba(68, 207, 6, 0.15)";
+      box.style.color = isError ? "#d94e34" : "#44cf06";
+      box.style.border = isError ? "1px solid #d94e34" : "1px solid #44cf06";
     }
 
     function renderUI() {
@@ -520,7 +511,6 @@
       document.getElementById("invite-link-input").value = link;
     }
 
-    // Live Database Sync
     async function syncDataFromDB() {
       try {
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
@@ -564,7 +554,7 @@
           div.innerHTML = `
             <div>
               <h4>${t.title}</h4>
-              <p style="color:var(--green-glow); font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
+              <p style="color:var(--green-bright); font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
             </div>
             <button class="btn-sub" id="task-btn-${t.id}" ${isDone ? "disabled" : ""}>
               ${isDone ? "Done" : "Start"}
@@ -593,7 +583,6 @@
       });
     }
 
-    // Ads Watch
     let isWatching = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       if (config.bot_status === 'OFF') {
@@ -623,7 +612,6 @@
       }, 1000);
     });
 
-    // Daily Bonus
     document.getElementById("btn-daily").addEventListener("click", async () => {
       const now = Date.now();
       if (now - lastDaily < 24 * 60 * 60 * 1000) {
@@ -642,7 +630,6 @@
       showAlert("🎁 နေ့စဉ်ဆု", `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`);
     });
 
-    // Task Execution
     function handleDynamicTask(task) {
       if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
       const b = document.getElementById(`task-btn-${task.id}`);
@@ -664,17 +651,16 @@
       }, 3500);
     }
 
-    // Withdraw History Loader
     async function loadWithdrawHistory() {
       const container = document.getElementById("history-container");
-      container.innerHTML = "<p style='font-size:12px; color:var(--dim);'>မှတ်တမ်း ဆွဲယူနေပါသည်...</p>";
+      container.innerHTML = "<p style='font-size:12px; color:var(--text-dim);'>မှတ်တမ်း ဆွဲယူနေပါသည်...</p>";
       try {
         const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals?user_id=eq.${userData.id}&order=created_at.desc`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const list = await res.json();
         if (list.length === 0) {
-          container.innerHTML = "<p style='font-size:12px; color:var(--dim); padding:10px 0;'>ငွေထုတ်မှတ်တမ်း မရှိသေးပါ။</p>";
+          container.innerHTML = "<p style='font-size:12px; color:var(--text-dim); padding:10px 0;'>ငွေထုတ်မှတ်တမ်း မရှိသေးပါ။</p>";
           return;
         }
         container.innerHTML = "";
@@ -685,18 +671,17 @@
           div.innerHTML = `
             <div>
               <h4>$${item.amount} USDT</h4>
-              <p style="font-size:10px; color:var(--dim); font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
+              <p style="font-size:10px; color:var(--text-dim); font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
             </div>
-            <span style="font-size:11px; font-weight:800; color: ${isApp ? 'var(--green-glow)' : 'var(--brown-main)'};">${item.status}</span>
+            <span style="font-size:11px; font-weight:800; color: ${isApp ? 'var(--green-bright)' : 'var(--brown-accent)'};">${item.status}</span>
           `;
           container.appendChild(div);
         });
       } catch (e) {
-        container.innerHTML = "<p style='font-size:12px; color:var(--danger);'>မှတ်တမ်းဆွဲယူ၍ မရပါ။</p>";
+        container.innerHTML = "<p style='font-size:12px; color:var(--text-dim);'>မှတ်တမ်းဆွဲယူ၍ မရပါ။</p>";
       }
     }
 
-    // Withdraw Submit
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
       document.getElementById("withdraw-msg-box").style.display = "none";
       document.getElementById("input-amount").value = "";
@@ -752,7 +737,6 @@
       }, 2500);
     });
 
-    // Copy Link Action
     document.getElementById("btn-copy-link").addEventListener("click", () => {
       const link = document.getElementById("invite-link-input").value;
       navigator.clipboard.writeText(link).then(() => {
@@ -762,7 +746,6 @@
       });
     });
 
-    // Direct Share Action
     document.getElementById("btn-share").addEventListener("click", () => {
       const link = document.getElementById("invite-link-input").value;
       if (tg?.openTelegramLink) {
