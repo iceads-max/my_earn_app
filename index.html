@@ -6,21 +6,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cyber Earn - Purple Green Edition</title>
+  <title>Cyber Earn</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root {
-      --bg: #0d0814;
-      --card-bg: #160f24;
-      --border-color: #2e1d4d;
-      --purple-bright: #b829ff;
-      --purple-dark: #630ea8;
-      --green-bright: #00ff88;
-      --green-dark: #008f4c;
-      --text-white: #ffffff;
-      --text-dim: #978aa8;
-      --danger: #ff3366;
-    }
     * {
       box-sizing: border-box;
       margin: 0;
@@ -30,16 +18,15 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      background-color: var(--bg);
-      background-image: radial-gradient(circle at 0% 0%, rgba(184, 41, 255, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(0, 255, 136, 0.12) 0%, transparent 50%);
-      color: var(--text-white);
+      background-color: #0b0713 !important;
+      background-image: radial-gradient(circle at 0% 0%, rgba(184, 41, 255, 0.22) 0%, transparent 55%),
+                        radial-gradient(circle at 100% 100%, rgba(0, 255, 136, 0.16) 0%, transparent 55%) !important;
+      color: #ffffff !important;
       padding: 16px;
       padding-bottom: 95px;
       min-height: 100vh;
     }
 
-    /* Top Bar */
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -54,13 +41,13 @@
     .avatar-icon {
       width: 44px;
       height: 44px;
-      background: linear-gradient(135deg, var(--purple-bright), var(--green-bright));
+      background: linear-gradient(135deg, #b829ff, #00ff88);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 22px;
-      box-shadow: 0 4px 15px rgba(184, 41, 255, 0.4);
+      box-shadow: 0 4px 16px rgba(184, 41, 255, 0.45);
     }
     .status-badge {
       font-size: 11px;
@@ -68,31 +55,30 @@
       padding: 5px 12px;
       border-radius: 10px;
       background: rgba(0, 255, 136, 0.12);
-      border: 1px solid var(--green-bright);
-      color: var(--green-bright);
+      border: 1px solid #00ff88;
+      color: #00ff88;
     }
 
-    /* Main Balance Box */
     .balance-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
+      background: #140d21 !important;
+      border: 1px solid #2f1c4e !important;
       border-radius: 20px;
       padding: 22px 16px;
       text-align: center;
       margin-bottom: 16px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
     }
     .balance-box::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--purple-bright), var(--green-bright));
+      background: linear-gradient(90deg, #b829ff, #00ff88);
     }
     .balance-title {
       font-size: 11px;
-      color: var(--text-dim);
+      color: #9c8eaf;
       text-transform: uppercase;
       letter-spacing: 1px;
       font-weight: 700;
@@ -100,13 +86,12 @@
     .balance-val {
       font-size: 38px;
       font-weight: 900;
-      color: var(--green-bright);
+      color: #00ff88 !important;
       margin: 6px 0;
       font-family: monospace;
-      text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.45);
     }
 
-    /* Dual Buttons */
     .btn-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -128,20 +113,19 @@
     }
     .action-btn:active { transform: scale(0.96); }
     .btn-purple {
-      background: linear-gradient(135deg, #8712c9, #b829ff);
-      color: #ffffff;
-      box-shadow: 0 4px 18px rgba(184, 41, 255, 0.35);
+      background: linear-gradient(135deg, #8712c9, #b829ff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 18px rgba(184, 41, 255, 0.4) !important;
     }
     .btn-green {
-      background: linear-gradient(135deg, #009952, #00ff88);
-      color: #07120a;
-      box-shadow: 0 4px 18px rgba(0, 255, 136, 0.35);
+      background: linear-gradient(135deg, #009952, #00ff88) !important;
+      color: #07120a !important;
+      box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4) !important;
     }
 
-    /* Cards */
     .card-item {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
+      background: #140d21 !important;
+      border: 1px solid #2f1c4e !important;
       border-radius: 16px;
       padding: 14px;
       margin-bottom: 10px;
@@ -155,12 +139,12 @@
     }
     .card-item p {
       font-size: 11px;
-      color: var(--text-dim);
+      color: #9c8eaf;
     }
     .btn-sub {
-      background: rgba(184, 41, 255, 0.12);
-      border: 1px solid var(--purple-bright);
-      color: var(--purple-bright);
+      background: rgba(184, 41, 255, 0.12) !important;
+      border: 1px solid #b829ff !important;
+      color: #b829ff !important;
       padding: 8px 16px;
       border-radius: 10px;
       font-size: 12px;
@@ -168,13 +152,12 @@
       cursor: pointer;
     }
     .btn-sub:disabled {
-      border-color: #2b203d;
-      color: #5d536e;
-      background: transparent;
+      border-color: #2b203d !important;
+      color: #5d536e !important;
+      background: transparent !important;
       cursor: not-allowed;
     }
 
-    /* 5 Page Views */
     .tab-view {
       display: none;
     }
@@ -182,10 +165,9 @@
       display: block;
     }
 
-    /* Invite Box */
     .invite-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
+      background: #140d21;
+      border: 1px solid #2f1c4e;
       border-radius: 14px;
       padding: 14px;
       margin-top: 14px;
@@ -199,7 +181,7 @@
       flex: 1;
       padding: 11px;
       background: #09050d;
-      border: 1px solid var(--border-color);
+      border: 1px solid #2f1c4e;
       border-radius: 10px;
       color: #ddd;
       font-size: 12px;
@@ -207,21 +189,20 @@
       font-family: monospace;
     }
 
-    /* Bottom Navigation */
     .custom-bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       height: 74px;
-      background: #120b1c;
-      border-top: 1px solid var(--border-color);
+      background: #100a1b !important;
+      border-top: 1px solid #2b1a45 !important;
       display: flex;
       align-items: center;
       justify-content: space-around;
       z-index: 999;
       padding: 0 4px;
-      box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.85);
     }
     .cnav-item {
       flex: 1;
@@ -230,7 +211,7 @@
       align-items: center;
       justify-content: center;
       gap: 3px;
-      color: var(--text-dim);
+      color: #9c8eaf;
       font-size: 10px;
       font-weight: 800;
       cursor: pointer;
@@ -241,19 +222,18 @@
       line-height: 1;
     }
     .cnav-item.active {
-      color: var(--green-bright);
+      color: #00ff88 !important;
     }
     .cnav-item.active .nav-icon {
       filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.7));
     }
     .cnav-item.center-home.active {
-      color: var(--purple-bright);
+      color: #b829ff !important;
     }
     .cnav-item.center-home.active .nav-icon {
       filter: drop-shadow(0 0 8px rgba(184, 41, 255, 0.8));
     }
 
-    /* Modals */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -268,7 +248,7 @@
     .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal-box {
       background: #170e24;
-      border: 1px solid var(--purple-bright);
+      border: 1px solid #b829ff;
       border-radius: 20px;
       padding: 22px;
       width: 100%; max-width: 350px;
@@ -277,7 +257,7 @@
       width: 100%;
       padding: 12px;
       background: #09050d;
-      border: 1px solid var(--border-color);
+      border: 1px solid #2f1c4e;
       border-radius: 10px;
       color: white;
       font-size: 14px;
@@ -285,7 +265,7 @@
       outline: none;
     }
     .modal-box input:focus {
-      border-color: var(--green-bright);
+      border-color: #00ff88;
     }
   </style>
 </head>
@@ -297,7 +277,7 @@
       <div class="avatar-icon">⚡</div>
       <div>
         <h3 id="ui-username" style="font-size:15px; font-weight:800;">...</h3>
-        <p id="ui-userid" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">ID: ...</p>
+        <p id="ui-userid" style="font-size: 11px; color: #9c8eaf; font-family: monospace;">ID: ...</p>
       </div>
     </div>
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
@@ -307,7 +287,7 @@
   <div class="balance-box">
     <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
-    <div style="font-size: 11px; color: var(--purple-bright);" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
+    <div style="font-size: 11px; color: #b829ff;" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
   </div>
 
   <!-- Action Buttons -->
@@ -320,15 +300,15 @@
 
   <!-- View 1: TASK -->
   <div class="tab-view" id="view-task">
-    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
     <div id="tasks-container">
-      <p style="font-size:12px; color:var(--text-dim); padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
+      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
     </div>
   </div>
 
   <!-- View 2: GAME -->
   <div class="tab-view" id="view-game">
-    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">🎮 Earning Games</div>
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">🎮 Earning Games</div>
     <div class="card-item">
       <div>
         <h4>Lucky Spin Wheel</h4>
@@ -354,18 +334,18 @@
       </div>
       <button class="btn-sub" id="btn-daily">Claim</button>
     </div>
-    <div class="card-item">
+    <div class="card-item" style="border-color: #2f1c4e;">
       <div>
         <h4>Ads Quick Earn</h4>
-        <p style="color:var(--green-bright);">ကြော်ငြာကြည့်၍ တိုက်ရိုက်ဆုကြေးယူပါ</p>
+        <p style="color:#00ff88;">ကြော်ငြာကြည့်၍ တိုက်ရိုက်ဆုကြေးယူပါ</p>
       </div>
-      <button class="btn-sub" style="border-color:var(--green-bright); color:var(--green-bright);" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
+      <button class="btn-sub" style="border-color:#00ff88; color:#00ff88;" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
     </div>
   </div>
 
   <!-- View 4: INVITE -->
   <div class="tab-view" id="view-invite">
-    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
     <div class="card-item">
       <div>
         <h4>Invite Commission (<span id="ref-percent-text">20</span>%)</h4>
@@ -375,7 +355,7 @@
     </div>
 
     <div class="invite-box">
-      <div style="font-size:12px; color:var(--text-dim); font-weight:700;">သင်၏ Invite Link</div>
+      <div style="font-size:12px; color:#9c8eaf; font-weight:700;">သင်၏ Invite Link</div>
       <div class="invite-input-wrap">
         <input type="text" id="invite-link-input" class="invite-input" readonly>
         <button class="action-btn btn-purple" style="padding: 0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
@@ -385,18 +365,18 @@
 
   <!-- View 5: PROFILE -->
   <div class="tab-view" id="view-profile">
-    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
     <div class="card-item" style="margin-bottom:14px;">
       <div>
         <h4 id="profile-name">...</h4>
         <p id="profile-uid" style="font-family: monospace;">ID: ...</p>
       </div>
-      <span style="font-size:11px; font-weight:800; color:var(--green-bright);">VERIFIED</span>
+      <span style="font-size:11px; font-weight:800; color:#00ff88;">VERIFIED</span>
     </div>
 
-    <div style="font-size: 12px; color: var(--text-dim); font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
+    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
     <div id="history-container">
-      <p style="font-size:12px; color:var(--text-dim); padding:10px 0;">မှတ်တမ်း ဆွဲယူနေပါသည်...</p>
+      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">မှတ်တမ်း ဆွဲယူနေပါသည်...</p>
     </div>
   </div>
 
@@ -432,7 +412,7 @@
   <div class="modal-overlay" id="modal-alert">
     <div class="modal-box" style="text-align: center;">
       <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
-      <p id="alert-msg" style="color: var(--text-dim); font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
+      <p id="alert-msg" style="color: #9c8eaf; font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
       <button class="action-btn btn-purple" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
     </div>
   </div>
@@ -441,17 +421,17 @@
   <div class="modal-overlay" id="modal-withdraw">
     <div class="modal-box">
       <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;">USDT BEP-20 ထုတ်ယူရန်</h3>
-      <p style="font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
+      <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
       <div id="withdraw-msg-box" style="display: none; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 12px; font-weight: bold;"></div>
 
-      <label style="font-size: 11px; color: var(--text-dim);">ထုတ်ယူမည့် ပမာဏ ($)</label>
+      <label style="font-size: 11px; color: #9c8eaf;">ထုတ်ယူမည့် ပမာဏ ($)</label>
       <input type="number" id="input-amount" step="0.001" placeholder="0.03">
 
-      <label style="font-size: 11px; color: var(--text-dim);">BEP-20 Wallet Address (0x...)</label>
+      <label style="font-size: 11px; color: #9c8eaf;">BEP-20 Wallet Address (0x...)</label>
       <input type="text" id="input-wallet" placeholder="0x...">
 
       <button class="action-btn btn-green" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
-      <button class="action-btn" style="width: 100%; background: #26193b; color: var(--text-dim); padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
+      <button class="action-btn" style="width: 100%; background: #26193b; color: #9c8eaf; padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
     </div>
   </div>
 
@@ -555,7 +535,7 @@
           div.innerHTML = `
             <div>
               <h4>${t.title}</h4>
-              <p style="color:var(--green-bright); font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
+              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
             </div>
             <button class="btn-sub" id="task-btn-${t.id}" ${isDone ? "disabled" : ""}>
               ${isDone ? "Done" : "Start"}
@@ -654,14 +634,14 @@
 
     async function loadWithdrawHistory() {
       const container = document.getElementById("history-container");
-      container.innerHTML = "<p style='font-size:12px; color:var(--text-dim);'>မှတ်တမ်း ဆွဲယူနေပါသည်...</p>";
+      container.innerHTML = "<p style='font-size:12px; color:#9c8eaf;'>မှတ်တမ်း ဆွဲယူနေပါသည်...</p>";
       try {
         const res = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals?user_id=eq.${userData.id}&order=created_at.desc`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const list = await res.json();
         if (list.length === 0) {
-          container.innerHTML = "<p style='font-size:12px; color:var(--text-dim); padding:10px 0;'>ငွေထုတ်မှတ်တမ်း မရှိသေးပါ။</p>";
+          container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>ငွေထုတ်မှတ်တမ်း မရှိသေးပါ။</p>";
           return;
         }
         container.innerHTML = "";
@@ -672,14 +652,14 @@
           div.innerHTML = `
             <div>
               <h4>$${item.amount} USDT</h4>
-              <p style="font-size:10px; color:var(--text-dim); font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
+              <p style="font-size:10px; color:#9c8eaf; font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
             </div>
-            <span style="font-size:11px; font-weight:800; color: ${isApp ? 'var(--green-bright)' : 'var(--purple-bright)'};">${item.status}</span>
+            <span style="font-size:11px; font-weight:800; color: ${isApp ? '#00ff88' : '#b829ff'};">${item.status}</span>
           `;
           container.appendChild(div);
         });
       } catch (e) {
-        container.innerHTML = "<p style='font-size:12px; color:var(--text-dim);'>မှတ်တမ်းဆွဲယူ၍ မရပါ။</p>";
+        container.innerHTML = "<p style='font-size:12px; color:#ff3366;'>မှတ်တမ်းဆွဲယူ၍ မရပါ။</p>";
       }
     }
 
