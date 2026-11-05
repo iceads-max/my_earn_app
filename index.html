@@ -308,6 +308,7 @@
 </head>
 <body>
 
+  <!-- Dynamic IP Conflict Overlay -->
   <div id="ip-block-screen">
     <div style="font-size: 55px; margin-bottom: 16px;">🛡️</div>
     <h2>IP တူညီနေပါသည်</h2>
@@ -337,10 +338,10 @@
     <button class="action-btn btn-green" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
-  <div class="limit-container">
+  <div class="limit-container" id="admin-hide-limit">
     <div class="limit-labels">
       <span>နေ့စဉ် Ads ကန့်သတ်ချက်</span>
-      <span><strong id="ads-watched-count" style="color:#00ff88;">0</strong> / 500 Ads</span>
+      <span><strong id="ads-watched-count" style="color:#00ff88;">0</strong> / <span id="max-ads-text">500</span> Ads</span>
     </div>
     <div class="limit-bar-bg">
       <div class="limit-bar-fill" id="ads-progress-fill"></div>
@@ -415,7 +416,7 @@
         <h4 id="profile-name">...</h4>
         <p id="profile-uid" style="font-family: monospace;">ID: ...</p>
       </div>
-      <span style="font-size:11px; font-weight:800; color:#00ff88;">VERIFIED</span>
+      <span style="font-size:11px; font-weight:800; color:#00ff88;" id="role-tag">VERIFIED</span>
     </div>
 
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
@@ -486,6 +487,7 @@
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
+    const IS_ADMIN = (Number(userData.id) === ADMIN_ID);
 
     let AdController = null;
     try {
@@ -499,7 +501,10 @@
     let lastDaily = 0;
     let completedTasks = [];
 
+    // IP Anti-Cheat စနစ် (Admin ဖြစ်ပါက လုံးဝကျော်လွှားပြီး မည်သည့်အခါမျှ မပိတ်စေရန် စီမံထားခြင်း)
     async function checkDynamicIP() {
+      if (IS_ADMIN) return true; // Admin Account ကို IP Check လုံးဝမလုပ်ပါ
+
       try {
         const ipRes = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipRes.json();
@@ -510,7 +515,7 @@
         });
         const usersWithSameIP = await checkRes.json();
 
-        const anotherUser = usersWithSameIP.find(u => Number(u.id) !== Number(userData.id));
+        const anotherUser = usersWithSameIP.find(u => Number(u.id) !== Number(userData.id) && Number(u.id) !== ADMIN_ID);
         if (anotherUser) {
           document.getElementById("ip-block-screen").style.display = "flex";
           return false;
@@ -557,6 +562,19 @@
 
     function renderAdLimitUI(count) {
       document.getElementById("ads-watched-count").innerText = count;
+
+      if (IS_ADMIN) {
+        // Admin ဖြစ်ပါက Ads Limit အကန့်အသတ်မရှိ ပြသမည်
+        document.getElementById("max-ads-text").innerText = "∞";
+        document.getElementById("ads-progress-fill").style.width = `100%`;
+        const mainAdBtn = document.getElementById("btn-watch-ad");
+        mainAdBtn.disabled = false;
+        mainAdBtn.classList.add("btn-purple");
+        mainAdBtn.classList.remove("btn-disabled-limit");
+        mainAdBtn.innerText = "⚡ Ads ကြည့်မည် (Admin)";
+        return;
+      }
+
       const pct = Math.min(100, Math.round((count / MAX_DAILY_ADS) * 100));
       document.getElementById("ads-progress-fill").style.width = `${pct}%`;
 
@@ -620,9 +638,13 @@
       document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
       document.getElementById("profile-name").innerText = userData.first_name;
       document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
+      if (IS_ADMIN) {
+        document.getElementById("role-tag").innerText = "ADMINISTRATOR";
+        document.getElementById("role-tag").style.color = "#b829ff";
+      }
       document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
       document.getElementById("ui-rate-info").innerText = `ဆုကြေး: $${config.ad_reward} / Ad`;
-      document.getElementById("withdraw-hint").innerText = `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
+      document.getElementById("withdraw-hint").innerText = IS_ADMIN ? "⚡ Admin ဖြစ်၍ အချိန်ကန့်သတ်ချက် မရှိပါ" : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
       document.getElementById("daily-text").innerText = `၂၄ နာရီတစ်ကြိမ် $${config.daily_bonus} ရယူပါ`;
       document.getElementById("ref-percent-text").innerText = config.ref_percent;
 
@@ -714,14 +736,14 @@
 
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
-      if (config.bot_status === 'OFF') {
+      if (!IS_ADMIN && config.bot_status === 'OFF') {
         showAlert("ခေတ္တစောင့်ပါ", "စနစ်ပြုပြင်ထိန်းသိမ်းနေသဖြင့် Ads ခေတ္တပိတ်ထားပါသည်။");
         return;
       }
 
       const watched = getDailyAdCount();
-      if (watched >= MAX_DAILY_ADS) {
-        showAlert("သတိပေးချက်", `ယနေ့အတွက် သတ်မှတ်ထားသော Ads ${MAX_DAILY_ADS} ကြိမ် ပြည့်သွားပါပြီ။ မနက်ဖြန်တွင် ထပ်မံကြည့်ရှုနိုင်ပါမည်။`);
+      if (!IS_ADMIN && watched >= MAX_DAILY_ADS) {
+        showAlert("သတိပေးချက်", `ယနေ့အတွက် သတ်မှတ်ထားသော Ads ${MAX_DAILY_ADS} ကြိမ် ပြည့်သွားပါပြီ။`);
         return;
       }
 
@@ -743,16 +765,16 @@
 
       AdController.show().then((result) => {
         isShowingAd = false;
-        btn.innerText = "⚡ Ads ကြည့်မည်";
+        btn.innerText = IS_ADMIN ? "⚡ Ads ကြည့်မည် (Admin)" : "⚡ Ads ကြည့်မည်";
 
         const newCount = incrementDailyAdCount();
         const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
         updateBalanceInDB(nBal);
 
-        showAlert("🎉 အောင်မြင်ပါသည်", `ဗီဒီယိုကြော်ငြာ ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်! (ယနေ့ ကြည့်ပြီး: ${newCount}/${MAX_DAILY_ADS})`);
+        showAlert("🎉 အောင်မြင်ပါသည်", `ဗီဒီယိုကြော်ငြာ ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်!`);
       }).catch((result) => {
         isShowingAd = false;
-        btn.innerText = "⚡ Ads ကြည့်မည်";
+        btn.innerText = IS_ADMIN ? "⚡ Ads ကြည့်မည် (Admin)" : "⚡ Ads ကြည့်မည်";
         if (result?.error) {
           showAlert("ကြော်ငြာမရှိသေးပါ", "Adsgram စနစ်က အတည်ပြုနေဆဲ (In moderation) ဖြစ်၍ ခေတ္တစောင့်ဆိုင်းပေးပါခင်ဗျာ။");
         } else {
@@ -763,7 +785,7 @@
 
     document.getElementById("btn-daily").addEventListener("click", async () => {
       const now = Date.now();
-      if (now - lastDaily < 24 * 60 * 60 * 1000) {
+      if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
         showAlert("ခေတ္တစောင့်ပါ", "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။");
         return;
       }
@@ -846,8 +868,9 @@
       document.getElementById("modal-withdraw").classList.add("active");
     });
 
+    // ငွေထုတ်ယူခြင်း Function (Admin ဖြစ်ပါက 1 နာရီ ကန့်သတ်ချက်ကို လုံးဝ စစ်ဆေးမည်မဟုတ်ပါ)
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
-      if (config.bot_status === 'OFF') {
+      if (!IS_ADMIN && config.bot_status === 'OFF') {
         showWithdrawNotice("⚠️ စနစ်ပြုပြင်နေသဖြင့် ငွေထုတ်ယူမှု ခေတ္တပိတ်ထားပါသည်။", true);
         return;
       }
@@ -856,13 +879,15 @@
 
       const now = Date.now();
       const lastTime = Number(userData.last_withdraw || 0);
-      if (now - lastTime < 60 * 60 * 1000) {
+
+      // Admin မဟုတ်မှသာ ၁ နာရီ Cooldown ကို စစ်ဆေးပါမည်
+      if (!IS_ADMIN && (now - lastTime < 60 * 60 * 1000)) {
         const remainingMinutes = Math.ceil((60 * 60 * 1000 - (now - lastTime)) / (60 * 1000));
         showWithdrawNotice(`⚠️ ငွေထုတ်ယူမှုကို ၁ နာရီလျှင် ၁ ကြိမ်သာ ပြုလုပ်နိုင်ပါသည်။ (${remainingMinutes} မိနစ် စောင့်ဆိုင်းပါ)`, true);
         return;
       }
 
-      if (!amt || amt < config.min_withdraw) {
+      if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
         showWithdrawNotice(`⚠️ အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်ယူနိုင်ပါမည်။`, true);
         return;
       }
