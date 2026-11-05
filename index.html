@@ -2,279 +2,543 @@
 <html lang="my">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Cyber Earn Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyber Earn</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #0d0f17;
-      --card-bg: #161926;
-      --accent-gradient: linear-gradient(135deg, #ff8c00, #ff4500);
-      --green-gradient: linear-gradient(135deg, #00b09b, #96c93d);
-      --text: #ffffff;
-      --subtext: #8e94a5;
+      --bg-color: #0b0e14;
+      --card-bg: #151924;
+      --card-border: #23293b;
+      --accent-orange: #ff5e00;
+      --accent-yellow: #ffb700;
+      --accent-green: #00d26a;
+      --text-main: #ffffff;
+      --text-muted: #8b92a5;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 80px; }
-    
-    .header { text-align: center; margin-bottom: 16px; margin-top: 10px; }
-    .fire-icon { font-size: 42px; margin-bottom: 4px; }
-    
-    .balance-box { background: var(--card-bg); border-radius: 18px; padding: 20px; text-align: center; border: 1px solid #23283c; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-    .balance-box h2 { font-size: 34px; color: #ffae00; margin: 8px 0; font-weight: 800; }
-    .usdt-est { color: #00e676; font-size: 15px; font-weight: bold; }
-    
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
-    .btn { border: none; padding: 14px; border-radius: 14px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    .btn-earn { background: var(--accent-gradient); }
-    .btn-withdraw { background: var(--green-gradient); }
-    
-    .section-title { font-size: 15px; margin: 18px 0 10px; color: var(--subtext); display: flex; align-items: center; gap: 6px; font-weight: 600; }
-    .card { background: var(--card-bg); border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid #23283c; display: flex; align-items: center; justify-content: space-between; }
-    .card-info h4 { font-size: 15px; margin-bottom: 4px; }
-    .card-info p { font-size: 12px; color: var(--subtext); }
-    .reward-tag { color: #ffae00; font-weight: bold; font-size: 13px; }
-    
-    .btn-small { background: #ff7700; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; }
-    .btn-small:disabled { background: #3a3f55; color: #777; cursor: not-allowed; }
-    
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
-    .modal-content { background: var(--card-bg); border-radius: 18px; padding: 22px; width: 90%; max-width: 380px; border: 1px solid #2d334d; }
-    .modal input { width: 100%; padding: 12px; background: #0d0f17; border: 1px solid #2d334d; border-radius: 10px; color: white; margin: 8px 0 16px; font-size: 14px; outline: none; }
-    
-    #loading { color: #ffae00; text-align: center; font-size: 14px; margin: 10px 0; display: none; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 16px;
+      padding-bottom: 90px;
+    }
+    .profile-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+    .profile-avatar {
+      width: 68px;
+      height: 68px;
+      background: radial-gradient(circle, #ff7700 0%, #ff3700 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      box-shadow: 0 0 20px rgba(255, 85, 0, 0.4);
+      margin-bottom: 10px;
+    }
+    .user-name {
+      font-size: 19px;
+      font-weight: 700;
+    }
+    .user-id {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .balance-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      margin-bottom: 18px;
+    }
+    .balance-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .balance-points {
+      font-size: 38px;
+      font-weight: 800;
+      color: var(--accent-yellow);
+      margin: 6px 0;
+      text-shadow: 0 0 15px rgba(255, 183, 0, 0.2);
+    }
+    .balance-usdt {
+      color: var(--accent-green);
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .main-btn {
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s ease, filter 0.2s;
+    }
+    .main-btn:active {
+      transform: scale(0.97);
+    }
+    .btn-earn {
+      background: linear-gradient(135deg, #ff7b00, #ff3c00);
+      box-shadow: 0 4px 15px rgba(255, 68, 0, 0.3);
+    }
+    .btn-withdraw {
+      background: linear-gradient(135deg, #00b09b, #96c93d);
+      box-shadow: 0 4px 15px rgba(0, 210, 106, 0.3);
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 18px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .list-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .list-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .list-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .action-sub-btn {
+      background: #ff5e00;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .action-sub-btn:disabled {
+      background: #2b3145;
+      color: #656d85;
+      cursor: not-allowed;
+    }
+    /* Notification Modal */
+    .popup-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+      padding: 20px;
+    }
+    .popup-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .popup-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      transform: translateY(20px);
+      transition: transform 0.25s ease;
+    }
+    .popup-modal.active .popup-box {
+      transform: translateY(0);
+    }
+    .popup-box input {
+      width: 100%;
+      padding: 13px;
+      background: #0b0e14;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: white;
+      font-size: 14px;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      outline: none;
+    }
+    .popup-box input:focus {
+      border-color: var(--accent-orange);
+    }
+    .close-btn {
+      background: #252a3c;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="fire-icon">🔥</div>
-    <h3 id="username">ကြိုဆိုပါသည်</h3>
-    <p id="telegram-id" style="font-size: 12px; color: var(--subtext);"></p>
-    <div id="loading">ဒေတာများ ဆွဲယူနေပါသည်...</div>
+  <div class="profile-section">
+    <div class="profile-avatar">🔥</div>
+    <div class="user-name" id="ui-username">အသုံးပြုသူ</div>
+    <div class="user-id" id="ui-userid">ID: ...</div>
   </div>
 
-  <div class="balance-box">
-    <p style="color: var(--subtext); font-size: 13px;">လက်ကျန် Points</p>
-    <h2 id="point-bal">0 PTS</h2>
-    <div class="usdt-est">≈ <span id="usdt-bal">0.0000</span> USDT</div>
+  <div class="balance-card">
+    <div class="balance-title">လက်ကျန် Points</div>
+    <div class="balance-points" id="ui-points">0 PTS</div>
+    <div class="balance-usdt">≈ <span id="ui-usdt">0.0000</span> USDT</div>
   </div>
 
   <div class="action-grid">
-    <button class="btn btn-earn" onclick="watchAd()">⚡ Ads ကြည့်မည်</button>
-    <button class="btn btn-withdraw" onclick="openModal('swap-modal')">🔄 Swap & Withdraw</button>
+    <button class="main-btn btn-earn" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
+    <button class="main-btn btn-withdraw" id="btn-open-withdraw">🔄 Withdraw</button>
   </div>
 
-  <div class="section-title">🎁 နေ့စဉ်ဆုလက်ဆောင် & မိတ်ဆက်</div>
-  <div class="card">
-    <div class="card-info">
+  <div class="section-title">🎁 ဆုလက်ဆောင် & မိတ်ဆက်</div>
+  <div class="list-card">
+    <div class="list-info">
       <h4>Daily Bonus</h4>
       <p>၂၄ နာရီတစ်ကြိမ် 50 PTS ရယူပါ</p>
     </div>
-    <button class="btn-small" id="btn-daily" onclick="claimDaily()">Claim</button>
+    <button class="action-sub-btn" id="btn-daily-bonus">Claim</button>
   </div>
 
-  <div class="card">
-    <div class="card-info">
+  <div class="list-card">
+    <div class="list-info">
       <h4>Invite Friends (20% Bonus)</h4>
       <p>မိတ်ဆက်သူများ ရရှိသည့် Point မှ 20% ရမည်</p>
     </div>
-    <button class="btn-small" onclick="shareRef()">Share</button>
+    <button class="action-sub-btn" id="btn-share-ref">Share</button>
   </div>
 
   <div class="section-title">📋 ပြီးမြောက်ရန် Tasks များ</div>
-  <div class="card">
-    <div class="card-info">
+  <div class="list-card">
+    <div class="list-info">
       <h4>Join Telegram Channel</h4>
-      <p class="reward-tag">+100 PTS</p>
+      <p style="color: var(--accent-yellow); font-weight: bold;">+100 PTS</p>
     </div>
-    <button class="btn-small" id="task-btn-tg" onclick="completeTask('tg_channel', 100, 'https://t.me/Tonsarsar')">Join</button>
+    <button class="action-sub-btn" id="btn-task-tg">Join</button>
   </div>
-  <div class="card">
-    <div class="card-info">
+
+  <div class="list-card">
+    <div class="list-info">
       <h4>Subscribe YouTube</h4>
-      <p class="reward-tag">+150 PTS</p>
+      <p style="color: var(--accent-yellow); font-weight: bold;">+150 PTS</p>
     </div>
-    <button class="btn-small" id="task-btn-yt" onclick="completeTask('yt_sub', 150, 'https://youtube.com')">Subscribe</button>
+    <button class="action-sub-btn" id="btn-task-yt">Subscribe</button>
   </div>
 
-  <!-- Swap & Withdraw Modal -->
-  <div class="modal" id="swap-modal">
-    <div class="modal-content">
-      <h3 style="margin-bottom: 8px;">USDT (BEP-20) ဖြင့် ငွေထုတ်ရန်</h3>
-      <p style="font-size: 12px; color: var(--subtext); margin-bottom: 14px;">1,000 PTS = 1 USDT (အနည်းဆုံး 1,000 PTS မှ ထုတ်နိုင်ပါသည်)</p>
-      
-      <label style="font-size: 12px;">ထုတ်ယူမည့် Points</label>
-      <input type="number" id="swap-points" placeholder="ဥပမာ - 1000">
+  <!-- Custom Popup System -->
+  <div class="popup-modal" id="modal-alert">
+    <div class="popup-box">
+      <h3 id="alert-title" style="margin-bottom: 8px;">အသိပေးချက်</h3>
+      <p id="alert-msg" style="color: var(--text-muted); font-size: 14px; margin-bottom: 18px; line-height: 1.5;"></p>
+      <button class="main-btn btn-earn" style="width: 100%;" id="alert-ok-btn">ကောင်းပြီ</button>
+    </div>
+  </div>
 
-      <label style="font-size: 12px;">USDT BEP-20 Wallet Address (0x...)</label>
-      <input type="text" id="wallet-addr" placeholder="0x...">
+  <!-- Withdraw Modal -->
+  <div class="popup-modal" id="modal-withdraw">
+    <div class="popup-box" style="text-align: left;">
+      <h3 style="margin-bottom: 6px; text-align: center;">USDT (BEP-20) ထုတ်ရန်</h3>
+      <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 14px;">1,000 PTS = 1.00 USDT (အနည်းဆုံး 1,000 PTS)</p>
 
-      <button class="btn btn-earn" style="width: 100%; margin-bottom: 10px;" onclick="submitWithdraw()">Withdraw တင်မည်</button>
-      <button class="btn" style="width: 100%; background: #26293b;" onclick="closeModal('swap-modal')">ပိတ်မည်</button>
+      <label style="font-size: 12px; color: var(--text-muted);">ထုတ်ယူမည့် Points</label>
+      <input type="number" id="input-points" placeholder="ဥပမာ - 1000">
+
+      <label style="font-size: 12px; color: var(--text-muted);">BEP-20 Wallet Address (0x...)</label>
+      <input type="text" id="input-wallet" placeholder="0x...">
+
+      <button class="main-btn btn-withdraw" style="width: 100%;" id="btn-submit-withdraw">Withdraw တင်မည်</button>
+      <button class="main-btn close-btn" style="width: 100%;" id="btn-close-withdraw">ပိတ်မည်</button>
     </div>
   </div>
 
   <script>
-    // ---------------- Supabase Setup ----------------
-    const SUPABASE_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Supabase Credentials
+    const SB_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
+    const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
 
+    // Telegram Context Setup
     const tg = window.Telegram?.WebApp;
-    if (tg) { tg.expand(); }
-
-    const user = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
-    let currentUserData = null;
-
-    document.getElementById("username").innerText = `🔥 ${user.first_name}`;
-    document.getElementById("telegram-id").innerText = `ID: ${user.id}`;
-
-    async function loadData() {
-      document.getElementById("loading").style.display = "block";
+    if (tg) {
       try {
-        // User ရှိမရှိ စစ်ဆေးခြင်း
-        let { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
-        
-        if (error && error.code === 'PGRST116') {
-          // User အသစ်ဖြစ်ပါက Insert လုပ်ခြင်း
-          const refParam = tg?.initDataUnsafe?.start_param ? Number(tg.initDataUnsafe.start_param) : null;
-          const { data: newUser } = await supabase.from('users').insert([
-            { id: user.id, name: user.first_name, points: 50, referrer: refParam, last_daily: 0 }
-          ]).select().single();
-          data = newUser;
-        }
+        tg.ready();
+        tg.expand();
+      } catch (e) {}
+    }
 
-        currentUserData = data;
-        updateUI();
+    const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
 
-        // ပြီးထားသော Task များကို Disable လုပ်ခြင်း
-        const { data: completedTasks } = await supabase.from('completed_tasks').select('task_id').eq('user_id', user.id);
-        if (completedTasks) {
-          completedTasks.forEach(t => {
-            if (t.task_id === 'tg_channel') {
-              const b = document.getElementById("task-btn-tg");
-              b.innerText = "Done"; b.disabled = true;
-            }
-            if (t.task_id === 'yt_sub') {
-              const b = document.getElementById("task-btn-yt");
-              b.innerText = "Done"; b.disabled = true;
-            }
-          });
-        }
-      } catch (err) {
-        alert("ချိတ်ဆက်မှု မအောင်မြင်ပါ: " + err.message);
-      } finally {
-        document.getElementById("loading").style.display = "none";
+    // App State Management
+    let state = {
+      points: Number(localStorage.getItem("cb_pts") || 100),
+      lastDaily: Number(localStorage.getItem("cb_daily") || 0),
+      tasks: JSON.parse(localStorage.getItem("cb_tasks") || "[]")
+    };
+
+    // UI Elements
+    const uiUsername = document.getElementById("ui-username");
+    const uiUserid = document.getElementById("ui-userid");
+    const uiPoints = document.getElementById("ui-points");
+    const uiUsdt = document.getElementById("ui-usdt");
+
+    const btnWatchAd = document.getElementById("btn-watch-ad");
+    const btnOpenWithdraw = document.getElementById("btn-open-withdraw");
+    const btnDailyBonus = document.getElementById("btn-daily-bonus");
+    const btnShareRef = document.getElementById("btn-share-ref");
+    const btnTaskTg = document.getElementById("btn-task-tg");
+    const btnTaskYt = document.getElementById("btn-task-yt");
+
+    const modalAlert = document.getElementById("modal-alert");
+    const alertTitle = document.getElementById("alert-title");
+    const alertMsg = document.getElementById("alert-msg");
+    const alertOkBtn = document.getElementById("alert-ok-btn");
+
+    const modalWithdraw = document.getElementById("modal-withdraw");
+    const inputPoints = document.getElementById("input-points");
+    const inputWallet = document.getElementById("input-wallet");
+    const btnSubmitWithdraw = document.getElementById("btn-submit-withdraw");
+    const btnCloseWithdraw = document.getElementById("btn-close-withdraw");
+
+    // Modal Helpers
+    function showAlert(title, message) {
+      alertTitle.innerText = title;
+      alertMsg.innerText = message;
+      modalAlert.classList.add("active");
+    }
+
+    alertOkBtn.addEventListener("click", () => {
+      modalAlert.classList.remove("active");
+    });
+
+    btnOpenWithdraw.addEventListener("click", () => {
+      modalWithdraw.classList.add("active");
+    });
+
+    btnCloseWithdraw.addEventListener("click", () => {
+      modalWithdraw.classList.remove("active");
+    });
+
+    // Update Display
+    function refreshUI() {
+      uiUsername.innerText = `🔥 ${userData.first_name}`;
+      uiUserid.innerText = `ID: ${userData.id}`;
+      uiPoints.innerText = `${state.points} PTS`;
+      uiUsdt.innerText = (state.points / 1000).toFixed(4);
+
+      if (state.tasks.includes("tg_channel")) {
+        btnTaskTg.innerText = "Done";
+        btnTaskTg.disabled = true;
       }
+      if (state.tasks.includes("yt_sub")) {
+        btnTaskYt.innerText = "Done";
+        btnTaskYt.disabled = true;
+      }
+
+      localStorage.setItem("cb_pts", state.points);
+      localStorage.setItem("cb_daily", state.lastDaily);
+      localStorage.setItem("cb_tasks", JSON.stringify(state.tasks));
     }
 
-    function updateUI() {
-      if (!currentUserData) return;
-      document.getElementById("point-bal").innerText = `${currentUserData.points} PTS`;
-      document.getElementById("usdt-bal").innerText = (currentUserData.points / 1000).toFixed(4);
+    // Direct REST API Sync (CDN library မလိုဘဲ တိုက်ရိုက်သိမ်းခြင်း)
+    async function syncToSupabase() {
+      try {
+        fetch(`${SB_URL}/rest/v1/users`, {
+          method: "POST",
+          headers: {
+            "apikey": SB_KEY,
+            "Authorization": `Bearer ${SB_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates"
+          },
+          body: JSON.stringify({
+            id: userData.id,
+            name: userData.first_name,
+            points: state.points,
+            last_daily: state.lastDaily
+          })
+        }).catch(() => {});
+      } catch (e) {}
     }
 
-    async function watchAd() {
-      alert("📺 ကြော်ငြာ စတင်ပြသနေပါသည်... (ကျေးဇူးပြု၍ ၅ စက္ကန့် စောင့်ပါ)");
-      setTimeout(async () => {
-        const reward = 10;
-        const newPoints = (currentUserData?.points || 0) + reward;
-        await supabase.from('users').update({ points: newPoints }).eq('id', user.id);
-        currentUserData.points = newPoints;
-        updateUI();
+    // 1. Ads Watch Action
+    let isWatching = false;
+    btnWatchAd.addEventListener("click", () => {
+      if (isWatching) return;
+      isWatching = true;
 
-        // Referrer ကို 20% ပေးခြင်း
-        if (currentUserData.referrer) {
-          const { data: refUser } = await supabase.from('users').select('points').eq('id', currentUserData.referrer).single();
-          if (refUser) {
-            await supabase.from('users').update({ points: refUser.points + 2 }).eq('id', currentUserData.referrer);
-          }
+      let countdown = 5;
+      btnWatchAd.innerText = `⏳ ကြည့်ရှုနေသည် (${countdown}s)...`;
+
+      const timer = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          btnWatchAd.innerText = `⏳ ကြည့်ရှုနေသည် (${countdown}s)...`;
+        } else {
+          clearInterval(timer);
+          btnWatchAd.innerText = "⚡ Ads ကြည့်မည်";
+          isWatching = false;
+
+          state.points += 10;
+          refreshUI();
+          syncToSupabase();
+          showAlert("🎉 အောင်မြင်ပါသည်", "ကြော်ငြာ ကြည့်ရှုမှုအတွက် +10 PTS ရရှိပါသည်!");
         }
-        alert("🎉 ဂုဏ်ယူပါသည်! +10 PTS ရရှိပါသည်");
-      }, 5000);
-    }
+      }, 1000);
+    });
 
-    async function claimDaily() {
+    // 2. Daily Bonus Action
+    btnDailyBonus.addEventListener("click", () => {
       const now = Date.now();
-      if (now - (currentUserData.last_daily || 0) < 24 * 60 * 60 * 1000) {
-        alert("ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။ ၂၄ နာရီပြည့်မှ ပြန်လာခဲ့ပါ။");
+      const diff = now - state.lastDaily;
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (diff < oneDay) {
+        const remHours = Math.ceil((oneDay - diff) / (1000 * 60 * 60));
+        showAlert("ခေတ္တစောင့်ပါ", `ယနေ့အတွက် ဆုလက်ဆောင် ရယူပြီးပါပြီ။ နောက်ထပ် ${remHours} နာရီမှ ပြန်လာခဲ့ပါ။`);
         return;
       }
-      const newPoints = currentUserData.points + 50;
-      await supabase.from('users').update({ points: newPoints, last_daily: now }).eq('id', user.id);
-      currentUserData.points = newPoints;
-      currentUserData.last_daily = now;
-      updateUI();
-      alert("🎁 ဂုဏ်ယူပါသည်! Daily Bonus +50 PTS ရရှိပါသည်");
-    }
 
-    function shareRef() {
-      const botUser = "CyberEarn_bot"; // သင့် Telegram Bot Username
-      const link = `https://t.me/${botUser}?start=${user.id}`;
-      if (tg) {
+      state.points += 50;
+      state.lastDaily = now;
+      refreshUI();
+      syncToSupabase();
+      showAlert("🎁 ဂုဏ်ယူပါသည်", "နေ့စဉ်ဆုလက်ဆောင် +50 PTS ရရှိပါသည်!");
+    });
+
+    // 3. Invite Action
+    btnShareRef.addEventListener("click", () => {
+      const link = `https://t.me/CyberEarn_bot?start=${userData.id}`;
+      if (tg?.openTelegramLink) {
         tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("ငါနဲ့အတူ Ads ကြည့်ပြီး USDT ရယူကြစို့!")}`);
       } else {
         navigator.clipboard.writeText(link);
-        alert("Referral Link ကူးယူပြီးပါပြီ: " + link);
+        showAlert("Referral Link", "Link ကို ကူးယူပြီးပါပြီ - \n" + link);
       }
+    });
+
+    // 4. Tasks Actions
+    function handleTask(taskId, reward, targetUrl, btnElement) {
+      if (state.tasks.includes(taskId)) return;
+
+      if (tg?.openLink) {
+        tg.openLink(targetUrl);
+      } else {
+        window.open(targetUrl, "_blank");
+      }
+
+      btnElement.innerText = "စစ်ဆေးနေသည်...";
+
+      setTimeout(() => {
+        state.tasks.push(taskId);
+        state.points += reward;
+        refreshUI();
+        syncToSupabase();
+        showAlert("✅ Task အောင်မြင်ပါသည်", `ဆုလက်ဆောင် +${reward} PTS ထည့်သွင်းပေးလိုက်ပါပြီ!`);
+      }, 3500);
     }
 
-    async function completeTask(taskId, reward, link) {
-      if (tg) { tg.openLink(link); } else { window.open(link, '_blank'); }
-      
-      const { data } = await supabase.from('completed_tasks').select('*').eq('user_id', user.id).eq('task_id', taskId);
-      if (data && data.length > 0) {
-        alert("ဤ Task ကို ပြီးမြောက်ပြီးသား ဖြစ်ပါသည်");
-        return;
-      }
+    btnTaskTg.addEventListener("click", () => {
+      handleTask("tg_channel", 100, "https://t.me/Tonsarsar", btnTaskTg);
+    });
 
-      setTimeout(async () => {
-        await supabase.from('completed_tasks').insert([{ user_id: user.id, task_id: taskId }]);
-        const newPoints = currentUserData.points + reward;
-        await supabase.from('users').update({ points: newPoints }).eq('id', user.id);
-        currentUserData.points = newPoints;
-        updateUI();
-        loadData();
-        alert(`✅ Task အောင်မြင်ပါသည်! +${reward} PTS ရရှိပါသည်`);
-      }, 3000);
-    }
+    btnTaskYt.addEventListener("click", () => {
+      handleTask("yt_sub", 150, "https://youtube.com", btnTaskYt);
+    });
 
-    async function submitWithdraw() {
-      const pts = Number(document.getElementById("swap-points").value);
-      const addr = document.getElementById("wallet-addr").value.trim();
+    // 5. Withdraw Submission
+    btnSubmitWithdraw.addEventListener("click", async () => {
+      const pts = Number(inputPoints.value);
+      const addr = inputWallet.value.trim();
 
       if (!pts || pts < 1000) {
-        alert("အနည်းဆုံး 1,000 PTS လဲလှယ်ရပါမည်");
+        showAlert("မှားယွင်းမှု", "အနည်းဆုံး 1,000 PTS လဲလှယ်ရပါမည်။");
         return;
       }
-      if (pts > currentUserData.points) {
-        alert("လက်ကျန် Points မလုံလောက်ပါ");
+      if (pts > state.points) {
+        showAlert("မှားယွင်းမှု", "လက်ကျန် Points မလုံလောက်ပါ။");
         return;
       }
       if (!addr.startsWith("0x") || addr.length < 40) {
-        alert("မှန်ကန်သော BEP-20 (0x...) Wallet Address ထည့်ပါ");
+        showAlert("မှားယွင်းမှု", "မှန်ကန်သော BEP-20 (0x...) Address ရိုက်ထည့်ပါ။");
         return;
       }
 
+      state.points -= pts;
       const usdt = (pts / 1000).toFixed(2);
-      await supabase.from('withdrawals').insert([
-        { user_id: user.id, points: pts, usdt_amount: usdt, wallet_address: addr, status: 'Pending' }
-      ]);
+      refreshUI();
+      syncToSupabase();
 
-      const newBal = currentUserData.points - pts;
-      await supabase.from('users').update({ points: newBal }).eq('id', user.id);
-      currentUserData.points = newBal;
-      updateUI();
-      closeModal('swap-modal');
-      alert(`🚀 ${usdt} USDT ငွေထုတ်တောင်းဆိုမှု အောင်မြင်ပါသည်။ Admin စစ်ဆေးပြီး လွှဲပေးပါမည်။`);
-    }
+      // Send to Withdrawals table
+      try {
+        fetch(`${SB_URL}/rest/v1/withdrawals`, {
+          method: "POST",
+          headers: {
+            "apikey": SB_KEY,
+            "Authorization": `Bearer ${SB_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            user_id: userData.id,
+            points: pts,
+            usdt_amount: usdt,
+            wallet_address: addr,
+            status: "Pending"
+          })
+        }).catch(() => {});
+      } catch (e) {}
 
-    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+      modalWithdraw.classList.remove("active");
+      inputPoints.value = "";
+      inputWallet.value = "";
+      showAlert("ငွေထုတ်တောင်းဆိုပြီးပါပြီ", `${usdt} USDT အတွက် တောင်းဆိုမှု ရရှိပါသည်။ Admin စစ်ဆေးပြီး လွှဲပေးပါမည်။`);
+    });
 
-    loadData();
+    // Initial Refresh
+    refreshUI();
+    syncToSupabase();
   </script>
 </body>
 </html>
+
