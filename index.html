@@ -3,44 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Crypto Ads Earn Bot</title>
+  <title>Cyber Earn Bot</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #0f101c;
-      --card-bg: #1a1b2e;
-      --accent: #ff6a00;
+      --bg: #0d0f17;
+      --card-bg: #161926;
       --accent-gradient: linear-gradient(135deg, #ff8c00, #ff4500);
-      --green: #00d26a;
+      --green-gradient: linear-gradient(135deg, #00b09b, #96c93d);
       --text: #ffffff;
-      --subtext: #8b8e9f;
+      --subtext: #8e94a5;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 70px; }
+    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 80px; }
     
-    .header { text-align: center; margin-bottom: 20px; }
-    .fire-icon { font-size: 40px; }
-    .balance-box { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; border: 1px solid #2d304a; margin-bottom: 16px; }
-    .balance-box h2 { font-size: 32px; color: #ffae00; margin: 8px 0; }
-    .usdt-est { color: var(--green); font-size: 15px; font-weight: bold; }
+    .header { text-align: center; margin-bottom: 16px; margin-top: 10px; }
+    .fire-icon { font-size: 42px; margin-bottom: 4px; }
     
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .btn { border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .balance-box { background: var(--card-bg); border-radius: 18px; padding: 20px; text-align: center; border: 1px solid #23283c; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .balance-box h2 { font-size: 34px; color: #ffae00; margin: 8px 0; font-weight: 800; }
+    .usdt-est { color: #00e676; font-size: 15px; font-weight: bold; }
+    
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+    .btn { border: none; padding: 14px; border-radius: 14px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
     .btn-earn { background: var(--accent-gradient); }
-    .btn-withdraw { background: #16a34a; }
+    .btn-withdraw { background: var(--green-gradient); }
     
-    .section-title { font-size: 16px; margin: 16px 0 10px; color: var(--subtext); display: flex; align-items: center; gap: 6px; }
-    .card { background: var(--card-bg); border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid #23253a; display: flex; align-items: center; justify-content: space-between; }
+    .section-title { font-size: 15px; margin: 18px 0 10px; color: var(--subtext); display: flex; align-items: center; gap: 6px; font-weight: 600; }
+    .card { background: var(--card-bg); border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid #23283c; display: flex; align-items: center; justify-content: space-between; }
     .card-info h4 { font-size: 15px; margin-bottom: 4px; }
     .card-info p { font-size: 12px; color: var(--subtext); }
     .reward-tag { color: #ffae00; font-weight: bold; font-size: 13px; }
     
-    .btn-small { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .btn-small:disabled { background: #444; cursor: not-allowed; }
+    .btn-small { background: #ff7700; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; }
+    .btn-small:disabled { background: #3a3f55; color: #777; cursor: not-allowed; }
     
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 100; }
-    .modal-content { background: var(--card-bg); border-radius: 16px; padding: 20px; width: 90%; max-width: 400px; border: 1px solid #333; }
-    .modal input { width: 100%; padding: 12px; background: #0f101c; border: 1px solid #333; border-radius: 8px; color: white; margin: 8px 0 16px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+    .modal-content { background: var(--card-bg); border-radius: 18px; padding: 22px; width: 90%; max-width: 380px; border: 1px solid #2d334d; }
+    .modal input { width: 100%; padding: 12px; background: #0d0f17; border: 1px solid #2d334d; border-radius: 10px; color: white; margin: 8px 0 16px; font-size: 14px; outline: none; }
+    
+    #loading { color: #ffae00; text-align: center; font-size: 14px; margin: 10px 0; display: none; }
   </style>
 </head>
 <body>
@@ -49,6 +52,7 @@
     <div class="fire-icon">🔥</div>
     <h3 id="username">ကြိုဆိုပါသည်</h3>
     <p id="telegram-id" style="font-size: 12px; color: var(--subtext);"></p>
+    <div id="loading">ဒေတာများ ဆွဲယူနေပါသည်...</div>
   </div>
 
   <div class="balance-box">
@@ -58,7 +62,7 @@
   </div>
 
   <div class="action-grid">
-    <button class="btn btn-earn" onclick="watchAd()">⚡ ကြော်ငြာကြည့်မည်</button>
+    <button class="btn btn-earn" onclick="watchAd()">⚡ Ads ကြည့်မည်</button>
     <button class="btn btn-withdraw" onclick="openModal('swap-modal')">🔄 Swap & Withdraw</button>
   </div>
 
@@ -68,13 +72,13 @@
       <h4>Daily Bonus</h4>
       <p>၂၄ နာရီတစ်ကြိမ် 50 PTS ရယူပါ</p>
     </div>
-    <button class="btn-small" onclick="claimDaily()">Claim</button>
+    <button class="btn-small" id="btn-daily" onclick="claimDaily()">Claim</button>
   </div>
 
   <div class="card">
     <div class="card-info">
       <h4>Invite Friends (20% Bonus)</h4>
-      <p>သူငယ်ချင်းများရရှိသည့် Points မှ 20% ရရှိမည်</p>
+      <p>မိတ်ဆက်သူများ ရရှိသည့် Point မှ 20% ရမည်</p>
     </div>
     <button class="btn-small" onclick="shareRef()">Share</button>
   </div>
@@ -85,80 +89,186 @@
       <h4>Join Telegram Channel</h4>
       <p class="reward-tag">+100 PTS</p>
     </div>
-    <button class="btn-small" onclick="completeTask('tg_channel', 100)">Join</button>
+    <button class="btn-small" id="task-btn-tg" onclick="completeTask('tg_channel', 100, 'https://t.me/Tonsarsar')">Join</button>
   </div>
   <div class="card">
     <div class="card-info">
       <h4>Subscribe YouTube</h4>
       <p class="reward-tag">+150 PTS</p>
     </div>
-    <button class="btn-small" onclick="completeTask('yt_sub', 150)">Subscribe</button>
+    <button class="btn-small" id="task-btn-yt" onclick="completeTask('yt_sub', 150, 'https://youtube.com')">Subscribe</button>
   </div>
 
   <!-- Swap & Withdraw Modal -->
   <div class="modal" id="swap-modal">
     <div class="modal-content">
-      <h3 style="margin-bottom: 12px;">USDT (BEP-20) ဖြင့် ငွေထုတ်ရန်</h3>
-      <p style="font-size: 12px; color: var(--subtext); margin-bottom: 10px;">(1,000 PTS = 1 USDT, အနည်းဆုံး 1 USDT ထုတ်ယူနိုင်ပါသည်)</p>
+      <h3 style="margin-bottom: 8px;">USDT (BEP-20) ဖြင့် ငွေထုတ်ရန်</h3>
+      <p style="font-size: 12px; color: var(--subtext); margin-bottom: 14px;">1,000 PTS = 1 USDT (အနည်းဆုံး 1,000 PTS မှ ထုတ်နိုင်ပါသည်)</p>
       
-      <label style="font-size: 12px;">လဲလှယ်မည့် Points ပမာဏ</label>
+      <label style="font-size: 12px;">ထုတ်ယူမည့် Points</label>
       <input type="number" id="swap-points" placeholder="ဥပမာ - 1000">
 
       <label style="font-size: 12px;">USDT BEP-20 Wallet Address (0x...)</label>
       <input type="text" id="wallet-addr" placeholder="0x...">
 
-      <button class="btn btn-earn" style="width: 100%; margin-bottom: 8px;" onclick="submitWithdraw()">Withdraw တင်မည်</button>
-      <button class="btn" style="width: 100%; background: #333;" onclick="closeModal('swap-modal')">ပိတ်မည်</button>
+      <button class="btn btn-earn" style="width: 100%; margin-bottom: 10px;" onclick="submitWithdraw()">Withdraw တင်မည်</button>
+      <button class="btn" style="width: 100%; background: #26293b;" onclick="closeModal('swap-modal')">ပိတ်မည်</button>
     </div>
   </div>
 
   <script>
+    // ---------------- Supabase Setup ----------------
+    const SUPABASE_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.expand(); }
 
-    const BACKEND_URL = "https://YOUR-BACKEND-SERVER.com"; // သင်၏ Backend Server URL ထည့်သွင်းပါ
-    const user = tg?.initDataUnsafe?.user || { id: 12345678, first_name: "Developer" };
+    const user = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
+    let currentUserData = null;
 
-    document.getElementById("username").innerText = `🔥 ${user.first_name}`; document.getElementById("telegram-id").innerText = `ID: ${user.id}`;
+    document.getElementById("username").innerText = `🔥 ${user.first_name}`;
+    document.getElementById("telegram-id").innerText = `ID: ${user.id}`;
 
-    // Backend မှ Data ရယူခြင်း
     async function loadData() {
+      document.getElementById("loading").style.display = "block";
       try {
-        const res = await fetch(`${BACKEND_URL}/api/user?id=${user.id}&name=${encodeURIComponent(user.first_name)}`); const data = await res.json(); document.getElementById("point-bal").innerText = `${data.points} PTS`;
-        document.getElementById("usdt-bal").innerText = (data.points / 1000).toFixed(4);
+        // User ရှိမရှိ စစ်ဆေးခြင်း
+        let { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
+        
+        if (error && error.code === 'PGRST116') {
+          // User အသစ်ဖြစ်ပါက Insert လုပ်ခြင်း
+          const refParam = tg?.initDataUnsafe?.start_param ? Number(tg.initDataUnsafe.start_param) : null;
+          const { data: newUser } = await supabase.from('users').insert([
+            { id: user.id, name: user.first_name, points: 50, referrer: refParam, last_daily: 0 }
+          ]).select().single();
+          data = newUser;
+        }
+
+        currentUserData = data;
+        updateUI();
+
+        // ပြီးထားသော Task များကို Disable လုပ်ခြင်း
+        const { data: completedTasks } = await supabase.from('completed_tasks').select('task_id').eq('user_id', user.id);
+        if (completedTasks) {
+          completedTasks.forEach(t => {
+            if (t.task_id === 'tg_channel') {
+              const b = document.getElementById("task-btn-tg");
+              b.innerText = "Done"; b.disabled = true;
+            }
+            if (t.task_id === 'yt_sub') {
+              const b = document.getElementById("task-btn-yt");
+              b.innerText = "Done"; b.disabled = true;
+            }
+          });
+        }
       } catch (err) {
-        console.error("Fetch error:", err);
+        alert("ချိတ်ဆက်မှု မအောင်မြင်ပါ: " + err.message);
+      } finally {
+        document.getElementById("loading").style.display = "none";
       }
     }
 
+    function updateUI() {
+      if (!currentUserData) return;
+      document.getElementById("point-bal").innerText = `${currentUserData.points} PTS`;
+      document.getElementById("usdt-bal").innerText = (currentUserData.points / 1000).toFixed(4);
+    }
+
     async function watchAd() {
-      alert("ကြော်ငြာ စတင်ပြသနေပါသည်... (5 စက္ကန့် စောင့်ပါ)");
+      alert("📺 ကြော်ငြာ စတင်ပြသနေပါသည်... (ကျေးဇူးပြု၍ ၅ စက္ကန့် စောင့်ပါ)");
       setTimeout(async () => {
-        const res = await fetch(`${BACKEND_URL}/api/ad-reward`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id }) }); const d = await res.json(); alert(`ဂုဏ်ယူပါတယ်! +${d.added} PTS ရရှိပါသည်`);
-        loadData();
+        const reward = 10;
+        const newPoints = (currentUserData?.points || 0) + reward;
+        await supabase.from('users').update({ points: newPoints }).eq('id', user.id);
+        currentUserData.points = newPoints;
+        updateUI();
+
+        // Referrer ကို 20% ပေးခြင်း
+        if (currentUserData.referrer) {
+          const { data: refUser } = await supabase.from('users').select('points').eq('id', currentUserData.referrer).single();
+          if (refUser) {
+            await supabase.from('users').update({ points: refUser.points + 2 }).eq('id', currentUserData.referrer);
+          }
+        }
+        alert("🎉 ဂုဏ်ယူပါသည်! +10 PTS ရရှိပါသည်");
       }, 5000);
     }
 
     async function claimDaily() {
-      const res = await fetch(`${BACKEND_URL}/api/daily-bonus`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id }) }); const d = await res.json(); alert(d.message); loadData(); }  function shareRef() { const link = `https://t.me/YOUR_BOT_USERNAME?start=${user.id}`;
+      const now = Date.now();
+      if (now - (currentUserData.last_daily || 0) < 24 * 60 * 60 * 1000) {
+        alert("ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။ ၂၄ နာရီပြည့်မှ ပြန်လာခဲ့ပါ။");
+        return;
+      }
+      const newPoints = currentUserData.points + 50;
+      await supabase.from('users').update({ points: newPoints, last_daily: now }).eq('id', user.id);
+      currentUserData.points = newPoints;
+      currentUserData.last_daily = now;
+      updateUI();
+      alert("🎁 ဂုဏ်ယူပါသည်! Daily Bonus +50 PTS ရရှိပါသည်");
+    }
+
+    function shareRef() {
+      const botUser = "CyberEarn_bot"; // သင့် Telegram Bot Username
+      const link = `https://t.me/${botUser}?start=${user.id}`;
       if (tg) {
         tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("ငါနဲ့အတူ Ads ကြည့်ပြီး USDT ရယူကြစို့!")}`);
       } else {
         navigator.clipboard.writeText(link);
-        alert("Referral Link ကို ကူးယူပြီးပါပြီ - " + link);
+        alert("Referral Link ကူးယူပြီးပါပြီ: " + link);
       }
     }
 
-    async function completeTask(taskId, reward) {
-      const res = await fetch(`${BACKEND_URL}/api/complete-task`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id, taskId, reward }) }); const d = await res.json(); alert(d.message); loadData(); }  async function submitWithdraw() { const points = document.getElementById("swap-points").value; const address = document.getElementById("wallet-addr").value; if (!points \vert{}\vert{} !address \vert{}\vert{} points < 1000) { alert("အနည်းဆုံး 1000 PTS လိုအပ်ပြီး BEP-20 Address ပြည့်စုံစွာ ဖြည့်ပါ"); return; } const res = await fetch(`${BACKEND_URL}/api/withdraw`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: user.id, points: Number(points), address })
-      });
-      const d = await res.json();
-      alert(d.message);
+    async function completeTask(taskId, reward, link) {
+      if (tg) { tg.openLink(link); } else { window.open(link, '_blank'); }
+      
+      const { data } = await supabase.from('completed_tasks').select('*').eq('user_id', user.id).eq('task_id', taskId);
+      if (data && data.length > 0) {
+        alert("ဤ Task ကို ပြီးမြောက်ပြီးသား ဖြစ်ပါသည်");
+        return;
+      }
+
+      setTimeout(async () => {
+        await supabase.from('completed_tasks').insert([{ user_id: user.id, task_id: taskId }]);
+        const newPoints = currentUserData.points + reward;
+        await supabase.from('users').update({ points: newPoints }).eq('id', user.id);
+        currentUserData.points = newPoints;
+        updateUI();
+        loadData();
+        alert(`✅ Task အောင်မြင်ပါသည်! +${reward} PTS ရရှိပါသည်`);
+      }, 3000);
+    }
+
+    async function submitWithdraw() {
+      const pts = Number(document.getElementById("swap-points").value);
+      const addr = document.getElementById("wallet-addr").value.trim();
+
+      if (!pts || pts < 1000) {
+        alert("အနည်းဆုံး 1,000 PTS လဲလှယ်ရပါမည်");
+        return;
+      }
+      if (pts > currentUserData.points) {
+        alert("လက်ကျန် Points မလုံလောက်ပါ");
+        return;
+      }
+      if (!addr.startsWith("0x") || addr.length < 40) {
+        alert("မှန်ကန်သော BEP-20 (0x...) Wallet Address ထည့်ပါ");
+        return;
+      }
+
+      const usdt = (pts / 1000).toFixed(2);
+      await supabase.from('withdrawals').insert([
+        { user_id: user.id, points: pts, usdt_amount: usdt, wallet_address: addr, status: 'Pending' }
+      ]);
+
+      const newBal = currentUserData.points - pts;
+      await supabase.from('users').update({ points: newBal }).eq('id', user.id);
+      currentUserData.points = newBal;
+      updateUI();
       closeModal('swap-modal');
-      loadData();
+      alert(`🚀 ${usdt} USDT ငွေထုတ်တောင်းဆိုမှု အောင်မြင်ပါသည်။ Admin စစ်ဆေးပြီး လွှဲပေးပါမည်။`);
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
