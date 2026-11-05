@@ -7,7 +7,13 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Cyber Earn</title>
+  
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Adsgram Official SDK -->
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -337,7 +343,7 @@
     <div class="card-item" style="border-color: #2f1c4e;">
       <div>
         <h4>Ads Quick Earn</h4>
-        <p style="color:#00ff88;">ကြော်ငြာကြည့်၍ တိုက်ရိုက်ဆုကြေးယူပါ</p>
+        <p style="color:#00ff88;">တကယ့်ဗီဒီယိုကြော်ငြာ ကြည့်၍ ဆုကြေးယူပါ</p>
       </div>
       <button class="btn-sub" style="border-color:#00ff88; color:#00ff88;" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
     </div>
@@ -442,10 +448,23 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
+    // သင့် တရားဝင် Adsgram Block ID (UnitID: 58116)
+    const ADSGRAM_BLOCK_ID = "58116";
+
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
+
+    // Adsgram Controller စတင် ချိတ်ဆက်ခြင်း
+    let AdController = null;
+    try {
+      if (window.Adsgram) {
+        AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+      }
+    } catch (e) {
+      console.error("Adsgram init error:", e);
+    }
 
     let config = { bot_status: 'ON', ad_reward: 0.003, min_withdraw: 0.03, daily_bonus: 0.005, ref_percent: 20 };
     let currentBalance = 0.000;
@@ -564,33 +583,46 @@
       });
     }
 
-    let isWatching = false;
+    // တကယ့် Adsgram ဗီဒီယိုကြော်ငြာ ပြသမည့် Logic
+    let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       if (config.bot_status === 'OFF') {
         showAlert("ခေတ္တစောင့်ပါ", "စနစ်ပြုပြင်ထိန်းသိမ်းနေသဖြင့် Ads ခေတ္တပိတ်ထားပါသည်။");
         return;
       }
-      if (isWatching) return;
-      isWatching = true;
+      if (isShowingAd) return;
 
-      let c = 5;
-      const b = document.getElementById("btn-watch-ad");
-      b.innerText = `⏳ ကြည့်ရှုနေသည် (${c}s)...`;
+      const btn = document.getElementById("btn-watch-ad");
 
-      const t = setInterval(() => {
-        c--;
-        if (c > 0) {
-          b.innerText = `⏳ ကြည့်ရှုနေသည် (${c}s)...`;
+      // AdController အဆင်သင့် မဖြစ်သေးပါက
+      if (!AdController) {
+        if (window.Adsgram) {
+          AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
         } else {
-          clearInterval(t);
-          b.innerText = "⚡ Ads ကြည့်မည်";
-          isWatching = false;
-
-          const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
-          updateBalanceInDB(nBal);
-          showAlert("🎉 အောင်မြင်ပါသည်", `ကြော်ငြာအတွက် +$${config.ad_reward} ရရှိပါသည်!`);
+          showAlert("ကြော်ငြာမရသေးပါ", "Ads Network နှင့် ခေတ္တချိတ်ဆက်နေဆဲဖြစ်ပါသည်။ ခဏအကြာမှ ပြန်နှိပ်ပေးပါ။");
+          return;
         }
-      }, 1000);
+      }
+
+      isShowingAd = true;
+      btn.innerText = "⏳ ကြော်ငြာဖွင့်နေသည်...";
+
+      AdController.show().then((result) => {
+        // User က ဗီဒီယိုပြီးဆုံးအောင် ကြည့်ရှုပြီးမှသာ ဆုကြေးရမည်
+        isShowingAd = false;
+        btn.innerText = "⚡ Ads ကြည့်မည်";
+        const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
+        updateBalanceInDB(nBal);
+        showAlert("🎉 အောင်မြင်ပါသည်", `ဗီဒီယိုကြော်ငြာ ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်!`);
+      }).catch((result) => {
+        isShowingAd = false;
+        btn.innerText = "⚡ Ads ကြည့်မည်";
+        if (result?.error) {
+          showAlert("ကြော်ငြာမရှိသေးပါ", "လက်ရှိ ပြသရန် ကြော်ငြာမရှိသေးပါ။ ခဏအကြာမှ ထပ်မံကြိုးစားပေးပါ။");
+        } else {
+          showAlert("သတိပေးချက်", "ဆုကြေးရရှိရန် ကြော်ငြာဗီဒီယိုကို အဆုံးထိ ကြည့်ရှုပေးရပါမည်။");
+        }
+      });
     });
 
     document.getElementById("btn-daily").addEventListener("click", async () => {
