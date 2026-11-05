@@ -7,14 +7,17 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #090c15;
-      --card: rgba(18, 24, 38, 0.9);
-      --border: rgba(0, 240, 255, 0.2);
-      --cyan: #00f0ff;
-      --green: #00ff88;
-      --orange: #ff7700;
-      --text: #ffffff;
-      --dim: #79859f;
+      --bg: #12140f;
+      --card: #1b1e17;
+      --card-border: #2e3527;
+      --green-main: #38b000;
+      --green-glow: #70e000;
+      --brown-main: #b07d4f;
+      --brown-dark: #2c221a;
+      --brown-border: #4a382c;
+      --text: #f4f6f0;
+      --dim: #8b9482;
+      --danger: #d94e34;
     }
     * {
       box-sizing: border-box;
@@ -26,14 +29,15 @@
     }
     body {
       background: var(--bg);
-      background-image: radial-gradient(circle at 50% 0%, rgba(255, 119, 0, 0.1) 0%, transparent 60%);
+      background-image: radial-gradient(circle at 50% 0%, rgba(56, 176, 0, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(176, 125, 79, 0.08) 0%, transparent 40%);
       color: var(--text);
       padding: 16px;
-      padding-bottom: 110px; /* အောက်ခြေ navigation bar အတွက် နေရာချန်ထားခြင်း */
+      padding-bottom: 95px;
       min-height: 100vh;
     }
 
-    /* Header Profile */
+    /* Top Bar */
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -48,137 +52,179 @@
     .avatar-icon {
       width: 42px;
       height: 42px;
-      background: linear-gradient(135deg, var(--orange), #ff3300);
+      background: linear-gradient(135deg, var(--brown-main), var(--green-main));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 0 15px rgba(255, 119, 0, 0.4);
+      font-size: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
     }
     .status-badge {
       font-size: 10px;
       font-weight: 700;
       padding: 4px 10px;
-      border-radius: 20px;
-      background: rgba(0, 255, 136, 0.1);
-      border: 1px solid var(--green);
-      color: var(--green);
+      border-radius: 8px;
+      background: rgba(56, 176, 0, 0.12);
+      border: 1px solid var(--green-main);
+      color: var(--green-glow);
+      letter-spacing: 0.5px;
     }
 
-    /* Balance Section */
+    /* Main Balance Box */
     .balance-box {
       background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px;
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 22px 18px;
       text-align: center;
       margin-bottom: 16px;
       position: relative;
-      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
     .balance-box::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--orange), var(--green));
+      background: linear-gradient(90deg, var(--brown-main), var(--green-main));
+      border-radius: 18px 18px 0 0;
+    }
+    .balance-title {
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
     }
     .balance-val {
-      font-size: 36px;
+      font-size: 38px;
       font-weight: 900;
-      color: var(--green);
-      margin: 4px 0;
+      color: var(--green-glow);
+      margin: 6px 0;
       font-family: monospace;
+      text-shadow: 0 0 20px rgba(112, 224, 0, 0.25);
     }
 
-    /* Dual Action Buttons (ပုံစံတူ အရောင်စပ်) */
+    /* Action Buttons */
     .btn-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 18px;
     }
-    .cyber-btn {
+    .base-btn {
       border: none;
-      border-radius: 16px;
-      padding: 15px;
+      border-radius: 14px;
+      padding: 14px;
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
+      transition: transform 0.1s;
     }
-    .cyber-btn:active { transform: scale(0.96); }
-    .btn-earn {
-      background: linear-gradient(135deg, #ff8800, #ff3300);
-      color: #fff;
-      box-shadow: 0 4px 15px rgba(255, 100, 0, 0.35);
+    .base-btn:active { transform: scale(0.97); }
+    .btn-green {
+      background: linear-gradient(135deg, #2b8a00, #38b000);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(56, 176, 0, 0.25);
     }
-    .btn-withdraw {
-      background: linear-gradient(135deg, #00ff88, #00aa55);
-      color: #050811;
-      box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+    .btn-brown {
+      background: linear-gradient(135deg, #7a5433, #b07d4f);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(176, 125, 79, 0.25);
     }
 
-    /* List Cards */
+    /* Card Items */
     .card-item {
       background: var(--card);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
       padding: 14px;
       margin-bottom: 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .btn-action {
-      background: rgba(0, 240, 255, 0.1);
-      border: 1px solid var(--cyan);
-      color: var(--cyan);
+    .card-item h4 {
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    .card-item p {
+      font-size: 11px;
+      color: var(--dim);
+    }
+    .btn-sub {
+      background: rgba(56, 176, 0, 0.12);
+      border: 1px solid var(--green-main);
+      color: var(--green-glow);
       padding: 8px 16px;
       border-radius: 10px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
     }
-    .btn-action:disabled {
-      border-color: #262c3e;
-      color: #555e75;
+    .btn-sub:disabled {
+      border-color: #333a2c;
+      color: #555e4e;
       background: transparent;
       cursor: not-allowed;
     }
 
-    /* Tab Page Container */
-    .tab-page {
+    /* Tab Page Views */
+    .tab-view {
       display: none;
     }
-    .tab-page.active-page {
+    .tab-view.active-view {
       display: block;
     }
 
+    /* Invite Copy Box */
+    .invite-box {
+      background: var(--card);
+      border: 1px solid var(--brown-border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+    .invite-input-wrap {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .invite-input {
+      flex: 1;
+      padding: 11px;
+      background: #0d0f0c;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: #ccc;
+      font-size: 12px;
+      outline: none;
+      font-family: monospace;
+    }
+
     /* =========================================
-       BOTTOM NAVIGATION BAR (ပုံထဲကအတိုင်း)
+       BOTTOM NAVIGATION BAR (Task Game Home Invite Profile)
        ========================================= */
-    .bottom-nav {
+    .custom-bottom-nav {
       position: fixed;
-      bottom: 12px;
-      left: 14px;
-      right: 14px;
-      height: 68px;
-      background: rgba(13, 17, 28, 0.95);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 26px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: #151811;
+      border-top: 1px solid var(--card-border);
       display: flex;
       align-items: center;
       justify-content: space-around;
-      padding: 0 6px;
       z-index: 999;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      padding: 0 4px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
     }
-    .nav-item {
+    .cnav-item {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -189,50 +235,24 @@
       font-size: 10px;
       font-weight: 700;
       cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s;
+      padding: 8px 0;
+      transition: color 0.15s ease;
     }
-    .nav-item span.icon {
-      font-size: 18px;
+    .cnav-item .nav-icon {
+      font-size: 19px;
+      line-height: 1;
     }
-    .nav-item.active {
-      color: var(--orange);
+    .cnav-item.active {
+      color: var(--green-glow);
     }
-    .nav-item.active span.icon {
-      filter: drop-shadow(0 0 6px rgba(255, 119, 0, 0.6));
+    .cnav-item.active .nav-icon {
+      filter: drop-shadow(0 0 6px rgba(112, 224, 0, 0.5));
     }
-
-    /* Center Elevated PLAY Button (ပုံထဲက မီးလုံးခလုတ်ကြီး) */
-    .nav-center-item {
-      position: relative;
-      top: -18px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
+    .cnav-item.center-home.active {
+      color: var(--brown-main);
     }
-    .play-orb {
-      width: 58px;
-      height: 58px;
-      background: radial-gradient(circle at 35% 35%, #ffaa00, #ff3300);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      box-shadow: 0 8px 24px rgba(255, 60, 0, 0.55), inset 0 2px 4px rgba(255,255,255,0.4);
-      border: 3px solid #090c15;
-      transition: transform 0.15s ease;
-    }
-    .play-orb:active {
-      transform: scale(0.92);
-    }
-    .nav-center-item span.label {
-      font-size: 10px;
-      font-weight: 800;
-      color: var(--orange);
-      margin-top: 2px;
-      letter-spacing: 0.5px;
+    .cnav-item.center-home.active .nav-icon {
+      filter: drop-shadow(0 0 6px rgba(176, 125, 79, 0.6));
     }
 
     /* Modals */
@@ -245,158 +265,189 @@
       opacity: 0; visibility: hidden;
       transition: all 0.2s ease;
       padding: 20px;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(6px);
     }
     .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal-box {
-      background: #0f1422;
-      border: 1px solid var(--cyan);
-      border-radius: 20px;
+      background: #171b13;
+      border: 1px solid var(--brown-main);
+      border-radius: 18px;
       padding: 22px;
-      width: 100%; max-width: 360px;
+      width: 100%; max-width: 350px;
     }
     .modal-box input {
       width: 100%;
       padding: 12px;
-      background: #07090e;
-      border: 1px solid rgba(255,255,255,0.15);
+      background: #0d0f0c;
+      border: 1px solid var(--card-border);
       border-radius: 10px;
       color: white;
       font-size: 14px;
       margin: 6px 0 14px;
       outline: none;
     }
+    .modal-box input:focus {
+      border-color: var(--green-main);
+    }
   </style>
 </head>
 <body>
 
-  <!-- Top Header Profile -->
+  <!-- Top Header -->
   <div class="header-bar">
     <div class="user-profile">
-      <div class="avatar-icon">🔥</div>
+      <div class="avatar-icon">🌿</div>
       <div>
-        <h3 id="ui-username">...</h3>
+        <h3 id="ui-username" style="font-size:15px; font-weight:800;">...</h3>
         <p id="ui-userid" style="font-size: 11px; color: var(--dim); font-family: monospace;">ID: ...</p>
       </div>
     </div>
-    <div class="status-badge" id="bot-status-tag">SYSTEM ONLINE</div>
+    <div class="status-badge" id="bot-status-tag">ONLINE</div>
   </div>
 
   <!-- Balance Section -->
   <div class="balance-box">
-    <div style="font-size: 11px; color: var(--dim); text-transform: uppercase;">လက်ကျန်ငွေ (USDT BEP-20)</div>
+    <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
     <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
-    <div style="font-size: 12px; color: var(--orange);" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
+    <div style="font-size: 11px; color: var(--brown-main);" id="ui-rate-info">ဆုကြေး: $0.003 / Ad</div>
   </div>
 
   <!-- Primary Buttons -->
   <div class="btn-grid">
-    <button class="cyber-btn btn-earn" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
-    <button class="cyber-btn btn-withdraw" id="btn-open-withdraw">💳 Withdraw</button>
+    <button class="base-btn btn-green" id="btn-watch-ad">⚡ Ads ကြည့်မည်</button>
+    <button class="base-btn btn-brown" id="btn-open-withdraw">💳 Withdraw</button>
   </div>
 
-  <!-- ================= TAB PAGES ================= -->
+  <!-- ================= 5 TAB VIEWS ================= -->
 
-  <!-- Page 1: HOME PAGE -->
-  <div class="tab-page active-page" id="page-home">
-    <div class="card-item">
-      <div>
-        <h4>Daily Bonus</h4>
-        <p style="font-size:11px; color:var(--dim);" id="daily-text">၂၄ နာရီတစ်ကြိမ် ရယူပါ</p>
-      </div>
-      <button class="btn-action" id="btn-daily">Claim</button>
-    </div>
-
-    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin: 16px 0 8px 4px;">📋 ရရှိနိုင်သော TASKS များ</div>
+  <!-- View 1: TASK -->
+  <div class="tab-view" id="view-task">
+    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
     <div id="tasks-container">
       <p style="font-size:12px; color:var(--dim); padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
     </div>
   </div>
 
-  <!-- Page 2: EARN PAGE (အမြန်ဝင်ငွေရှာရန်) -->
-  <div class="tab-page" id="page-earn">
-    <div style="font-size: 13px; color: var(--dim); font-weight: 700; margin-bottom: 12px;">⚡ Watch & Earn Ads</div>
+  <!-- View 2: GAME -->
+  <div class="tab-view" id="view-game">
+    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">🎮 Earning Games</div>
     <div class="card-item">
       <div>
-        <h4>Video Ad #1</h4>
-        <p style="font-size:11px; color:var(--green);">+$0.003 USDT ရယူပါ</p>
+        <h4>Lucky Spin Wheel</h4>
+        <p>နေ့စဉ် ကံစမ်းပြီး ဒေါ်လာဆုများ ရယူပါ</p>
       </div>
-      <button class="btn-action" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
+      <button class="btn-sub" onclick="showAlert('Lucky Spin', 'Lucky Spin Game ကို မကြာမီ ဖွင့်လှစ်ပေးပါမည်။')">Play</button>
     </div>
     <div class="card-item">
       <div>
-        <h4>Video Ad #2</h4>
-        <p style="font-size:11px; color:var(--green);">+$0.003 USDT ရယူပါ</p>
+        <h4>Tap to Earn</h4>
+        <p>အမှတ်များ စုဆောင်း၍ USDT လဲလှယ်ပါ</p>
       </div>
-      <button class="btn-action" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
-    </div>
-  </div>
-
-  <!-- Page 3: FRIENDS (Invite Page) -->
-  <div class="tab-page" id="page-friends">
-    <div class="card-item">
-      <div>
-        <h4>Invite Friends (<span id="ref-percent-text">20</span>%)</h4>
-        <p style="font-size:11px; color:var(--dim);">မိတ်ဆက်သူများ ရရှိသည့်ဆုကြေးမှ 20% ရမည်</p>
-      </div>
-      <button class="btn-action" id="btn-share">Share</button>
+      <button class="btn-sub" onclick="showAlert('Tap Game', 'Tap Game Module ကို မကြာမီ ထည့်သွင်းပေးပါမည်။')">Play</button>
     </div>
   </div>
 
-  <!-- Page 4: ME / PROFILE (ငွေထုတ်မှတ်တမ်းနှင့် အချက်အလက်) -->
-  <div class="tab-page" id="page-me">
-    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
+  <!-- View 3: HOME (Default View) -->
+  <div class="tab-view active-view" id="view-home">
+    <div class="card-item">
+      <div>
+        <h4>Daily Bonus</h4>
+        <p id="daily-text">၂၄ နာရီတစ်ကြိမ် ရယူပါ</p>
+      </div>
+      <button class="btn-sub" id="btn-daily">Claim</button>
+    </div>
+    <div class="card-item" style="border-color: var(--brown-border);">
+      <div>
+        <h4>Ads Quick Earn</h4>
+        <p style="color:var(--green-glow);">ကြော်ငြာကြည့်၍ တိုက်ရိုက်ဆုကြေးယူပါ</p>
+      </div>
+      <button class="btn-sub" style="border-color:var(--brown-main); color:var(--brown-main);" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
+    </div>
+  </div>
+
+  <!-- View 4: INVITE -->
+  <div class="tab-view" id="view-invite">
+    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👥 မိတ်ဆက်ဖိတ်ခေါ်ရန်</div>
+    <div class="card-item">
+      <div>
+        <h4>Invite Commission (<span id="ref-percent-text">20</span>%)</h4>
+        <p>သူငယ်ချင်းများ ကြည့်ရှုသည့် Ads မှ 20% ရရှိပါမည်</p>
+      </div>
+      <button class="btn-sub" id="btn-share">Share</button>
+    </div>
+
+    <div class="invite-box">
+      <div style="font-size:12px; color:var(--dim); font-weight:700;">သင်၏ Invite Link</div>
+      <div class="invite-input-wrap">
+        <input type="text" id="invite-link-input" class="invite-input" readonly>
+        <button class="base-btn btn-brown" style="padding: 0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View 5: PROFILE -->
+  <div class="tab-view" id="view-profile">
+    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">👤 Profile & မှတ်တမ်းများ</div>
+    <div class="card-item" style="margin-bottom:14px;">
+      <div>
+        <h4 id="profile-name">...</h4>
+        <p id="profile-uid" style="font-family: monospace;">ID: ...</p>
+      </div>
+      <span style="font-size:11px; font-weight:800; color:var(--green-glow);">VERIFIED</span>
+    </div>
+
+    <div style="font-size: 12px; color: var(--dim); font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
     <div id="history-container">
       <p style="font-size:12px; color:var(--dim); padding:10px 0;">မှတ်တမ်း ဆွဲယူနေပါသည်...</p>
     </div>
   </div>
 
-  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
-  <div class="bottom-nav">
-    <!-- Home Tab -->
-    <div class="nav-item active" onclick="switchTab('page-home', this)">
-      <span class="icon">🏠</span>
-      <span>HOME</span>
+  <!-- ================= 5 BOTTOM NAVIGATION BUTTONS ================= -->
+  <div class="custom-bottom-nav">
+    <!-- 1. Task -->
+    <div class="cnav-item" onclick="switchNav('view-task', this)">
+      <span class="nav-icon">📋</span>
+      <span>Task</span>
     </div>
 
-    <!-- Earn Tab -->
-    <div class="nav-item" onclick="switchTab('page-earn', this)">
-      <span class="icon">⚡</span>
-      <span>EARN</span>
+    <!-- 2. Game -->
+    <div class="cnav-item" onclick="switchNav('view-game', this)">
+      <span class="nav-icon">🎮</span>
+      <span>Game</span>
     </div>
 
-    <!-- Center PLAY Orb Button (တိုက်ရိုက် Ad ကြည့်ရန်) -->
-    <div class="nav-center-item" onclick="document.getElementById('btn-watch-ad').click()">
-      <div class="play-orb">🔥</div>
-      <span class="label">PLAY</span>
+    <!-- 3. Home (Center) -->
+    <div class="cnav-item center-home active" onclick="switchNav('view-home', this)">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
     </div>
 
-    <!-- Friends Tab -->
-    <div class="nav-item" onclick="switchTab('page-friends', this)">
-      <span class="icon">👥</span>
-      <span>FRIENDS</span>
+    <!-- 4. Invite -->
+    <div class="cnav-item" onclick="switchNav('view-invite', this)">
+      <span class="nav-icon">👥</span>
+      <span>Invite</span>
     </div>
 
-    <!-- Profile / Me Tab -->
-    <div class="nav-item" onclick="switchTab('page-me', this); loadWithdrawHistory();">
-      <span class="icon">👤</span>
-      <span>ME</span>
+    <!-- 5. Profile -->
+    <div class="cnav-item" onclick="switchNav('view-profile', this); loadWithdrawHistory();">
+      <span class="nav-icon">👤</span>
+      <span>Profile</span>
     </div>
   </div>
 
-  <!-- Alert Modal -->
+  <!-- Notification Alert Modal -->
   <div class="modal-overlay" id="modal-alert">
     <div class="modal-box" style="text-align: center;">
-      <h3 id="alert-title" style="margin-bottom: 8px;">အသိပေးချက်</h3>
+      <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
       <p id="alert-msg" style="color: var(--dim); font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
-      <button class="cyber-btn btn-earn" style="width: 100%; padding:13px;" id="alert-ok-btn">ကောင်းပြီ</button>
+      <button class="base-btn btn-green" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
     </div>
   </div>
 
   <!-- Withdraw Modal -->
   <div class="modal-overlay" id="modal-withdraw">
     <div class="modal-box">
-      <h3 style="margin-bottom: 4px; text-align: center;">USDT BEP-20 ထုတ်ယူရန်</h3>
+      <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;">USDT BEP-20 ထုတ်ယူရန်</h3>
       <p style="font-size: 11px; color: var(--dim); text-align: center; margin-bottom: 12px;" id="withdraw-hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
       <div id="withdraw-msg-box" style="display: none; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 12px; font-weight: bold;"></div>
 
@@ -406,8 +457,8 @@
       <label style="font-size: 11px; color: var(--dim);">BEP-20 Wallet Address (0x...)</label>
       <input type="text" id="input-wallet" placeholder="0x...">
 
-      <button class="cyber-btn btn-withdraw" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
-      <button class="cyber-btn" style="width: 100%; background: #161c2d; color: white; padding:13px;" id="btn-close-withdraw">ပိတ်မည်</button>
+      <button class="base-btn btn-green" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်တောင်းဆိုမည်</button>
+      <button class="base-btn" style="width: 100%; background: #262a21; color: var(--dim); padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
     </div>
   </div>
 
@@ -428,12 +479,12 @@
     let lastDaily = 0;
     let completedTasks = [];
 
-    // Tab Bar Switching
-    function switchTab(pageId, navEl) {
-      document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active-page'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.getElementById(pageId).classList.add('active-page');
-      if (navEl) navEl.classList.add('active');
+    // Switch 5 Navs
+    function switchNav(viewId, el) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
+      document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active-view');
+      if (el) el.classList.add('active');
     }
 
     function showAlert(title, msg) {
@@ -449,21 +500,27 @@
       const box = document.getElementById("withdraw-msg-box");
       box.style.display = "block";
       box.innerText = text;
-      box.style.background = isError ? "rgba(255, 51, 102, 0.15)" : "rgba(0, 255, 136, 0.15)";
-      box.style.color = isError ? "#ff3366" : "#00ff88";
-      box.style.border = isError ? "1px solid #ff3366" : "1px solid #00ff88";
+      box.style.background = isError ? "rgba(217, 78, 52, 0.15)" : "rgba(56, 176, 0, 0.15)";
+      box.style.color = isError ? "#d94e34" : "#70e000";
+      box.style.border = isError ? "1px solid #d94e34" : "1px solid #70e000";
     }
 
     function renderUI() {
       document.getElementById("ui-username").innerText = userData.first_name;
       document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
+      document.getElementById("profile-name").innerText = userData.first_name;
+      document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
       document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
       document.getElementById("ui-rate-info").innerText = `ဆုကြေး: $${config.ad_reward} / Ad`;
       document.getElementById("withdraw-hint").innerText = `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`;
       document.getElementById("daily-text").innerText = `၂၄ နာရီတစ်ကြိမ် $${config.daily_bonus} ရယူပါ`;
       document.getElementById("ref-percent-text").innerText = config.ref_percent;
+
+      const link = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
+      document.getElementById("invite-link-input").value = link;
     }
 
+    // Live Database Sync
     async function syncDataFromDB() {
       try {
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
@@ -507,9 +564,9 @@
           div.innerHTML = `
             <div>
               <h4>${t.title}</h4>
-              <p style="color:var(--green); font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
+              <p style="color:var(--green-glow); font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
             </div>
-            <button class="btn-action" id="task-btn-${t.id}" ${isDone ? "disabled" : ""}>
+            <button class="btn-sub" id="task-btn-${t.id}" ${isDone ? "disabled" : ""}>
               ${isDone ? "Done" : "Start"}
             </button>
           `;
@@ -536,7 +593,7 @@
       });
     }
 
-    // Ads Watch Logic
+    // Ads Watch
     let isWatching = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
       if (config.bot_status === 'OFF') {
@@ -630,16 +687,16 @@
               <h4>$${item.amount} USDT</h4>
               <p style="font-size:10px; color:var(--dim); font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
             </div>
-            <span style="font-size:11px; font-weight:700; color: ${isApp ? 'var(--green)' : 'var(--cyan)'};">${item.status}</span>
+            <span style="font-size:11px; font-weight:800; color: ${isApp ? 'var(--green-glow)' : 'var(--brown-main)'};">${item.status}</span>
           `;
           container.appendChild(div);
         });
       } catch (e) {
-        container.innerHTML = "<p style='font-size:12px; color:var(--dim);'>မှတ်တမ်းဆွဲယူ၍ မရပါ။</p>";
+        container.innerHTML = "<p style='font-size:12px; color:var(--danger);'>မှတ်တမ်းဆွဲယူ၍ မရပါ။</p>";
       }
     }
 
-    // Submit Withdraw
+    // Withdraw Submit
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
       document.getElementById("withdraw-msg-box").style.display = "none";
       document.getElementById("input-amount").value = "";
@@ -679,7 +736,6 @@
       const data = await res.json();
       const orderId = data[0]?.id || "New";
 
-      // Telegram Bot API ဖြင့် Admin ထံ တိုက်ရိုက် Alert ပို့ခြင်း
       const alertText = `🔔 *ငွေထုတ်တောင်းဆိုမှု အသစ် ရရှိပါသည်!*\n\n🆔 *Order ID:* \`${orderId}\`\n👤 *User:* ${userData.first_name} (\`${userData.id}\`)\n💰 *ပမာဏ:* \`$${amt} USDT\`\n🔗 *Address (BEP-20):*\n\`${addr}\`\n\n👉 အတည်ပြုရန်: \`/approve ${orderId}\``;
       fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
@@ -696,14 +752,24 @@
       }, 2500);
     });
 
-    // Invite Share Link
+    // Copy Link Action
+    document.getElementById("btn-copy-link").addEventListener("click", () => {
+      const link = document.getElementById("invite-link-input").value;
+      navigator.clipboard.writeText(link).then(() => {
+        showAlert("အောင်မြင်ပါသည်", "Invite Link ကို Copy ကူးယူပြီးပါပြီ!");
+      }).catch(() => {
+        showAlert("Invite Link", link);
+      });
+    });
+
+    // Direct Share Action
     document.getElementById("btn-share").addEventListener("click", () => {
-      const link = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
+      const link = document.getElementById("invite-link-input").value;
       if (tg?.openTelegramLink) {
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Cyber Earn မှာ Ads ကြည့်ပြီး USDT ဝင်ငွေရှာကြစို့!")}`);
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Cyber Earn မှာ Ads ကြည့်ပြီး USDT ဒေါ်လာတွေ အတူတူ ရှာဖွေကြစို့!")}`);
       } else {
         navigator.clipboard.writeText(link);
-        showAlert("Invite Link", "သင့် Link ကို ကူးယူပြီးပါပြီ:\n" + link);
+        showAlert("Invite Link", link);
       }
     });
 
