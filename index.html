@@ -20,9 +20,8 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      background-color: #0b0713 !important;
-      background-image: radial-gradient(circle at 0% 0%, rgba(184, 41, 255, 0.22) 0%, transparent 55%),
-                        radial-gradient(circle at 100% 100%, rgba(0, 255, 136, 0.16) 0%, transparent 55%) !important;
+      background-color: #0b0718 !important;
+      background-image: radial-gradient(circle at 50% 0%, #2a114f 0%, #0b0718 75%) !important;
       color: #ffffff !important;
       padding: 16px;
       padding-bottom: 95px;
@@ -43,12 +42,12 @@
       width: 44px;
       height: 44px;
       background: linear-gradient(135deg, #b829ff, #00ff88);
-      border-radius: 12px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 22px;
-      box-shadow: 0 4px 16px rgba(184, 41, 255, 0.45);
+      box-shadow: 0 4px 18px rgba(184, 41, 255, 0.45);
     }
     .status-badge {
       font-size: 11px;
@@ -59,22 +58,27 @@
       border: 1px solid #00ff88;
       color: #00ff88;
     }
+
+    /* PERSISTENT MAIN BALANCE & ACTION CARD (GAME မှလွဲ၍ အကုန်ပေါ်မည်) */
+    .common-top-section {
+      display: block;
+      width: 100%;
+    }
     .balance-box {
-      background: #140d21 !important;
-      border: 1px solid #2f1c4e !important;
+      background: radial-gradient(circle at center, #1b0f33 0%, #110722 100%) !important;
+      border: 1px solid rgba(184, 41, 255, 0.4) !important;
       border-radius: 20px;
-      padding: 22px 16px;
+      padding: 20px 16px;
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(184, 41, 255, 0.2);
     }
     .balance-box::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, #b829ff, #00ff88);
+      top: 0; left: 15%; right: 15%; height: 2px;
+      background: linear-gradient(90deg, transparent, #b829ff, #00ff88, transparent);
     }
     .balance-title {
       font-size: 11px;
@@ -89,13 +93,13 @@
       color: #00ff88 !important;
       margin: 6px 0;
       font-family: monospace;
-      text-shadow: 0 0 20px rgba(0, 255, 136, 0.45);
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
     }
     .btn-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
     .action-btn {
       border: none;
@@ -114,29 +118,20 @@
     .btn-purple {
       background: linear-gradient(135deg, #8712c9, #b829ff) !important;
       color: #ffffff !important;
-      box-shadow: 0 4px 18px rgba(184, 41, 255, 0.4) !important;
+      box-shadow: 0 4px 18px rgba(184, 41, 255, 0.45) !important;
     }
     .btn-green {
       background: linear-gradient(135deg, #009952, #00ff88) !important;
       color: #07120a !important;
-      box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4) !important;
+      box-shadow: 0 4px 18px rgba(0, 255, 136, 0.45) !important;
     }
+
     .limit-container {
       background: rgba(184, 41, 255, 0.08);
       border: 1px solid rgba(184, 41, 255, 0.3);
       border-radius: 12px;
       padding: 10px 14px;
-      margin-bottom: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .limit-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 700;
-      color: #9c8eaf;
+      margin-bottom: 14px;
     }
     .limit-bar-bg {
       width: 100%;
@@ -144,6 +139,7 @@
       background: #09050d;
       border-radius: 6px;
       overflow: hidden;
+      margin-top: 6px;
     }
     .limit-bar-fill {
       height: 100%;
@@ -151,6 +147,8 @@
       background: linear-gradient(90deg, #b829ff, #00ff88);
       transition: width 0.3s ease;
     }
+
+    /* CARD ITEMS */
     .card-item {
       background: #140d21 !important;
       border: 1px solid #2f1c4e !important;
@@ -172,61 +170,79 @@
       cursor: pointer;
     }
 
-    /* PVP ARENA WHEEL STYLES */
-    .pvp-card {
-      background: #140d21;
-      border: 1px solid #2f1c4e;
-      border-radius: 18px;
+    /* PUBLIC LIVE PVP WHEEL STYLES */
+    .pvp-stage {
+      background: radial-gradient(circle at center, #26114a 0%, #0d061c 100%);
+      border: 1.5px solid #a855f7;
+      border-radius: 24px;
       padding: 18px 14px;
       text-align: center;
+      box-shadow: 0 10px 35px rgba(168, 85, 247, 0.3);
+      position: relative;
       margin-bottom: 14px;
     }
-    .pvp-wheel-wrapper {
-      position: relative;
-      width: 200px;
-      height: 200px;
+    .pvp-wheel-outer {
+      width: 220px;
+      height: 220px;
       margin: 15px auto;
-    }
-    .pvp-wheel {
-      width: 100%;
-      height: 100%;
       border-radius: 50%;
-      border: 6px solid #b829ff;
-      background: conic-gradient(#331d56 0% 100%);
+      border: 8px solid #a855f7;
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.6), inset 0 0 20px rgba(0,0,0,0.8);
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 20px rgba(184, 41, 255, 0.4);
-      transition: transform 3.5s cubic-bezier(0.15, 0.9, 0.2, 1);
+      transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+      background: conic-gradient(#331d56 0% 100%);
     }
-    .pvp-wheel-center {
-      width: 130px;
-      height: 130px;
-      background: #0f081c;
+    .pvp-wheel-inner {
+      width: 135px;
+      height: 135px;
+      background: #110722;
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      border: 2px solid #2f1c4e;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+      border: 2px solid rgba(255,255,255,0.1);
     }
-    .pvp-arrow {
+    .pvp-pointer {
       position: absolute;
-      top: -10px;
+      top: -12px;
       left: 50%;
       transform: translateX(-50%);
       width: 0;
       height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
       border-top: 14px solid #00ff88;
+      filter: drop-shadow(0 0 8px #00ff88);
       z-index: 10;
+    }
+    .public-bets-list {
+      background: #0d061c;
+      border: 1px solid #2f1952;
+      border-radius: 12px;
+      padding: 10px;
+      max-height: 120px;
+      overflow-y: auto;
+      margin: 10px 0;
+      text-align: left;
+      font-size: 11px;
+    }
+    .bet-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
     .tab-view { display: none; }
     .tab-view.active-view { display: block; }
 
-    /* BOTTOM NAV */
+    /* BOTTOM NAV (Task, Game, Home, Invite, Profile) */
     .custom-bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -237,8 +253,7 @@
       align-items: center;
       justify-content: space-around;
       z-index: 999;
-      padding: 0 4px;
-      box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.85);
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.9);
     }
     .cnav-item {
       flex: 1;
@@ -251,11 +266,10 @@
       font-size: 10px;
       font-weight: 800;
       cursor: pointer;
-      padding: 8px 0;
     }
-    .cnav-item .nav-icon { font-size: 20px; line-height: 1; }
     .cnav-item.active { color: #00ff88 !important; }
 
+    /* MODALS */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -265,7 +279,7 @@
       opacity: 0; visibility: hidden;
       transition: all 0.2s ease;
       padding: 20px;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(8px);
     }
     .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal-box {
@@ -290,7 +304,7 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Top Header Profile -->
   <div class="header-bar">
     <div class="user-profile">
       <div class="avatar-icon">⚡</div>
@@ -302,58 +316,12 @@
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
   </div>
 
-  <!-- 1. TASK VIEW -->
-  <div class="tab-view" id="view-task">
-    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 ရရှိနိုင်သော Tasks များ</div>
-    <div id="tasks-container">
-      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
-    </div>
-  </div>
-
-  <!-- 2. GAME VIEW (PVP SPIN WHEEL & GAMES) -->
-  <div class="tab-view" id="view-game">
-    <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">⚔️ PvP Arena Wheel</div>
-    
-    <div class="pvp-card">
-      <div style="display:flex; justify-content:space-between; font-size:11px; color:#9c8eaf;">
-        <span>Round Pot</span>
-        <span style="color:#ffeb3b; font-weight:bold;" id="pvp-status-badge">Waiting for bets</span>
-      </div>
-
-      <div class="pvp-wheel-wrapper">
-        <div class="pvp-arrow"></div>
-        <div class="pvp-wheel" id="main-pvp-wheel">
-          <div class="pvp-wheel-center">
-            <div style="font-size:10px; color:#9c8eaf;">TOTAL POT</div>
-            <div style="font-size:24px; font-weight:900; color:#00ff88;">$<span id="pvp-pot-amount">0.00</span></div>
-            <div style="font-size:10px; color:#ff4757; font-weight:bold;" id="pvp-my-share">RED (You): 0%</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:8px;">
-        <input type="number" id="input-pvp-bet" step="0.001" placeholder="Bet ပမာဏ ($0.01)" style="flex:1; padding:11px; background:#09050d; border:1px solid #2f1c4e; border-radius:10px; color:#fff; font-size:12px; outline:none;">
-        <button class="action-btn btn-purple" style="padding:0 18px; font-size:12px;" onclick="placePvPBet()">Bet ထိုးမည်</button>
-      </div>
-      <p style="font-size:11px; color:#9c8eaf; margin-top:8px;">Bet ထိုးလိုက်ပါက အဝိုင်းတွင် အရောင်နေရာယူပြီး ပြသပါမည်။</p>
-    </div>
-
-    <!-- Additional Solo Game Items -->
-    <div class="card-item">
-      <div>
-        <h4>Lucky Spin Wheel</h4>
-        <p>နေ့စဉ် ကံစမ်းပြီး ဒေါ်လာဆုများ ရယူပါ</p>
-      </div>
-      <button class="btn-sub" onclick="showAlert('Lucky Spin', 'နေ့စဉ် ကံစမ်းခွင့် မကြာမီ ဖွင့်လှစ်ပေးပါမည်။')">Play</button>
-    </div>
-  </div>
-
-  <!-- 3. HOME VIEW -->
-  <div class="tab-view active-view" id="view-home">
+  <!-- PERSISTENT TOP SECTION (Task, Home, Invite, Profile တို့တွင် အမြဲပေါ်မည့် Card) -->
+  <div class="common-top-section" id="persistent-top-bar">
     <div class="balance-box">
       <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
       <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
-      <div style="font-size: 11px; color: #b829ff;" id="ui-rate-info">ဆုကြေး: $0.0005 / Ad</div>
+      <div style="font-size: 11px; color: #b829ff;">ဆုကြေး: $0.0005 / Ad</div>
     </div>
 
     <div class="btn-grid">
@@ -361,8 +329,8 @@
       <button class="action-btn btn-green" id="btn-open-withdraw">💳 Withdraw</button>
     </div>
 
-    <div class="limit-container" id="limit-box-container">
-      <div class="limit-labels">
+    <div class="limit-container" id="admin-limit-container">
+      <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:#9c8eaf;">
         <span>နေ့စဉ် Ads ကန့်သတ်ချက်</span>
         <span><strong id="ads-watched-count" style="color:#00ff88;">0</strong> / 500 Ads</span>
       </div>
@@ -370,7 +338,54 @@
         <div class="limit-bar-fill" id="ads-progress-fill"></div>
       </div>
     </div>
+  </div>
 
+  <!-- 1. TASK VIEW (ထိပ်တွင် Card ရှိပြီး အောက်တွင် Tasks စာရင်း ပေါ်မည်) -->
+  <div class="tab-view" id="view-task">
+    <div style="font-size: 13px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 Official Channel Tasks</div>
+    <div id="tasks-container">
+      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">Tasks များကို ဆွဲယူနေပါသည်...</p>
+    </div>
+  </div>
+
+  <!-- 2. GAME VIEW (PVP တခုတည်းသာ သီးသန့် ပါဝင်သည်) -->
+  <div class="tab-view" id="view-game">
+    <div class="pvp-stage">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:13px; font-weight:bold; color:#00ff88;">⚔️ Public 1vs1+ PvP Arena</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="color:#ffeb3b; font-size:11px; font-weight:bold;" id="pvp-timer-status">Waiting for bets</span>
+          <button class="btn-sub" style="padding:3px 8px; font-size:10px;" onclick="openHistoryModal()">History</button>
+        </div>
+      </div>
+
+      <!-- Public Live Wheel (အရောင်အလိုက် နေရာယူမှု) -->
+      <div style="position:relative;">
+        <div class="pvp-pointer"></div>
+        <div class="pvp-wheel-outer" id="pvp-wheel">
+          <div class="pvp-wheel-inner">
+            <div style="font-size:10px; color:#9c8eaf;">ROUND POT</div>
+            <div style="font-size:24px; font-weight:900; color:#fff;">$<span id="pvp-pot-val">0.00</span></div>
+            <div style="font-size:10px; color:#00ff88; margin-top:2px;" id="pvp-players-count">0 players</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public Live Bets List (လူတိုင်းမြင်ရမည်) -->
+      <div class="public-bets-list" id="pvp-bets-list">
+        <div style="color:#9c8eaf; text-align:center;">မည်သူမျှ Bet မတင်ရသေးပါ။</div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1952; border-radius:12px; color:#fff; font-size:13px; outline:none;">
+        <button class="action-btn btn-purple" style="padding:0 20px;" id="btn-place-pvp" onclick="addPublicBetPvP()">Place bet</button>
+      </div>
+      <div style="font-size:11px; color:#9c8eaf; margin-top:8px;">လူ ၂ ယောက်နှင့်အထက် Bet တင်ပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (Public Live)</div>
+    </div>
+  </div>
+
+  <!-- 3. HOME VIEW -->
+  <div class="tab-view active-view" id="view-home">
     <div class="card-item">
       <div>
         <h4>Daily Bonus</h4>
@@ -382,7 +397,7 @@
     <div class="card-item">
       <div>
         <h4>Ads Quick Earn</h4>
-        <p style="color:#00ff88;">တကယ့်ဗီဒီယိုကြော်ငြာ ကြည့်၍ ဆုကြေးယူပါ</p>
+        <p style="color:#00ff88;">တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0005)</p>
       </div>
       <button class="btn-sub" style="border-color:#00ff88; color:#00ff88;" onclick="document.getElementById('btn-watch-ad').click()">Watch</button>
     </div>
@@ -390,18 +405,18 @@
 
   <!-- 4. INVITE VIEW -->
   <div class="tab-view" id="view-invite">
-    <div class="card-item">
+    <div class="card-item" style="margin-bottom:14px;">
       <div>
-        <h4>Invite Commission (20%)</h4>
-        <p>သူငယ်ချင်းများ ကြည့်ရှုသည့် Ads မှ 20% ရရှိပါမည်</p>
+        <h4>Invite Friends (20%)</h4>
+        <p>သူငယ်ချင်းများ ကြည့်ရှုသည့် Ads မှ 20% ကော်မရှင် ရရှိပါမည်</p>
       </div>
-      <button class="btn-sub" id="btn-share">Share</button>
+      <button class="btn-sub" id="btn-share-ref">Share</button>
     </div>
-    <div style="background:#140d21; border:1px solid #2f1c4e; border-radius:14px; padding:14px; margin-top:14px;">
+    <div style="background:#140d21; border:1px solid #2f1c4e; border-radius:14px; padding:14px;">
       <div style="font-size:12px; color:#9c8eaf; font-weight:700;">သင်၏ Invite Link</div>
       <div style="display:flex; gap:8px; margin-top:8px;">
         <input type="text" id="invite-link-input" style="flex:1; padding:11px; background:#09050d; border:1px solid #2f1c4e; border-radius:10px; color:#ddd; font-size:12px; font-family:monospace;" readonly>
-        <button class="action-btn btn-purple" style="padding:0 16px; font-size:12px;" id="btn-copy-link">Copy</button>
+        <button class="action-btn btn-purple" style="padding:0 16px; font-size:12px;" onclick="copyInviteLink()">Copy</button>
       </div>
     </div>
   </div>
@@ -417,54 +432,68 @@
     </div>
     <div style="font-size: 12px; color: #9c8eaf; font-weight: 700; margin-bottom: 8px;">📜 ငွေထုတ်ယူမှု မှတ်တမ်းများ</div>
     <div id="history-container">
-      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">မှတ်တမ်း ဆွဲယူနေပါသည်...</p>
+      <p style="font-size:12px; color:#9c8eaf; padding:10px 0;">မှတ်တမ်း မရှိသေးပါ။</p>
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
+  <!-- BOTTOM NAVIGATION (Task, Game, Home, Invite, Profile) -->
   <div class="custom-bottom-nav">
     <div class="cnav-item" onclick="switchNav('view-task', this)">
-      <span class="nav-icon">📋</span>
+      <span style="font-size:20px;">📋</span>
       <span>Task</span>
     </div>
-    <div class="cnav-item" onclick="switchNav('view-game', this)">
-      <span class="nav-icon">🎮</span>
+    <div class="cnav-item" onclick="switchNav('view-game', this); listenPublicPvP();">
+      <span style="font-size:20px;">🎮</span>
       <span>Game</span>
     </div>
     <div class="cnav-item active" onclick="switchNav('view-home', this)">
-      <span class="nav-icon">🏠</span>
+      <span style="font-size:20px;">🏠</span>
       <span>Home</span>
     </div>
     <div class="cnav-item" onclick="switchNav('view-invite', this)">
-      <span class="nav-icon">👥</span>
+      <span style="font-size:20px;">👥</span>
       <span>Invite</span>
     </div>
     <div class="cnav-item" onclick="switchNav('view-profile', this); loadWithdrawHistory();">
-      <span class="nav-icon">👤</span>
+      <span style="font-size:20px;">👤</span>
       <span>Profile</span>
     </div>
   </div>
 
-  <!-- Alert Modal -->
-  <div class="modal-overlay" id="modal-alert">
-    <div class="modal-box" style="text-align: center;">
-      <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
-      <p id="alert-msg" style="color: #9c8eaf; font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
-      <button class="action-btn btn-purple" style="width: 100%; padding:12px;" id="alert-ok-btn">ကောင်းပြီ</button>
+  <!-- GAME HISTORY MODAL -->
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal-box">
+      <h3 style="font-size:15px; margin-bottom:8px; text-align:center;">📜 PvP Winners History</h3>
+      <div id="history-items-list" style="max-height:180px; overflow-y:auto; font-size:12px; margin-bottom:12px;">
+        <p style="color:#9c8eaf; text-align:center;">မှတ်တမ်း ရယူနေပါသည်...</p>
+      </div>
+      <button class="action-btn btn-purple" style="width:100%; padding:10px;" onclick="document.getElementById('modal-history').classList.remove('active')">ပိတ်မည်</button>
     </div>
   </div>
 
-  <!-- Withdraw Modal -->
+  <!-- WITHDRAW MODAL -->
   <div class="modal-overlay" id="modal-withdraw">
     <div class="modal-box">
       <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;">USDT BEP-20 ထုတ်ယူရန်</h3>
       <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
+      
       <label style="font-size: 11px; color: #9c8eaf;">ထုတ်ယူမည့် ပမာဏ ($)</label>
       <input type="number" id="input-amount" step="0.001" placeholder="0.03">
+
       <label style="font-size: 11px; color: #9c8eaf;">BEP-20 Address (0x...)</label>
       <input type="text" id="input-wallet" placeholder="0x...">
+
       <button class="action-btn btn-green" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-withdraw">ငွေထုတ်မည်</button>
-      <button class="action-btn" style="width: 100%; background: #26193b; color: #9c8eaf; padding:12px;" id="btn-close-withdraw">ပိတ်မည်</button>
+      <button class="action-btn" style="width: 100%; background: #26193b; color: #9c8eaf; padding:12px;" onclick="document.getElementById('modal-withdraw').classList.remove('active')">ပိတ်မည်</button>
+    </div>
+  </div>
+
+  <!-- ALERT MODAL -->
+  <div class="modal-overlay" id="modal-alert">
+    <div class="modal-box" style="text-align: center;">
+      <h3 id="alert-title" style="margin-bottom: 8px; font-size:16px;">အသိပေးချက်</h3>
+      <p id="alert-msg" style="color: #9c8eaf; font-size: 13px; margin-bottom: 18px; line-height: 1.5;"></p>
+      <button class="action-btn btn-purple" style="width: 100%; padding:12px;" onclick="document.getElementById('modal-alert').classList.remove('active')">ကောင်းပြီ</button>
     </div>
   </div>
 
@@ -486,19 +515,28 @@
     let currentBalance = 0.0000;
     let lastDaily = 0;
 
+    // ကစားသမားများအတွက် မတူညီသော သီးသန့် Neon အရောင်များ
+    const PLAYER_PALETTE = ['#ff4757', '#1e90ff', '#2ed573', '#ffa502', '#9b59b6', '#e056fd', '#00d2d3'];
+
     function showAlert(title, msg) {
       document.getElementById("alert-title").innerText = title;
       document.getElementById("alert-msg").innerText = msg;
       document.getElementById("modal-alert").classList.add("active");
     }
-    document.getElementById("alert-ok-btn").addEventListener("click", () => document.getElementById("modal-alert").classList.remove("active"));
-    document.getElementById("btn-close-withdraw").addEventListener("click", () => document.getElementById("modal-withdraw").classList.remove("active"));
 
+    // Tab Switching (Game မှလွဲ၍ အခြားနေရာများတွင် ထိပ်ဆုံး Card ကို ပြသခြင်း)
     function switchNav(viewId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
       document.getElementById(viewId).classList.add('active-view');
       if (el) el.classList.add('active');
+
+      const topBar = document.getElementById("persistent-top-bar");
+      if (viewId === 'view-game') {
+        topBar.style.display = 'none';
+      } else {
+        topBar.style.display = 'block';
+      }
     }
 
     function getTodayString() {
@@ -544,7 +582,7 @@
         document.getElementById("invite-link-input").value = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
 
         if (IS_ADMIN) {
-          document.getElementById("limit-box-container").style.display = "none";
+          document.getElementById("admin-limit-container").style.display = "none";
         } else {
           const currentAds = getDailyAdCount();
           document.getElementById("ads-watched-count").innerText = currentAds;
@@ -552,6 +590,7 @@
         }
 
         loadTasks();
+        listenPublicPvP();
       } catch (e) {
         console.error(e);
       }
@@ -609,102 +648,235 @@
     });
 
     // ==========================================
-    // PVP SPIN WHEEL & BET COLOR LOGIC
+    // GLOBAL PUBLIC LIVE PVP WHEEL (လူအစစ် 2+ & BOT မပါ)
     // ==========================================
-    let myPvPBet = 0;
-    let oppPvPBet = 0;
-    let isSpinningWheel = false;
+    let currentPvPRoom = null;
+    let pvpTimer = null;
+    let isPvPSpinning = false;
 
-    function renderWheelUI() {
-      const total = myPvPBet + oppPvPBet;
-      const wheel = document.getElementById("main-pvp-wheel");
-      document.getElementById("pvp-pot-amount").innerText = total.toFixed(3);
+    async function listenPublicPvP() {
+      try {
+        const res = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?order=created_at.desc&limit=1`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const rooms = await res.json();
+        if (rooms.length > 0) {
+          currentPvPRoom = rooms[0];
+          updatePvPWheelUI(currentPvPRoom);
+        }
+      } catch (e) {}
+    }
 
-      if (total === 0) {
-        wheel.style.background = `conic-gradient(#331d56 0% 100%)`;
-        document.getElementById("pvp-my-share").innerText = `RED (You): 0%`;
+    // Live Auto-Poll (Bot သုံးနေသည့် User အားလုံး Real-time မြင်တွေ့စေခြင်း)
+    setInterval(() => {
+      if (document.getElementById("view-game").classList.contains("active-view") && !isPvPSpinning) {
+        listenPublicPvP();
+      }
+    }, 2000);
+
+    function updatePvPWheelUI(room) {
+      if (!room || room.status === 'finished') {
+        document.getElementById("pvp-pot-val").innerText = "0.00";
+        document.getElementById("pvp-players-count").innerText = "0 players";
+        document.getElementById("pvp-timer-status").innerText = "Waiting for bets";
+        document.getElementById("pvp-bets-list").innerHTML = `<div style="color:#9c8eaf; text-align:center;">မည်သူမျှ Bet မတင်ရသေးပါ။</div>`;
+        document.getElementById("pvp-wheel").style.background = `conic-gradient(#331d56 0% 100%)`;
         return;
       }
 
-      const myPct = Math.round((myPvPBet / total) * 100);
-      document.getElementById("pvp-my-share").innerText = `RED (You): ${myPct}%`;
+      // Players & Bet List Parsing
+      let players = [];
+      try {
+        players = typeof room.players_data === 'string' ? JSON.parse(room.players_data) : (room.players_data || []);
+      } catch (err) { players = []; }
 
-      // အဝိုင်းပေါ်တွင် မိမိအရောင် (RED) နှင့် တစ်ဖက်လူအရောင် (BLUE) အချိုးကျ နေရာယူစေခြင်း
-      if (oppPvPBet === 0) {
-        wheel.style.background = `conic-gradient(#ff4757 0% 100%)`;
-      } else {
-        wheel.style.background = `conic-gradient(#ff4757 0% ${myPct}%, #1e90ff ${myPct}% 100%)`;
+      // အကယ်၍ အဟောင်း format ဖြစ်နေပါက
+      if (players.length === 0 && room.player_1) {
+        players.push({ id: room.player_1, name: room.p1_name, bet: Number(room.bet_amount), color: PLAYER_PALETTE[0] });
+        if (room.player_2) {
+          players.push({ id: room.player_2, name: room.p2_name, bet: Number(room.p2_bet || 0), color: PLAYER_PALETTE[1] });
+        }
+      }
+
+      let totalPot = 0;
+      players.forEach(p => totalPot += Number(p.bet));
+      document.getElementById("pvp-pot-val").innerText = totalPot.toFixed(3);
+      document.getElementById("pvp-players-count").innerText = `${players.length} players`;
+
+      // Wheel Segments (လူအစစ်များ၏ အရောင်အလိုက် အဝိုင်းတွင် နေရာယူစေခြင်း)
+      if (totalPot > 0 && players.length > 0) {
+        let gradientParts = [];
+        let curPercent = 0;
+        let betsListHtml = "";
+
+        players.forEach((p, idx) => {
+          const color = p.color || PLAYER_PALETTE[idx % PLAYER_PALETTE.length];
+          const pct = (Number(p.bet) / totalPot) * 100;
+          const nextPercent = curPercent + pct;
+          gradientParts.push(`${color} ${curPercent.toFixed(1)}% ${nextPercent.toFixed(1)}%`);
+          curPercent = nextPercent;
+
+          betsListHtml += `
+            <div class="bet-item">
+              <span style="color:${color}; font-weight:bold;">● ${p.name}</span>
+              <span>$${Number(p.bet).toFixed(3)} (${pct.toFixed(0)}%)</span>
+            </div>
+          `;
+        });
+
+        document.getElementById("pvp-wheel").style.background = `conic-gradient(${gradientParts.join(', ')})`;
+        document.getElementById("pvp-bets-list").innerHTML = betsListHtml;
+      }
+
+      // လူ ၂ ယောက်နှင့်အထက် စုံသည်နှင့် ၃၀ စက္ကန့် Countdown စတင်ခြင်း
+      if (players.length >= 2 && room.status === 'playing' && !pvpTimer) {
+        startPvPCountdownTimer(room, players, totalPot);
       }
     }
 
-    async function placePvPBet() {
-      const amt = Number(document.getElementById("input-pvp-bet").value);
+    async function addPublicBetPvP() {
+      const amt = Number(document.getElementById("pvp-bet-amt").value);
       if (!amt || amt < 0.001) return showAlert("သတိပေးချက်", "အနည်းဆုံး $0.001 Bet ထိုးရပါမည်။");
       if (amt > currentBalance) return showAlert("သတိပေးချက်", "လက်ကျန်ငွေ မလုံလောက်ပါ။");
 
       let nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
 
-      myPvPBet += amt;
-      renderWheelUI();
-      document.getElementById("input-pvp-bet").value = "";
+      const res = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?status=in.(waiting,playing)&order=created_at.desc&limit=1`, {
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+      });
+      const rooms = await res.json();
 
-      showAlert("✅ Bet တင်ပြီးပါပြီ", `သင်သည် $${amt} လောင်းကြေးထိုးလိုက်ပါပြီ။ အဝိုင်းတွင် သင့်အရောင် (RED) နေရာယူထားပါသည်။`);
+      if (rooms.length > 0) {
+        const r = rooms[0];
+        let pList = [];
+        try { pList = typeof r.players_data === 'string' ? JSON.parse(r.players_data) : (r.players_data || []); } catch (e) {}
 
-      // တစ်ဖက်လူ မရှိပါက ၃ စက္ကန့်အတွင်း ပြိုင်ဘက်ဝင်ရောက်လာစေခြင်း
-      if (oppPvPBet === 0) {
-        document.getElementById("pvp-status-badge").innerText = "Waiting for Opponent...";
-        setTimeout(() => {
-          oppPvPBet = Number((amt * (0.8 + Math.random() * 0.4)).toFixed(3));
-          renderWheelUI();
-          document.getElementById("pvp-status-badge").innerText = "Opponent Joined! Starting 30s...";
-          startPvPWheelTimer(30);
-        }, 3000);
+        const existIndex = pList.findIndex(p => Number(p.id) === Number(userData.id));
+        if (existIndex >= 0) {
+          // လောင်းကြေး တိုးခြင်း
+          pList[existIndex].bet = Number((Number(pList[existIndex].bet) + amt).toFixed(4));
+        } else {
+          // Player အသစ် ဝင်ရောက်ခြင်း (အရောင်အသစ် သတ်မှတ်)
+          const newColor = PLAYER_PALETTE[pList.length % PLAYER_PALETTE.length];
+          pList.push({ id: userData.id, name: userData.first_name, bet: amt, color: newColor });
+        }
+
+        const newStatus = pList.length >= 2 ? "playing" : "waiting";
+        await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${r.id}`, {
+          method: "PATCH",
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ players_data: JSON.stringify(pList), status: newStatus })
+        });
+      } else {
+        // အသစ် Public Room တည်ထောင်ခြင်း (ထွက်သွားသော်လည်း မပျောက်ပါ)
+        const initPlayers = [{ id: userData.id, name: userData.first_name, bet: amt, color: PLAYER_PALETTE[0] }];
+        await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms`, {
+          method: "POST",
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ player_1: userData.id, p1_name: userData.first_name, bet_amount: amt, players_data: JSON.stringify(initPlayers), status: "waiting" })
+        });
       }
+
+      document.getElementById("pvp-bet-amt").value = "";
+      listenPublicPvP();
     }
 
-    function startPvPWheelTimer(sec) {
-      let t = sec;
-      const timer = setInterval(() => {
+    function startPvPCountdownTimer(room, players, total) {
+      let t = 30;
+      document.getElementById("pvp-timer-status").innerText = `Spin in ${t}s`;
+
+      pvpTimer = setInterval(() => {
         t--;
-        document.getElementById("pvp-status-badge").innerText = `Spin in ${t}s`;
+        document.getElementById("pvp-timer-status").innerText = `Spin in ${t}s`;
         if (t <= 0) {
-          clearInterval(timer);
-          triggerWheelSpin();
+          clearInterval(pvpTimer);
+          pvpTimer = null;
+          isPvPSpinning = true;
+          document.getElementById("pvp-timer-status").innerText = "🌀 SPINNING!";
+
+          const deg = 1800 + Math.floor(Math.random() * 360);
+          document.getElementById("pvp-wheel").style.transform = `rotate(${deg}deg)`;
+
+          setTimeout(async () => {
+            // Bet ပမာဏအလိုက် အနိုင်ရွေးချယ်ခြင်း
+            const rand = Math.random() * total;
+            let accum = 0;
+            let winner = players[0];
+
+            for (let p of players) {
+              accum += Number(p.bet);
+              if (rand <= accum) {
+                winner = p;
+                break;
+              }
+            }
+
+            const prize = Number((total * 0.95).toFixed(4));
+
+            if (Number(userData.id) === Number(winner.id)) {
+              const finBal = Number((currentBalance + prize).toFixed(4));
+              await updateBalanceInDB(finBal);
+              showAlert("🎉 PvP အနိုင်ရရှိပါသည်!", `ဂုဏ်ယူပါသည်! သင့်အရောင် ကျရောက်သဖြင့် Pot ငွေ +$${prize} USDT ရရှိပါသည်!`);
+            } else {
+              showAlert("⚔️ PvP ပြီးဆုံးပါသည်", `အနိုင်ရရှိသူ: [${winner.name}] ဖြစ်ပါသည်။`);
+            }
+
+            // Game History သိမ်းဆည်းခြင်း
+            await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
+              method: "POST",
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ game_type: "PvP Wheel", winner_name: winner.name, winner_id: winner.id, prize: prize })
+            });
+
+            await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${room.id}`, {
+              method: "PATCH",
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "finished" })
+            });
+
+            isPvPSpinning = false;
+            document.getElementById("pvp-wheel").style.transform = `rotate(0deg)`;
+            listenPublicPvP();
+          }, 4500);
         }
       }, 1000);
     }
 
-    function triggerWheelSpin() {
-      if (isSpinningWheel) return;
-      isSpinningWheel = true;
-      document.getElementById("pvp-status-badge").innerText = "🌀 SPINNING!";
+    // ==========================================
+    // GAME WINNERS HISTORY
+    // ==========================================
+    async function openHistoryModal() {
+      document.getElementById("modal-history").classList.add("active");
+      const list = document.getElementById("history-items-list");
+      list.innerHTML = "<p style='color:#9c8eaf; text-align:center;'>မှတ်တမ်း ရယူနေပါသည်...</p>";
 
-      const randDeg = 1800 + Math.floor(Math.random() * 360);
-      const wheel = document.getElementById("main-pvp-wheel");
-      wheel.style.transform = `rotate(${randDeg}deg)`;
-
-      setTimeout(async () => {
-        const total = myPvPBet + oppPvPBet;
-        const myWinProb = myPvPBet / total;
-        const isWin = (Math.random() < myWinProb);
-
-        if (isWin) {
-          const prize = Number((total * 0.95).toFixed(4));
-          const finBal = Number((currentBalance + prize).toFixed(4));
-          await updateBalanceInDB(finBal);
-          showAlert("🎉 အနိုင်ရရှိပါသည်!", `PvP Wheel အနိုင်ရရှိသဖြင့် Pot ဆုကြေး +$${prize} USDT ရရှိပါသည်!`);
-        } else {
-          showAlert("😢 ရှုံးနိမ့်ပါသည်", "ပြိုင်ဘက် အရောင် ကျရောက်သွားပါသည်။");
+      try {
+        const res = await fetch(`${SB_URL}/rest/v1/cyber_game_history?order=created_at.desc&limit=15`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const data = await res.json();
+        if (data.length === 0) {
+          list.innerHTML = "<p style='color:#9c8eaf; text-align:center;'>မှတ်တမ်း မရှိသေးပါ။</p>";
+          return;
         }
 
-        myPvPBet = 0;
-        oppPvPBet = 0;
-        isSpinningWheel = false;
-        wheel.style.transform = `rotate(0deg)`;
-        renderWheelUI();
-        document.getElementById("pvp-status-badge").innerText = "Waiting for bets";
-      }, 4000);
+        let html = "";
+        data.forEach(item => {
+          html += `
+            <div class="bet-item">
+              <div>
+                <span style="color:#00ff88; font-weight:bold;">🏆 ${item.winner_name}</span>
+                <span style="color:#9c8eaf; font-size:10px;"> (${item.game_type})</span>
+              </div>
+              <span style="color:#ffeb3b; font-weight:bold;">+$${Number(item.prize).toFixed(3)}</span>
+            </div>
+          `;
+        });
+        list.innerHTML = html;
+      } catch (err) {
+        list.innerHTML = "<p style='color:#ff4757; text-align:center;'>မှတ်တမ်း ဆွဲယူ၍ မရပါ။</p>";
+      }
     }
 
     // ==========================================
@@ -826,17 +998,10 @@
       showAlert("✅ အောင်မြင်ပါသည်", `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။`);
     });
 
-    document.getElementById("btn-copy-link").addEventListener("click", () => {
+    function copyInviteLink() {
       const link = document.getElementById("invite-link-input").value;
       navigator.clipboard.writeText(link).then(() => showAlert("အောင်မြင်ပါသည်", "Invite Link ကူးယူပြီးပါပြီ!"));
-    });
-
-    document.getElementById("btn-share").addEventListener("click", () => {
-      const link = document.getElementById("invite-link-input").value;
-      if (tg?.openTelegramLink) {
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Cyber Earn မှာ Ads ကြည့်ပြီး USDT ဒေါ်လာတွေ အတူတူ ရှာဖွေကြစို့!")}`);
-      }
-    });
+    }
 
     async function loadWithdrawHistory() {
       const container = document.getElementById("history-container");
