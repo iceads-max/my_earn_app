@@ -520,7 +520,7 @@
   <div class="modal-overlay" id="modal-withdraw">
     <div class="modal-box">
       <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;" data-i18n="withdraw_modal_title">USDT BEP-20 ထုတ်ယူရန်</h3>
-      <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" data-i18n="withdraw_min_hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
+      <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" id="ui-withdraw-min-hint" data-i18n="withdraw_min_hint">အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်</p>
       
       <label style="font-size: 11px; color: #9c8eaf;" data-i18n="lbl_amount">ထုတ်ယူမည့် ပမာဏ ($)</label>
       <input type="number" id="input-amount" step="0.001" placeholder="0.03">
@@ -548,7 +548,7 @@
     const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
-    const PAYMENT_CHANNEL = "@CyberEarnPayment"; // Auto Payment Log Channel
+    const PAYMENT_CHANNEL = "@CyberEarnPayment";
 
     const MAX_DAILY_ADS = 500;
     const tg = window.Telegram?.WebApp;
@@ -597,7 +597,6 @@
         history_modal_title: "📜 PvP Winners History",
         btn_close: "ပိတ်မည်",
         withdraw_modal_title: "USDT BEP-20 ထုတ်ယူရန်",
-        withdraw_min_hint: "အနည်းဆုံး $0.03 မှ ထုတ်နိုင်ပါသည်",
         lbl_amount: "ထုတ်ယူမည့် ပမာဏ ($)",
         btn_submit_withdraw: "ငွေထုတ်မည်",
         btn_ok: "ကောင်းပြီ",
@@ -638,7 +637,6 @@
         history_modal_title: "📜 PvP Winners History",
         btn_close: "Close",
         withdraw_modal_title: "Withdraw USDT BEP-20",
-        withdraw_min_hint: "Minimum withdrawal: $0.03",
         lbl_amount: "Amount ($)",
         btn_submit_withdraw: "Submit Withdraw",
         btn_ok: "OK",
@@ -649,17 +647,28 @@
       }
     };
 
+    function updateMinWithdrawDisplay() {
+      const minText = `$${config.min_withdraw}`;
+      const el = document.getElementById("ui-withdraw-min-hint");
+      if (el) {
+        el.innerText = (currentLang === "en") ? `Minimum withdrawal: ${minText}` : `အနည်းဆုံး ${minText} မှ ထုတ်နိုင်ပါသည်`;
+      }
+      const inp = document.getElementById("input-amount");
+      if (inp) inp.placeholder = config.min_withdraw.toString();
+    }
+
     function applyLanguage(lang) {
       currentLang = lang;
       localStorage.setItem("cyber_lang", lang);
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
-        if (I18N[lang] && I18N[lang][key]) {
+        if (key !== "withdraw_min_hint" && I18N[lang] && I18N[lang][key]) {
           el.innerText = I18N[lang][key];
         }
       });
       document.getElementById("btn-lang-toggle").innerText = (lang === "my") ? "🇬🇧 EN" : "🇲🇲 မြန်မာ";
       document.getElementById("ui-ad-reward-text").innerText = I18N[lang].ad_reward_text;
+      updateMinWithdrawDisplay();
     }
 
     function toggleLanguage() {
@@ -691,7 +700,6 @@
       }
     }
 
-    // IP Lock
     async function checkIpLock() {
       if (IS_ADMIN) return true;
       try {
@@ -743,8 +751,19 @@
       return current;
     }
 
+    // Dynamic Database Settings & User Data Synchronization
     async function syncDataFromDB() {
       try {
+        // 1. Bot က ပြင်ထားသော min_withdraw ကို cyber_settings ထဲမှ Live ဆွဲဖတ်ခြင်း
+        const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?key=eq.min_withdraw`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const setData = await setRes.json();
+        if (setData.length > 0 && setData[0].value) {
+          config.min_withdraw = Number(setData[0].value);
+        }
+
+        // 2. User Data ဆွဲယူခြင်း
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -1246,7 +1265,6 @@
       document.getElementById("modal-withdraw").classList.add("active");
     });
 
-    // Telegram Payment Channel သို့ Auto Post တင်ပေးသည့် Function
     async function sendPaymentChannelLog(userFirstName, userId, amount, address, txStatus) {
       try {
         const maskedAddr = address.substring(0, 6) + "..." + address.substring(address.length - 4);
@@ -1267,16 +1285,17 @@
             parse_mode: "HTML"
           })
         });
-      } catch (err) {
-        console.error("Auto Channel Post Error:", err);
-      }
+      } catch (err) {}
     }
 
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
-      if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါမည်။`));
+      // Bot က သတ်မှတ်ထားသော config.min_withdraw အတိုင်း တိုက်ရိုက်စစ်ဆေးခြင်း
+      if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
+        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါမည်။`));
+      }
       if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
       if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
 
@@ -1291,7 +1310,6 @@
         body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: statusTag })
       });
 
-      // @CyberEarnPayment Channel သို့ အလိုအလျောက် Post တင်ခြင်း
       await sendPaymentChannelLog(userData.first_name, userData.id, amt, addr, statusTag);
 
       document.getElementById("modal-withdraw").classList.remove("active");
