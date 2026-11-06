@@ -340,7 +340,7 @@
 </head>
 <body>
 
-  <!-- IP LOCK SCREEN (အကောင့်မပိတ်ဘဲ ကန့်သတ်ထားသည့် Screen) -->
+  <!-- IP LOCK SCREEN -->
   <div id="ip-lock-screen">
     <div style="font-size: 60px; margin-bottom: 16px;">🔒</div>
     <h2 data-i18n="ip_lock_title">IP Access Restricted</h2>
@@ -422,7 +422,7 @@
       </div>
 
       <div style="display:flex; gap:8px;">
-        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1c4e; border-radius:12px; color:#fff; font-size:13px; outline:none;">
+        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1952; border-radius:12px; color:#fff; font-size:13px; outline:none;">
         <button class="action-btn btn-purple" style="padding:0 20px;" id="btn-place-pvp" onclick="addPublicBetPvP()" data-i18n="btn_place_bet">Place bet</button>
       </div>
       <div style="font-size:11px; color:#9c8eaf; margin-top:8px;" id="pvp-info-bar" data-i18n="pvp_rule">လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (10% fee အား နုတ်ယူပါမည်)။</div>
@@ -554,6 +554,7 @@
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
+    // ADMIN FULL BYPASS CHECK
     const IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
 
     let currentLang = localStorage.getItem("cyber_lang") || "my";
@@ -690,9 +691,9 @@
       }
     }
 
-    // IP Lock စနစ် (Ban မလုပ်ဘဲ တူညီသော IP အကောင့်ကို ဝင်ခွင့် Lock ချခြင်း)
+    // IP Lock စနစ် (Admin အတွက် လုံးဝ Bypass ပြုလုပ်ထားသည်)
     async function checkIpLock() {
-      if (IS_ADMIN) return true; // Admin ကင်းလွတ်ခွင့်
+      if (IS_ADMIN) return true; // Admin အကောင့် လုံးဝ ကင်းလွတ်ခွင့်
       try {
         const res = await fetch("https://api.ipify.org?format=json");
         const ipData = await res.json();
@@ -705,7 +706,6 @@
         const otherUser = users.find(u => Number(u.id) !== Number(userData.id));
 
         if (otherUser) {
-          // Ban မလုပ်ဘဲ Screen သာ Lock ချခြင်း (VPN ခံပါက IP ပြောင်း၍ ပြန်ဝင်နိုင်သည်)
           document.getElementById("ip-lock-screen").style.display = "flex";
           return false;
         } else {
@@ -787,7 +787,6 @@
       });
     }
 
-    // Admin Account သို့ Fee ပေါင်းထည့်ခြင်း
     async function addAdminFee(feeAmount) {
       try {
         const aRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${ADMIN_ID}`, {
@@ -1032,6 +1031,7 @@
               }
             }
 
+            // တိကျသော အနိုင်ရာခိုင်နှုန်း (ဥပမာ - 10% Win)
             const winnerWinPercent = Math.round((Number(winner.bet) / total) * 100);
             const fee = Number((total * 0.10).toFixed(4));
             const prize = Number((total * 0.90).toFixed(4));
@@ -1041,12 +1041,16 @@
             if (Number(userData.id) === Number(winner.id)) {
               const finBal = Number((currentBalance + prize).toFixed(4));
               await updateBalanceInDB(finBal);
-              showAlert("🎉 Victory!", (currentLang === "en" ? `Congratulations! You won the Pot: +$${prize} USDT (${winnerWinPercent}% win share, 10% fee deducted).` : `ဂုဏ်ယူပါသည်! သင့်အရောင် ကျရောက်သဖြင့် Pot ဆုကြေး +$${prize} USDT ရရှိပါသည် (${winnerWinPercent}% နေရာယူမှု၊ 10% fee နှုတ်ပြီး)!`));
+              showAlert("🎉 Victory!", (currentLang === "en" 
+                ? `Congratulations! You won with ${winnerWinPercent}% Win! Pot: +$${prize} USDT.` 
+                : `ဂုဏ်ယူပါသည်! သင်သည် ${winnerWinPercent}% Win ဖြင့် အနိုင်ရရှိခဲ့ပါသည်! Pot: +$${prize} USDT!`));
             } else {
-              showAlert("⚔️ Round Finished", (currentLang === "en" ? `Winner: [${winner.name}] (${winnerWinPercent}% share).` : `အနိုင်ရရှိသူ: [${winner.name}] (${winnerWinPercent}% နေရာယူမှု) ဖြစ်ပါသည်။`));
+              showAlert("⚔️ Round Finished", (currentLang === "en" 
+                ? `Winner: [${winner.name}] with ${winnerWinPercent}% Win.` 
+                : `အနိုင်ရရှိသူ: [${winner.name}] (${winnerWinPercent}% Win) ဖြစ်ပါသည်။`));
             }
 
-            // အနိုင် % နှင့် Date Time ပါဝင်သော History မှတ်တမ်း သိမ်းဆည်းခြင်း
+            // History သို့ တိကျသော Win % နှင့် သိမ်းဆည်းခြင်း
             await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
               method: "POST",
               headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -1069,7 +1073,7 @@
     }
 
     // ==========================================
-    // GAME WINNERS HISTORY (WIN % & DATE/TIME ပါဝင်မှု)
+    // GAME WINNERS HISTORY (ဥပမာ - 10% Win ဟု ပြသခြင်း)
     // ==========================================
     async function openHistoryModal() {
       document.getElementById("modal-history").classList.add("active");
@@ -1088,13 +1092,14 @@
 
         let html = "";
         data.forEach(item => {
-          const winPct = item.win_percent ? `${item.win_percent}%` : "100%";
+          // သင့်တောင်းဆိုချက်အတိုင်း "10% Win" ဟု ပြသခြင်း
+          const winPctText = item.win_percent ? `${item.win_percent}% Win` : "100% Win";
           const playTime = item.created_at ? new Date(item.created_at).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : "";
           
           html += `
             <div class="bet-item" style="flex-direction:column; align-items:flex-start; gap:2px; padding:6px 0;">
               <div style="display:flex; justify-content:space-between; width:100%;">
-                <span style="color:#00ff88; font-weight:bold;">🏆 ${item.winner_name} <span style="color:#ff4757; font-size:11px;">(${winPct})</span></span>
+                <span style="color:#00ff88; font-weight:bold;">🏆 ${item.winner_name} <span style="color:#ff4757; font-size:11px; margin-left:4px;">[${winPctText}]</span></span>
                 <span style="color:#ffeb3b; font-weight:bold;">+$${Number(item.prize).toFixed(3)}</span>
               </div>
               <div style="font-size:10px; color:#9c8eaf;">🕒 ${playTime} | ${item.game_type}</div>
@@ -1108,7 +1113,7 @@
     }
 
     // ==========================================
-    // CHANNEL JOIN CHECK & 2X PENALTY LOGIC
+    // CHANNEL JOIN CHECK & 2X PENALTY
     // ==========================================
     async function loadTasks() {
       const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
@@ -1139,7 +1144,6 @@
         `;
         container.appendChild(div);
 
-        // Task ပြီးထားသူများ ခိုးထွက်ပါက 2 ဆ ဒဏ်ကြေးဖြတ်စနစ်
         div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => {
           if (isDone) {
             verifyTaskIntegrity(t);
@@ -1150,7 +1154,6 @@
       });
     }
 
-    // Channel Task မှ ခိုးထွက်သွားပါက ဆုကြေး၏ ၂ ဆ ဖြတ်တောက်ခြင်း
     async function verifyTaskIntegrity(task) {
       if (IS_ADMIN) return showAlert("Admin Pass", "Admin is exempt from task penalty.");
       const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
@@ -1163,12 +1166,10 @@
         const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
 
         if (!isStillMember) {
-          // Channel မှ ပြန်ထွက်ထားသည်ကို တွေ့ရှိပါက ဆုကြေး၏ ၂ ဆ ဖြတ်ခြင်း
           const penalty = Number((Number(task.reward) * 2).toFixed(4));
           const newBal = Number(Math.max(0, currentBalance - penalty).toFixed(4));
           await updateBalanceInDB(newBal);
 
-          // Completed စာရင်းမှ ဖယ်ထုတ်ခြင်း
           await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
             method: "DELETE",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -1222,10 +1223,12 @@
       }, 3000);
     }
 
-    // Daily Bonus
+    // Daily Bonus (Admin အတွက် ၂၄ နာရီ ကန့်သတ်ချက် မရှိ)
     document.getElementById("btn-daily").addEventListener("click", async () => {
       const now = Date.now();
-      if (now - lastDaily < 24 * 60 * 60 * 1000) return showAlert("Notice", (currentLang === "en" ? "Already claimed today." : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။"));
+      if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
+        return showAlert("Notice", (currentLang === "en" ? "Already claimed today." : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။"));
+      }
 
       const nBal = Number((currentBalance + config.daily_bonus).toFixed(4));
       lastDaily = now;
@@ -1239,7 +1242,7 @@
       showAlert("Daily Bonus", (currentLang === "en" ? `Claimed +$${config.daily_bonus} USDT!` : `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
     });
 
-    // Withdraw Controls
+    // Withdraw Controls (Admin အတွက် Min Limit မရှိ)
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
       document.getElementById("modal-withdraw").classList.add("active");
     });
