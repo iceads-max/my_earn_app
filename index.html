@@ -510,7 +510,7 @@
     <div class="modal-box">
       <h3 style="font-size:15px; margin-bottom:8px; text-align:center;" data-i18n="history_modal_title">📜 PvP Winners History</h3>
       <div id="history-items-list" style="max-height:220px; overflow-y:auto; font-size:12px; margin-bottom:12px;">
-        <p style="color:#9c8eaf; text-align:center;">Loading records...</p>
+        <p style="color:#9c8eaf; text-align:center;">မှတ်တမ်း ရယူနေပါသည်...</p>
       </div>
       <button class="action-btn btn-purple" style="width:100%; padding:10px;" onclick="document.getElementById('modal-history').classList.remove('active')" data-i18n="btn_close">ပိတ်မည်</button>
     </div>
@@ -533,11 +533,11 @@
     </div>
   </div>
 
-  <!-- AUTO DEPOSIT MODAL -->
+  <!-- AUTO DEPOSIT MODAL (MIN $0.10) -->
   <div class="modal-overlay" id="modal-deposit">
     <div class="modal-box">
       <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;" data-i18n="deposit_modal_title">USDT BEP-20 ငွေသွင်းရန်</h3>
-      <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" data-i18n="deposit_modal_subtitle">Admin Wallet သို့ လွှဲပြီး TxHash ဖြင့် အတည်ပြုပါ</p>
+      <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" data-i18n="deposit_modal_subtitle">Admin Wallet သို့ လွှဲပြီး TxHash ဖြင့် အတည်ပြုပါ (အနည်းဆုံး $0.10)</p>
 
       <div style="background:#09050d; border:1px solid #2f1c4e; border-radius:10px; padding:10px; margin-bottom:12px;">
         <div style="font-size:10px; color:#9c8eaf;">Official Admin Deposit Address:</div>
@@ -546,7 +546,7 @@
       </div>
 
       <label style="font-size: 11px; color: #9c8eaf;" data-i18n="lbl_deposit_amount">သွင်းယူခဲ့သည့် ပမာဏ ($)</label>
-      <input type="number" id="input-deposit-amount" step="0.01" placeholder="1.00">
+      <input type="number" id="input-deposit-amount" step="0.01" min="0.1" placeholder="အနည်းဆုံး 0.10">
 
       <label style="font-size: 11px; color: #9c8eaf;">Transaction Hash (TxHash 0x...)</label>
       <input type="text" id="input-deposit-txhash" placeholder="0xabc123...">
@@ -573,6 +573,7 @@
     const BOT_USERNAME = "CyberEarns_bot";
     const PAYMENT_CHANNEL = "@CyberEarnPayment";
     const ADMIN_DEPOSIT_WALLET = "0x223C77E442436d4180A54A6265B321901B3a4798";
+    const MIN_DEPOSIT_AMOUNT = 0.10; // အနည်းဆုံး Deposit $0.10 သတ်မှတ်ချက်
 
     const MAX_DAILY_ADS = 500;
     const tg = window.Telegram?.WebApp;
@@ -622,7 +623,7 @@
         btn_close: "ပိတ်မည်",
         withdraw_modal_title: "USDT BEP-20 ထုတ်ယူရန်",
         deposit_modal_title: "USDT BEP-20 ငွေသွင်းရန်",
-        deposit_modal_subtitle: "Admin Wallet သို့ လွှဲပြီး TxHash ဖြင့် အတည်ပြုပါ",
+        deposit_modal_subtitle: "Admin Wallet သို့ လွှဲပြီး TxHash ဖြင့် အတည်ပြုပါ (အနည်းဆုံး $0.10)",
         lbl_amount: "ထုတ်ယူမည့် ပမာဏ ($)",
         lbl_deposit_amount: "သွင်းယူခဲ့သည့် ပမာဏ ($)",
         btn_submit_withdraw: "ငွေထုတ်မည်",
@@ -664,7 +665,7 @@
         btn_close: "Close",
         withdraw_modal_title: "Withdraw USDT BEP-20",
         deposit_modal_title: "Deposit USDT BEP-20",
-        deposit_modal_subtitle: "Transfer to Admin Wallet & Verify with TxHash",
+        deposit_modal_subtitle: "Transfer to Admin Wallet & Verify with TxHash (Min $0.10)",
         lbl_amount: "Amount ($)",
         lbl_deposit_amount: "Deposited Amount ($)",
         btn_submit_withdraw: "Submit Withdraw",
@@ -714,13 +715,16 @@
     }
 
     // ==========================================
-    // AUTO DEPOSIT VERIFICATION SYSTEM (TxHash)
+    // AUTO DEPOSIT VERIFICATION SYSTEM (MIN $0.10)
     // ==========================================
     async function handleAutoDepositVerify() {
       const amt = Number(document.getElementById("input-deposit-amount").value);
       const txHash = document.getElementById("input-deposit-txhash").value.trim().toLowerCase();
 
-      if (!amt || amt <= 0) return showAlert("Notice", (currentLang === "en" ? "Enter a valid deposit amount." : "မှန်ကန်သော ငွေပမာဏ ထည့်သွင်းပါ။"));
+      // အနည်းဆုံး $0.10 စစ်ဆေးခြင်း
+      if (!amt || amt < MIN_DEPOSIT_AMOUNT) {
+        return showAlert("Notice", (currentLang === "en" ? `Minimum deposit amount is $${MIN_DEPOSIT_AMOUNT.toFixed(2)}.` : `အနည်းဆုံး $${MIN_DEPOSIT_AMOUNT.toFixed(2)} မှ စတင်သွင်းယူနိုင်ပါသည်။`));
+      }
       if (!txHash.startsWith("0x") || txHash.length !== 66) {
         return showAlert("Notice", (currentLang === "en" ? "Invalid Transaction Hash format." : "မှန်ကန်သော TxHash (0x...) ထည့်သွင်းပေးပါ။"));
       }
@@ -730,7 +734,7 @@
       btn.disabled = true;
 
       try {
-        // ၁။ Double-spending စစ်ဆေးခြင်း (ယခင် သုံးပြီးသား TxHash ဟုတ်/မဟုတ်)
+        // ၁။ Double-spending စစ်ဆေးခြင်း
         const chkRes = await fetch(`${SB_URL}/rest/v1/cyber_deposits?tx_hash=eq.${txHash}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -756,20 +760,17 @@
         });
         const rpcData = await rpcRes.json();
 
-        // Transaction ရှိပြီး status == 0x1 (Success) ဖြစ်မှသာ အတည်ပြုမည်
         if (rpcData.result && rpcData.result.status === "0x1") {
-          // Balance ပေါင်းထည့်ခြင်း
           const newBal = Number((currentBalance + amt).toFixed(4));
           await updateBalanceInDB(newBal);
 
-          // Deposit Record သိမ်းဆည်းခြင်း
           await fetch(`${SB_URL}/rest/v1/cyber_deposits`, {
             method: "POST",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ user_id: userData.id, tx_hash: txHash, amount: amt, status: "Approved" })
           });
 
-          // Payment Channel သို့ Auto Log ပို့စ်တင်ခြင်း
+          // Payment Channel သို့ Auto Post တင်ခြင်း
           try {
             const postText = `📥 <b>NEW DEPOSIT CONFIRMED</b> 📥\n\n` +
               `👤 <b>User:</b> ${userData.first_name} (ID: <code>${userData.id}</code>)\n` +
