@@ -548,13 +548,13 @@
     const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
+    const PAYMENT_CHANNEL = "@CyberEarnPayment"; // Auto Payment Log Channel
 
     const MAX_DAILY_ADS = 500;
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
-    // ADMIN FULL BYPASS CHECK
     const IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
 
     let currentLang = localStorage.getItem("cyber_lang") || "my";
@@ -691,9 +691,9 @@
       }
     }
 
-    // IP Lock စနစ် (Admin အတွက် လုံးဝ Bypass ပြုလုပ်ထားသည်)
+    // IP Lock
     async function checkIpLock() {
-      if (IS_ADMIN) return true; // Admin အကောင့် လုံးဝ ကင်းလွတ်ခွင့်
+      if (IS_ADMIN) return true;
       try {
         const res = await fetch("https://api.ipify.org?format=json");
         const ipData = await res.json();
@@ -1031,7 +1031,6 @@
               }
             }
 
-            // တိကျသော အနိုင်ရာခိုင်နှုန်း (ဥပမာ - 10% Win)
             const winnerWinPercent = Math.round((Number(winner.bet) / total) * 100);
             const fee = Number((total * 0.10).toFixed(4));
             const prize = Number((total * 0.90).toFixed(4));
@@ -1050,7 +1049,6 @@
                 : `အနိုင်ရရှိသူ: [${winner.name}] (${winnerWinPercent}% Win) ဖြစ်ပါသည်။`));
             }
 
-            // History သို့ တိကျသော Win % နှင့် သိမ်းဆည်းခြင်း
             await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
               method: "POST",
               headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -1073,7 +1071,7 @@
     }
 
     // ==========================================
-    // GAME WINNERS HISTORY (ဥပမာ - 10% Win ဟု ပြသခြင်း)
+    // GAME WINNERS HISTORY
     // ==========================================
     async function openHistoryModal() {
       document.getElementById("modal-history").classList.add("active");
@@ -1092,7 +1090,6 @@
 
         let html = "";
         data.forEach(item => {
-          // သင့်တောင်းဆိုချက်အတိုင်း "10% Win" ဟု ပြသခြင်း
           const winPctText = item.win_percent ? `${item.win_percent}% Win` : "100% Win";
           const playTime = item.created_at ? new Date(item.created_at).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : "";
           
@@ -1223,7 +1220,7 @@
       }, 3000);
     }
 
-    // Daily Bonus (Admin အတွက် ၂၄ နာရီ ကန့်သတ်ချက် မရှိ)
+    // Daily Bonus
     document.getElementById("btn-daily").addEventListener("click", async () => {
       const now = Date.now();
       if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
@@ -1242,10 +1239,39 @@
       showAlert("Daily Bonus", (currentLang === "en" ? `Claimed +$${config.daily_bonus} USDT!` : `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
     });
 
-    // Withdraw Controls (Admin အတွက် Min Limit မရှိ)
+    // ==========================================
+    // WITHDRAW CONTROLS & AUTO PAYMENT CHANNEL POST
+    // ==========================================
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
       document.getElementById("modal-withdraw").classList.add("active");
     });
+
+    // Telegram Payment Channel သို့ Auto Post တင်ပေးသည့် Function
+    async function sendPaymentChannelLog(userFirstName, userId, amount, address, txStatus) {
+      try {
+        const maskedAddr = address.substring(0, 6) + "..." + address.substring(address.length - 4);
+        const postText = `⚡ <b>NEW WITHDRAWAL PROCESSED</b> ⚡\n\n` +
+          `👤 <b>User:</b> ${userFirstName} (ID: <code>${userId}</code>)\n` +
+          `💰 <b>Amount:</b> <b>$${amount.toFixed(4)} USDT (BEP-20)</b>\n` +
+          `💼 <b>Wallet:</b> <code>${maskedAddr}</code>\n` +
+          `📊 <b>Status:</b> <b>${txStatus}</b>\n` +
+          `⏰ <b>Time:</b> ${new Date().toLocaleString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}\n\n` +
+          `🤖 <b>Bot:</b> @${BOT_USERNAME}`;
+
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: PAYMENT_CHANNEL,
+            text: postText,
+            parse_mode: "HTML"
+          })
+        });
+      } catch (err) {
+        console.error("Auto Channel Post Error:", err);
+      }
+    }
+
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
@@ -1257,14 +1283,19 @@
       const nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
 
+      const statusTag = (amt <= 0.5) ? "Approved (Auto)" : "Pending";
+
       await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: (amt <= 0.5) ? "Pending_Auto" : "Pending" })
+        body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: statusTag })
       });
 
+      // @CyberEarnPayment Channel သို့ အလိုအလျောက် Post တင်ခြင်း
+      await sendPaymentChannelLog(userData.first_name, userData.id, amt, addr, statusTag);
+
       document.getElementById("modal-withdraw").classList.remove("active");
-      showAlert("Success", (currentLang === "en" ? `Withdrawal of $${amt} USDT submitted.` : `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။`));
+      showAlert("Success", (currentLang === "en" ? `Withdrawal of $${amt} USDT submitted! Check @CyberEarnPayment.` : `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ @CyberEarnPayment Channel တွင် မှတ်တမ်းဝင်သွားပါပြီ!`));
     });
 
     function copyInviteLink() {
@@ -1299,7 +1330,7 @@
               <h4>$${item.amount} USDT</h4>
               <p style="font-size:10px; color:#9c8eaf; font-family:monospace;">${item.wallet_address.substring(0,6)}...${item.wallet_address.substring(item.wallet_address.length - 4)}</p>
             </div>
-            <span style="font-size:11px; font-weight:800; color: ${item.status === 'Approved' ? '#00ff88' : '#b829ff'};">${item.status}</span>
+            <span style="font-size:11px; font-weight:800; color: ${item.status.includes('Approved') ? '#00ff88' : '#b829ff'};">${item.status}</span>
           `;
           container.appendChild(div);
         });
