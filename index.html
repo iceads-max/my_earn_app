@@ -59,7 +59,7 @@
       color: #00ff88;
     }
 
-    /* PERSISTENT MAIN BALANCE & ACTION CARD (GAME မှလွဲ၍ အကုန်ပေါ်မည်) */
+    /* PERSISTENT HEADER (Game မှလွဲ၍ အခြား Tab အားလုံးတွင် အမြဲပေါ်မည်) */
     .common-top-section {
       display: block;
       width: 100%;
@@ -193,11 +193,11 @@
       align-items: center;
       justify-content: center;
       transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
-      background: conic-gradient(#331d56 0% 100%);
+      background: conic-gradient(#2f1a52 0% 100%);
     }
     .pvp-wheel-inner {
-      width: 135px;
-      height: 135px;
+      width: 140px;
+      height: 140px;
       background: #110722;
       border-radius: 50%;
       display: flex;
@@ -206,6 +206,7 @@
       justify-content: center;
       box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
       border: 2px solid rgba(255,255,255,0.1);
+      z-index: 5;
     }
     .pvp-pointer {
       position: absolute;
@@ -222,10 +223,10 @@
     }
     .public-bets-list {
       background: #0d061c;
-      border: 1px solid #2f1952;
+      border: 1px solid #2f1c4e;
       border-radius: 12px;
       padding: 10px;
-      max-height: 120px;
+      max-height: 130px;
       overflow-y: auto;
       margin: 10px 0;
       text-align: left;
@@ -242,7 +243,7 @@
     .tab-view { display: none; }
     .tab-view.active-view { display: block; }
 
-    /* BOTTOM NAV (Task, Game, Home, Invite, Profile) */
+    /* BOTTOM NAV */
     .custom-bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -316,7 +317,7 @@
     <div class="status-badge" id="bot-status-tag">ONLINE</div>
   </div>
 
-  <!-- PERSISTENT TOP SECTION (Task, Home, Invite, Profile တို့တွင် အမြဲပေါ်မည့် Card) -->
+  <!-- PERSISTENT TOP SECTION (Task, Home, Invite, Profile တွင် အမြဲပေါ်မည်) -->
   <div class="common-top-section" id="persistent-top-bar">
     <div class="balance-box">
       <div class="balance-title">လက်ကျန်ငွေ (USDT BEP-20)</div>
@@ -340,7 +341,7 @@
     </div>
   </div>
 
-  <!-- 1. TASK VIEW (ထိပ်တွင် Card ရှိပြီး အောက်တွင် Tasks စာရင်း ပေါ်မည်) -->
+  <!-- 1. TASK VIEW -->
   <div class="tab-view" id="view-task">
     <div style="font-size: 13px; color: #9c8eaf; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">📋 Official Channel Tasks</div>
     <div id="tasks-container">
@@ -348,7 +349,7 @@
     </div>
   </div>
 
-  <!-- 2. GAME VIEW (PVP တခုတည်းသာ သီးသန့် ပါဝင်သည်) -->
+  <!-- 2. GAME VIEW (PUBLIC LIVE 1VS1+ PVP ARENA သီးသန့်) -->
   <div class="tab-view" id="view-game">
     <div class="pvp-stage">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -359,28 +360,28 @@
         </div>
       </div>
 
-      <!-- Public Live Wheel (အရောင်အလိုက် နေရာယူမှု) -->
+      <!-- Live Spin Wheel -->
       <div style="position:relative;">
         <div class="pvp-pointer"></div>
         <div class="pvp-wheel-outer" id="pvp-wheel">
           <div class="pvp-wheel-inner">
             <div style="font-size:10px; color:#9c8eaf;">ROUND POT</div>
-            <div style="font-size:24px; font-weight:900; color:#fff;">$<span id="pvp-pot-val">0.00</span></div>
-            <div style="font-size:10px; color:#00ff88; margin-top:2px;" id="pvp-players-count">0 players</div>
+            <div style="font-size:24px; font-weight:900; color:#00ff88;">$<span id="pvp-pot-val">0.00</span></div>
+            <div style="font-size:11px; font-weight:bold; color:#fff; margin-top:3px;" id="pvp-share-center">Waiting...</div>
           </div>
         </div>
       </div>
 
-      <!-- Public Live Bets List (လူတိုင်းမြင်ရမည်) -->
+      <!-- Public Live Bets List -->
       <div class="public-bets-list" id="pvp-bets-list">
         <div style="color:#9c8eaf; text-align:center;">မည်သူမျှ Bet မတင်ရသေးပါ။</div>
       </div>
 
       <div style="display:flex; gap:8px;">
-        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1952; border-radius:12px; color:#fff; font-size:13px; outline:none;">
+        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ပမာဏ ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1952; border-radius:12px; color:#fff; font-size:13px; outline:none;">
         <button class="action-btn btn-purple" style="padding:0 20px;" id="btn-place-pvp" onclick="addPublicBetPvP()">Place bet</button>
       </div>
-      <div style="font-size:11px; color:#9c8eaf; margin-top:8px;">လူ ၂ ယောက်နှင့်အထက် Bet တင်ပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (Public Live)</div>
+      <div style="font-size:11px; color:#9c8eaf; margin-top:8px;" id="pvp-info-bar">လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည်။</div>
     </div>
   </div>
 
@@ -436,7 +437,7 @@
     </div>
   </div>
 
-  <!-- BOTTOM NAVIGATION (Task, Game, Home, Invite, Profile) -->
+  <!-- BOTTOM NAVIGATION -->
   <div class="custom-bottom-nav">
     <div class="cnav-item" onclick="switchNav('view-task', this)">
       <span style="font-size:20px;">📋</span>
@@ -515,7 +516,7 @@
     let currentBalance = 0.0000;
     let lastDaily = 0;
 
-    // ကစားသမားများအတွက် မတူညီသော သီးသန့် Neon အရောင်များ
+    // ကစားသမားတစ်ဦးချင်းစီအတွက် Neon အရောင်များ
     const PLAYER_PALETTE = ['#ff4757', '#1e90ff', '#2ed573', '#ffa502', '#9b59b6', '#e056fd', '#00d2d3'];
 
     function showAlert(title, msg) {
@@ -524,7 +525,6 @@
       document.getElementById("modal-alert").classList.add("active");
     }
 
-    // Tab Switching (Game မှလွဲ၍ အခြားနေရာများတွင် ထိပ်ဆုံး Card ကို ပြသခြင်း)
     function switchNav(viewId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
@@ -581,6 +581,7 @@
         document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
         document.getElementById("invite-link-input").value = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
 
+        // Admin ဖြစ်ပါက နေ့စဉ် Limit ကန့်သတ်ချက် ဖျောက်ထားခြင်း
         if (IS_ADMIN) {
           document.getElementById("admin-limit-container").style.display = "none";
         } else {
@@ -611,6 +612,7 @@
     // ==========================================
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
+      // Admin အတွက် Ads ကန့်သတ်ချက် မရှိ
       if (!IS_ADMIN && getDailyAdCount() >= MAX_DAILY_ADS) {
         showAlert("သတိပေးချက်", `ယနေ့အတွက် Ads ${MAX_DAILY_ADS} ကြိမ် ပြည့်သွားပါပြီ။`);
         return;
@@ -648,7 +650,7 @@
     });
 
     // ==========================================
-    // GLOBAL PUBLIC LIVE PVP WHEEL (လူအစစ် 2+ & BOT မပါ)
+    // REAL-TIME PUBLIC LIVE PVP WHEEL (100% SHOW ON 1 PLAYER, MULTI-COLOR, 30s COUNTDOWN)
     // ==========================================
     let currentPvPRoom = null;
     let pvpTimer = null;
@@ -667,7 +669,7 @@
       } catch (e) {}
     }
 
-    // Live Auto-Poll (Bot သုံးနေသည့် User အားလုံး Real-time မြင်တွေ့စေခြင်း)
+    // Live Sync (၂ စက္ကန့်တစ်ကြိမ် ပြည်သူအားလုံးအတွက် အလိုအလျောက် Update ပြုလုပ်ခြင်း)
     setInterval(() => {
       if (document.getElementById("view-game").classList.contains("active-view") && !isPvPSpinning) {
         listenPublicPvP();
@@ -677,20 +679,20 @@
     function updatePvPWheelUI(room) {
       if (!room || room.status === 'finished') {
         document.getElementById("pvp-pot-val").innerText = "0.00";
-        document.getElementById("pvp-players-count").innerText = "0 players";
+        document.getElementById("pvp-share-center").innerText = "Waiting...";
         document.getElementById("pvp-timer-status").innerText = "Waiting for bets";
         document.getElementById("pvp-bets-list").innerHTML = `<div style="color:#9c8eaf; text-align:center;">မည်သူမျှ Bet မတင်ရသေးပါ။</div>`;
-        document.getElementById("pvp-wheel").style.background = `conic-gradient(#331d56 0% 100%)`;
+        document.getElementById("pvp-wheel").style.background = `conic-gradient(#2f1a52 0% 100%)`;
+        document.getElementById("pvp-info-bar").innerText = "လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည်။";
         return;
       }
 
-      // Players & Bet List Parsing
       let players = [];
       try {
         players = typeof room.players_data === 'string' ? JSON.parse(room.players_data) : (room.players_data || []);
       } catch (err) { players = []; }
 
-      // အကယ်၍ အဟောင်း format ဖြစ်နေပါက
+      // Backup fallback
       if (players.length === 0 && room.player_1) {
         players.push({ id: room.player_1, name: room.p1_name, bet: Number(room.bet_amount), color: PLAYER_PALETTE[0] });
         if (room.player_2) {
@@ -701,10 +703,28 @@
       let totalPot = 0;
       players.forEach(p => totalPot += Number(p.bet));
       document.getElementById("pvp-pot-val").innerText = totalPot.toFixed(3);
-      document.getElementById("pvp-players-count").innerText = `${players.length} players`;
 
-      // Wheel Segments (လူအစစ်များ၏ အရောင်အလိုက် အဝိုင်းတွင် နေရာယူစေခြင်း)
-      if (totalPot > 0 && players.length > 0) {
+      // ၁ ယောက်တည်း ရှိပါက ၁၀၀% ပြသပြီး ပွဲမစသေးဘဲ စောင့်ဆိုင်းခြင်း
+      if (players.length === 1) {
+        const p1 = players[0];
+        const p1Color = p1.color || PLAYER_PALETTE[0];
+        document.getElementById("pvp-wheel").style.background = `conic-gradient(${p1Color} 0% 100%)`;
+        document.getElementById("pvp-share-center").innerText = `${p1.name} (100%)`;
+        document.getElementById("pvp-share-center").style.color = p1Color;
+        document.getElementById("pvp-timer-status").innerText = "Waiting for Player 2";
+        document.getElementById("pvp-info-bar").innerText = `[${p1.name}] မှ $${Number(p1.bet).toFixed(3)} ဖြင့် ၁၀၀% နေရာယူထားပါသည်။ အခြားသူ ဝင်ရောက်လာသည်အထိ စောင့်ဆိုင်းနေပါသည်...`;
+
+        document.getElementById("pvp-bets-list").innerHTML = `
+          <div class="bet-item">
+            <span style="color:${p1Color}; font-weight:bold;">● ${p1.name}</span>
+            <span>$${Number(p1.bet).toFixed(3)} (100%)</span>
+          </div>
+        `;
+        return;
+      }
+
+      // လူ ၂ ယောက်နှင့်အထက် ရှိပါက အရောင်များ အချိုးကျ ခွဲဝေပြသခြင်း
+      if (players.length >= 2 && totalPot > 0) {
         let gradientParts = [];
         let curPercent = 0;
         let betsListHtml = "";
@@ -726,11 +746,13 @@
 
         document.getElementById("pvp-wheel").style.background = `conic-gradient(${gradientParts.join(', ')})`;
         document.getElementById("pvp-bets-list").innerHTML = betsListHtml;
-      }
+        document.getElementById("pvp-share-center").innerText = `${players.length} Players`;
+        document.getElementById("pvp-share-center").style.color = "#00ff88";
 
-      // လူ ၂ ယောက်နှင့်အထက် စုံသည်နှင့် ၃၀ စက္ကန့် Countdown စတင်ခြင်း
-      if (players.length >= 2 && room.status === 'playing' && !pvpTimer) {
-        startPvPCountdownTimer(room, players, totalPot);
+        // လူ ၂ ယောက် စုံသည်နှင့် ၃၀ စက္ကန့် စတင်ရေတွက်ခြင်း
+        if (room.status === 'playing' && !pvpTimer) {
+          startPvPCountdownTimer(room, players, totalPot);
+        }
       }
     }
 
@@ -754,10 +776,10 @@
 
         const existIndex = pList.findIndex(p => Number(p.id) === Number(userData.id));
         if (existIndex >= 0) {
-          // လောင်းကြေး တိုးခြင်း
+          // လောင်းကြေး ထပ်တိုးခြင်း
           pList[existIndex].bet = Number((Number(pList[existIndex].bet) + amt).toFixed(4));
         } else {
-          // Player အသစ် ဝင်ရောက်ခြင်း (အရောင်အသစ် သတ်မှတ်)
+          // ကစားသမားအသစ် ဝင်ရောက်ခြင်း (အရောင်အသစ် သတ်မှတ်)
           const newColor = PLAYER_PALETTE[pList.length % PLAYER_PALETTE.length];
           pList.push({ id: userData.id, name: userData.first_name, bet: amt, color: newColor });
         }
@@ -785,6 +807,7 @@
     function startPvPCountdownTimer(room, players, total) {
       let t = 30;
       document.getElementById("pvp-timer-status").innerText = `Spin in ${t}s`;
+      document.getElementById("pvp-info-bar").innerText = `လူ ၂ ယောက် စုံပါပြီ။ ${t} စက္ကန့်ပြည့်ပါက အဝိုင်း အလိုအလျောက် လှည့်ပါမည်!`;
 
       pvpTimer = setInterval(() => {
         t--;
@@ -799,7 +822,7 @@
           document.getElementById("pvp-wheel").style.transform = `rotate(${deg}deg)`;
 
           setTimeout(async () => {
-            // Bet ပမာဏအလိုက် အနိုင်ရွေးချယ်ခြင်း
+            // Bet ပမာဏအလိုက် အချိုးကျ အနိုင်ရွေးချယ်ခြင်း
             const rand = Math.random() * total;
             let accum = 0;
             let winner = players[0];
@@ -822,7 +845,7 @@
               showAlert("⚔️ PvP ပြီးဆုံးပါသည်", `အနိုင်ရရှိသူ: [${winner.name}] ဖြစ်ပါသည်။`);
             }
 
-            // Game History သိမ်းဆည်းခြင်း
+            // Game History မှတ်တမ်း သိမ်းဆည်းခြင်း
             await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
               method: "POST",
               headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -981,6 +1004,7 @@
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
+      // Admin မဟုတ်ပါက အနည်းဆုံးထုတ်ငွေ စစ်ဆေးခြင်း
       if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) return showAlert("သတိပေးချက်", `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါမည်။`);
       if (amt > currentBalance) return showAlert("သတိပေးချက်", "လက်ကျန်ငွေ မလုံလောက်ပါ။");
       if (!addr.startsWith("0x") || addr.length < 40) return showAlert("သတိပေးချက်", "မှန်ကန်သော BEP-20 Address ထည့်ပါ။");
@@ -1002,6 +1026,13 @@
       const link = document.getElementById("invite-link-input").value;
       navigator.clipboard.writeText(link).then(() => showAlert("အောင်မြင်ပါသည်", "Invite Link ကူးယူပြီးပါပြီ!"));
     }
+
+    document.getElementById("btn-share-ref").addEventListener("click", () => {
+      const link = document.getElementById("invite-link-input").value;
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Cyber Earn မှာ Ads ကြည့်ပြီး USDT ဒေါ်လာတွေ အတူတူ ရှာဖွေကြစို့!")}`);
+      }
+    });
 
     async function loadWithdrawHistory() {
       const container = document.getElementById("history-container");
