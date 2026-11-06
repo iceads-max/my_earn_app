@@ -550,7 +550,7 @@
 
       <div style="background:#09050d; border:1px solid #2f1c4e; border-radius:10px; padding:10px; margin-bottom:12px;">
         <div style="font-size:10px; color:#9c8eaf;">Official Admin Deposit Address:</div>
-        <div id="deposit-wallet-addr" style="font-size:11px; color:#00ff88; word-break:break-all; font-family:monospace; margin-top:4px;">0x223C77E442436d4180A54A6265B321901B3a4798</div>
+        <div id="deposit-wallet-addr" style="font-size:11px; color:#00ff88; word-break:break-all; font-family:monospace; margin-top:4px;">0x90e3CC7C79b766f3d6aea897B737869E5152CF68</div>
         <button class="btn-sub" style="width:100%; margin-top:8px; padding:6px; font-size:11px;" onclick="copyDepositAddress()">Copy Address</button>
       </div>
 
@@ -850,7 +850,7 @@
       const addr = document.getElementById("input-wallet").value.trim();
 
       if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
-        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါမည်။`));
+        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်။`));
       }
       if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
       if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
@@ -1285,7 +1285,7 @@
         });
         list.innerHTML = html;
       } catch (err) {
-        list.innerHTML = "<p style='color:#ff4757; text-align:center;'>Failed to load.</p>";
+        list.innerHTML = "<p style='color:#ff3366; text-align:center;'>Failed to load.</p>";
       }
     }
 
