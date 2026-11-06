@@ -373,7 +373,7 @@
     <div class="btn-grid-3">
       <button class="action-btn btn-purple" id="btn-watch-ad">⚡ <span data-i18n="btn_watch">Ads ကြည့်မည်</span></button>
       <button class="action-btn btn-green" id="btn-open-withdraw">💳 <span data-i18n="btn_withdraw">Withdraw</span></button>
-      <button class="action-btn btn-blue" id="btn-open-deposit" onclick="handleDepositClick()">📥 <span data-i18n="btn_deposit">Deposit</span></button>
+      <button class="action-btn btn-blue" id="btn-open-deposit" onclick="openDepositModal()">📥 <span data-i18n="btn_deposit">Deposit</span></button>
     </div>
 
     <div class="limit-container" id="admin-limit-container">
@@ -422,7 +422,7 @@
       </div>
 
       <div style="display:flex; gap:8px;">
-        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1952; border-radius:12px; color:#fff; font-size:13px; outline:none;">
+        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1c4e; border-radius:12px; color:#fff; font-size:13px; outline:none;">
         <button class="action-btn btn-purple" style="padding:0 20px;" id="btn-place-pvp" onclick="addPublicBetPvP()" data-i18n="btn_place_bet">Place bet</button>
       </div>
       <div style="font-size:11px; color:#9c8eaf; margin-top:8px;" id="pvp-info-bar" data-i18n="pvp_rule">လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (10% fee အား နုတ်ယူပါမည်)။</div>
@@ -510,7 +510,7 @@
     <div class="modal-box">
       <h3 style="font-size:15px; margin-bottom:8px; text-align:center;" data-i18n="history_modal_title">📜 PvP Winners History</h3>
       <div id="history-items-list" style="max-height:220px; overflow-y:auto; font-size:12px; margin-bottom:12px;">
-        <p style="color:#9c8eaf; text-align:center;">မှတ်တမ်း ရယူနေပါသည်...</p>
+        <p style="color:#9c8eaf; text-align:center;">Loading records...</p>
       </div>
       <button class="action-btn btn-purple" style="width:100%; padding:10px;" onclick="document.getElementById('modal-history').classList.remove('active')" data-i18n="btn_close">ပိတ်မည်</button>
     </div>
@@ -533,6 +533,29 @@
     </div>
   </div>
 
+  <!-- AUTO DEPOSIT MODAL -->
+  <div class="modal-overlay" id="modal-deposit">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 4px; text-align: center; font-size:16px;" data-i18n="deposit_modal_title">USDT BEP-20 ငွေသွင်းရန်</h3>
+      <p style="font-size: 11px; color: #9c8eaf; text-align: center; margin-bottom: 12px;" data-i18n="deposit_modal_subtitle">Admin Wallet သို့ လွှဲပြီး TxHash ဖြင့် အတည်ပြုပါ</p>
+
+      <div style="background:#09050d; border:1px solid #2f1c4e; border-radius:10px; padding:10px; margin-bottom:12px;">
+        <div style="font-size:10px; color:#9c8eaf;">Official Admin Deposit Address:</div>
+        <div id="deposit-wallet-addr" style="font-size:11px; color:#00ff88; word-break:break-all; font-family:monospace; margin-top:4px;">0x223C77E442436d4180A54A6265B321901B3a4798</div>
+        <button class="btn-sub" style="width:100%; margin-top:8px; padding:6px; font-size:11px;" onclick="copyDepositAddress()">Copy Address</button>
+      </div>
+
+      <label style="font-size: 11px; color: #9c8eaf;" data-i18n="lbl_deposit_amount">သွင်းယူခဲ့သည့် ပမာဏ ($)</label>
+      <input type="number" id="input-deposit-amount" step="0.01" placeholder="1.00">
+
+      <label style="font-size: 11px; color: #9c8eaf;">Transaction Hash (TxHash 0x...)</label>
+      <input type="text" id="input-deposit-txhash" placeholder="0xabc123...">
+
+      <button class="action-btn btn-blue" style="width: 100%; margin-bottom: 8px; padding:13px;" id="btn-submit-deposit" onclick="handleAutoDepositVerify()">အတည်ပြုမည် (Auto Verify)</button>
+      <button class="action-btn" style="width: 100%; background: #26193b; color: #9c8eaf; padding:12px;" onclick="document.getElementById('modal-deposit').classList.remove('active')" data-i18n="btn_close">ပိတ်မည်</button>
+    </div>
+  </div>
+
   <!-- ALERT MODAL -->
   <div class="modal-overlay" id="modal-alert">
     <div class="modal-box" style="text-align: center;">
@@ -549,6 +572,7 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
     const PAYMENT_CHANNEL = "@CyberEarnPayment";
+    const ADMIN_DEPOSIT_WALLET = "0x223C77E442436d4180A54A6265B321901B3a4798";
 
     const MAX_DAILY_ADS = 500;
     const tg = window.Telegram?.WebApp;
@@ -597,10 +621,12 @@
         history_modal_title: "📜 PvP Winners History",
         btn_close: "ပိတ်မည်",
         withdraw_modal_title: "USDT BEP-20 ထုတ်ယူရန်",
+        deposit_modal_title: "USDT BEP-20 ငွေသွင်းရန်",
+        deposit_modal_subtitle: "Admin Wallet သို့ လွှဲပြီး TxHash ဖြင့် အတည်ပြုပါ",
         lbl_amount: "ထုတ်ယူမည့် ပမာဏ ($)",
+        lbl_deposit_amount: "သွင်းယူခဲ့သည့် ပမာဏ ($)",
         btn_submit_withdraw: "ငွေထုတ်မည်",
         btn_ok: "ကောင်းပြီ",
-        deposit_coming_soon: "Deposit စနစ်ကို မကြာမီ ထည့်သွင်းပေးပါမည်ခင်ဗျာ။",
         ad_reward_text: "ဆုကြေး: $0.0005 / Ad",
         ip_lock_title: "IP Access Restricted",
         ip_lock_desc: "ဤ IP Address တွင် အခြားအကောင့်တစ်ခု အသုံးပြုထားပြီး ဖြစ်ပါသည်။ လုံခြုံရေးအရ အကောင့်များစွာ အသုံးပြုခွင့်ကို ကန့်သတ်ထားပါသည်။ ကျေးဇူးပြု၍ VPN အသုံးပြု၍ ဝင်ရောက်ပေးပါ။"
@@ -637,10 +663,12 @@
         history_modal_title: "📜 PvP Winners History",
         btn_close: "Close",
         withdraw_modal_title: "Withdraw USDT BEP-20",
+        deposit_modal_title: "Deposit USDT BEP-20",
+        deposit_modal_subtitle: "Transfer to Admin Wallet & Verify with TxHash",
         lbl_amount: "Amount ($)",
+        lbl_deposit_amount: "Deposited Amount ($)",
         btn_submit_withdraw: "Submit Withdraw",
         btn_ok: "OK",
-        deposit_coming_soon: "Deposit feature is coming soon!",
         ad_reward_text: "Reward: $0.0005 / Ad",
         ip_lock_title: "IP Access Restricted",
         ip_lock_desc: "Another account is already active on this IP. Multi-account use is restricted. Please connect to a VPN to proceed."
@@ -676,8 +704,109 @@
       applyLanguage(nextLang);
     }
 
-    function handleDepositClick() {
-      showAlert((currentLang === "en" ? "Deposit" : "ငွေသွင်းခြင်း"), I18N[currentLang].deposit_coming_soon);
+    function openDepositModal() {
+      document.getElementById("modal-deposit").classList.add("active");
+    }
+
+    function copyDepositAddress() {
+      const addr = document.getElementById("deposit-wallet-addr").innerText;
+      navigator.clipboard.writeText(addr).then(() => showAlert("Copied", (currentLang === "en" ? "Admin Deposit Wallet Address copied!" : "Deposit Address အား ကူးယူပြီးပါပြီ!")));
+    }
+
+    // ==========================================
+    // AUTO DEPOSIT VERIFICATION SYSTEM (TxHash)
+    // ==========================================
+    async function handleAutoDepositVerify() {
+      const amt = Number(document.getElementById("input-deposit-amount").value);
+      const txHash = document.getElementById("input-deposit-txhash").value.trim().toLowerCase();
+
+      if (!amt || amt <= 0) return showAlert("Notice", (currentLang === "en" ? "Enter a valid deposit amount." : "မှန်ကန်သော ငွေပမာဏ ထည့်သွင်းပါ။"));
+      if (!txHash.startsWith("0x") || txHash.length !== 66) {
+        return showAlert("Notice", (currentLang === "en" ? "Invalid Transaction Hash format." : "မှန်ကန်သော TxHash (0x...) ထည့်သွင်းပေးပါ။"));
+      }
+
+      const btn = document.getElementById("btn-submit-deposit");
+      btn.innerText = "⏳ Verifying on Blockchain...";
+      btn.disabled = true;
+
+      try {
+        // ၁။ Double-spending စစ်ဆေးခြင်း (ယခင် သုံးပြီးသား TxHash ဟုတ်/မဟုတ်)
+        const chkRes = await fetch(`${SB_URL}/rest/v1/cyber_deposits?tx_hash=eq.${txHash}`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const chkData = await chkRes.json();
+        if (chkData.length > 0) {
+          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+          btn.disabled = false;
+          return showAlert("Error", (currentLang === "en" ? "This TxHash has already been credited!" : "ဤ TxHash ဖြင့် ငွေသွင်းယူပြီး ဖြစ်ပါသည်!"));
+        }
+
+        // ၂။ Public BSC RPC Node ဖြင့် Transaction Status စစ်ဆေးခြင်း
+        const rpcPayload = {
+          jsonrpc: "2.0",
+          method: "eth_getTransactionReceipt",
+          params: [txHash],
+          id: 1
+        };
+
+        const rpcRes = await fetch("https://bsc-dataseed.binance.org/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(rpcPayload)
+        });
+        const rpcData = await rpcRes.json();
+
+        // Transaction ရှိပြီး status == 0x1 (Success) ဖြစ်မှသာ အတည်ပြုမည်
+        if (rpcData.result && rpcData.result.status === "0x1") {
+          // Balance ပေါင်းထည့်ခြင်း
+          const newBal = Number((currentBalance + amt).toFixed(4));
+          await updateBalanceInDB(newBal);
+
+          // Deposit Record သိမ်းဆည်းခြင်း
+          await fetch(`${SB_URL}/rest/v1/cyber_deposits`, {
+            method: "POST",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userData.id, tx_hash: txHash, amount: amt, status: "Approved" })
+          });
+
+          // Payment Channel သို့ Auto Log ပို့စ်တင်ခြင်း
+          try {
+            const postText = `📥 <b>NEW DEPOSIT CONFIRMED</b> 📥\n\n` +
+              `👤 <b>User:</b> ${userData.first_name} (ID: <code>${userData.id}</code>)\n` +
+              `💰 <b>Amount:</b> <b>+$${amt.toFixed(4)} USDT (BEP-20)</b>\n` +
+              `🔗 <b>TxHash:</b> <code>${txHash.substring(0, 10)}...${txHash.substring(txHash.length - 8)}</code>\n` +
+              `📊 <b>Status:</b> <b>Confirmed (Auto)</b>\n` +
+              `⏰ <b>Time:</b> ${new Date().toLocaleString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}\n\n` +
+              `🤖 <b>Bot:</b> @${BOT_USERNAME}`;
+
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: PAYMENT_CHANNEL, text: postText, parse_mode: "HTML" })
+            });
+          } catch (e) {}
+
+          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+          btn.disabled = false;
+          document.getElementById("modal-deposit").classList.remove("active");
+          document.getElementById("input-deposit-amount").value = "";
+          document.getElementById("input-deposit-txhash").value = "";
+
+          showAlert("🎉 Success", (currentLang === "en" 
+            ? `Deposit of +$${amt} USDT verified and added to your balance!` 
+            : `ငွေသွင်းယူမှု +$${amt} USDT အား အောင်မြင်စွာ စစ်ဆေးပြီး လက်ကျန်ငွေထဲ ပေါင်းထည့်ပေးလိုက်ပါပြီ!`));
+        } else {
+          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+          btn.disabled = false;
+          showAlert("Pending / Failed", (currentLang === "en" 
+            ? "Transaction not found or still pending on Binance Smart Chain. Please wait 1-2 minutes and try again." 
+            : "Blockchain ပေါ်တွင် ငွေလွှဲမှု မပြီးဆုံးသေးပါ (သို့မဟုတ်) Transaction မတွေ့ရှိပါ။ ၁-၂ မိနစ်ခန့် စောင့်ပြီး ပြန်လည် စမ်းသပ်ပေးပါ။"));
+        }
+      } catch (err) {
+        btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+        btn.disabled = false;
+        showAlert("Error", "Blockchain စစ်ဆေးရာတွင် အခက်အခဲရှိနေပါသည်။ ခေတ္တစောင့်ပြီး ပြန်ကြိုးစားပါ။");
+      }
     }
 
     function showAlert(title, msg) {
@@ -751,10 +880,8 @@
       return current;
     }
 
-    // Dynamic Database Settings & User Data Synchronization
     async function syncDataFromDB() {
       try {
-        // 1. Bot က ပြင်ထားသော min_withdraw ကို cyber_settings ထဲမှ Live ဆွဲဖတ်ခြင်း
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?key=eq.min_withdraw`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -763,7 +890,6 @@
           config.min_withdraw = Number(setData[0].value);
         }
 
-        // 2. User Data ဆွဲယူခြင်း
         const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -1292,7 +1418,6 @@
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
-      // Bot က သတ်မှတ်ထားသော config.min_withdraw အတိုင်း တိုက်ရိုက်စစ်ဆေးခြင်း
       if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
         return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါမည်။`));
       }
