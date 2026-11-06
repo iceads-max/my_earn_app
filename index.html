@@ -425,7 +425,7 @@
       </div>
 
       <div style="display:flex; gap:8px;">
-        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1c4e; border-radius:12px; color:#fff; font-size:13px; outline:none;">
+        <input type="number" id="pvp-bet-amt" step="0.001" value="0.01" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1c4e; border-radius:12px; color:#fff; font-size:13px; outline:none;">
         <button class="action-btn btn-purple" style="padding:0 20px;" id="btn-place-pvp" onclick="addPublicBetPvP()" data-i18n="btn_place_bet">Place bet</button>
       </div>
       <div style="font-size:11px; color:#9c8eaf; margin-top:8px;" id="pvp-info-bar" data-i18n="pvp_rule">လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (10% fee အား နုတ်ယူပါမည်)။</div>
@@ -455,8 +455,8 @@
   <div class="tab-view" id="view-invite">
     <div class="card-item" style="margin-bottom:14px;">
       <div>
-        <h4 data-i18n="invite_title">Invite Friends (20%)</h4>
-        <p data-i18n="invite_desc">သူငယ်ချင်းများ ကြည့်ရှုသည့် Ads မှ 20% ကော်မရှင် ရရှိပါမည်</p>
+        <h4 data-i18n="invite_title">Invite Friends ($0.01 per Refer)</h4>
+        <p data-i18n="invite_desc">သူငယ်ချင်း ၁ ယောက် ဖိတ်ခေါ်ပါက $0.01 ရရှိမည် (Ads ၁၀ ခု ကြည့်ရှုပြီး PvP ၁ ကြိမ် ကစားပြီးမှသာ Refer တက်မည်)</p>
       </div>
       <button class="btn-sub" id="btn-share-ref" data-i18n="btn_share">Share</button>
     </div>
@@ -617,8 +617,8 @@
         btn_claim: "Claim",
         quick_earn_title: "Ads Quick Earn",
         quick_earn_desc: "တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0005)",
-        invite_title: "Invite Friends (20%)",
-        invite_desc: "သူငယ်ချင်းများ ကြည့်ရှုသည့် Ads မှ 20% ကော်မရှင် ရရှိပါမည်",
+        invite_title: "Invite Friends ($0.01 per Refer)",
+        invite_desc: "သူငယ်ချင်း ၁ ယောက် ဖိတ်ခေါ်ပါက $0.01 ရရှိမည် (Ads ၁၀ ခု ကြည့်ရှုပြီး PvP ၁ ကြိမ် ကစားပြီးမှသာ Refer တက်မည်)",
         btn_share: "Share",
         invite_link_title: "သင်၏ Invite Link",
         btn_copy: "Copy",
@@ -657,8 +657,8 @@
         btn_claim: "Claim",
         quick_earn_title: "Ads Quick Earn",
         quick_earn_desc: "Watch 15s sponsored video ad to earn ($0.0005)",
-        invite_title: "Invite Friends (20%)",
-        invite_desc: "Earn 20% commission on friends' ad earnings",
+        invite_title: "Invite Friends ($0.01 per Refer)",
+        invite_desc: "Earn $0.01 per referral (Referral must watch 10 Ads & play 1 PvP game to complete)",
         btn_share: "Share",
         invite_link_title: "Your Invite Link",
         btn_copy: "Copy",
@@ -850,7 +850,7 @@
       const addr = document.getElementById("input-wallet").value.trim();
 
       if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
-        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်။`));
+        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်ောင်။`));
       }
       if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
       if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
@@ -1141,7 +1141,7 @@
 
     async function addPublicBetPvP() {
       const amt = Number(document.getElementById("pvp-bet-amt").value);
-      if (!amt || amt < 0.001) return showAlert("Notice", (currentLang === "en" ? "Minimum bet is $0.001" : "အနည်းဆုံး $0.001 Bet ထိုးရပါမည်။"));
+      if (!amt || amt < 0.01) return showAlert("Notice", (currentLang === "en" ? "Minimum bet is $0.01" : "အနည်းဆုံး $0.01 Bet ထိုးရပါမည်။"));
       if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
 
       let nBal = Number((currentBalance - amt).toFixed(4));
@@ -1180,7 +1180,7 @@
         });
       }
 
-      document.getElementById("pvp-bet-amt").value = "";
+      document.getElementById("pvp-bet-amt").value = "0.01";
       listenPublicPvP();
     }
 
