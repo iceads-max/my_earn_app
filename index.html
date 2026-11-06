@@ -111,7 +111,6 @@
       text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
     }
     
-    /* 3-BUTTON ACTION GRID (Ads, Withdraw, Deposit) */
     .btn-grid-3 {
       display: grid;
       grid-template-columns: 1.2fr 1fr 1fr;
@@ -170,7 +169,6 @@
       transition: width 0.3s ease;
     }
 
-    /* CARD ITEMS */
     .card-item {
       background: #140d21 !important;
       border: 1px solid #2f1c4e !important;
@@ -192,7 +190,7 @@
       cursor: pointer;
     }
 
-    /* PUBLIC LIVE PVP WHEEL STYLES */
+    /* PVP WHEEL STYLES */
     .pvp-stage {
       background: radial-gradient(circle at center, #26114a 0%, #0d061c 100%);
       border: 1.5px solid #a855f7;
@@ -310,7 +308,7 @@
       border: 1px solid #b829ff;
       border-radius: 20px;
       padding: 22px;
-      width: 100%; max-width: 350px;
+      width: 100%; max-width: 360px;
     }
     .modal-box input {
       width: 100%;
@@ -323,11 +321,33 @@
       margin: 6px 0 14px;
       outline: none;
     }
+
+    #ip-lock-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #09050d;
+      z-index: 999999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+    #ip-lock-screen h2 { color: #ffeb3b; margin-bottom: 12px; font-size: 20px; }
+    #ip-lock-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
   </style>
 </head>
 <body>
 
-  <!-- Top Header Profile -->
+  <!-- IP LOCK SCREEN (အကောင့်မပိတ်ဘဲ ကန့်သတ်ထားသည့် Screen) -->
+  <div id="ip-lock-screen">
+    <div style="font-size: 60px; margin-bottom: 16px;">🔒</div>
+    <h2 data-i18n="ip_lock_title">IP Access Restricted</h2>
+    <p data-i18n="ip_lock_desc">ဤ IP Address တွင် အခြားအကောင့်တစ်ခု အသုံးပြုထားပြီး ဖြစ်ပါသည်။ လုံခြုံရေးအရ အကောင့်များစွာ အသုံးပြုခွင့်ကို ကန့်သတ်ထားပါသည်။ ကျေးဇူးပြု၍ VPN အသုံးပြု၍ ဝင်ရောက်ပေးပါ။</p>
+  </div>
+
+  <!-- Header Profile -->
   <div class="header-bar">
     <div class="user-profile">
       <div class="avatar-icon">⚡</div>
@@ -342,7 +362,7 @@
     </div>
   </div>
 
-  <!-- PERSISTENT TOP SECTION (Task, Home, Invite, Profile တွင် အမြဲပေါ်မည်) -->
+  <!-- PERSISTENT TOP SECTION -->
   <div class="common-top-section" id="persistent-top-bar">
     <div class="balance-box">
       <div class="balance-title" data-i18n="bal_title">လက်ကျန်ငွေ (USDT BEP-20)</div>
@@ -350,7 +370,6 @@
       <div style="font-size: 11px; color: #b829ff;" id="ui-ad-reward-text">ဆုကြေး: $0.0005 / Ad</div>
     </div>
 
-    <!-- 3 Action Buttons -->
     <div class="btn-grid-3">
       <button class="action-btn btn-purple" id="btn-watch-ad">⚡ <span data-i18n="btn_watch">Ads ကြည့်မည်</span></button>
       <button class="action-btn btn-green" id="btn-open-withdraw">💳 <span data-i18n="btn_withdraw">Withdraw</span></button>
@@ -376,7 +395,7 @@
     </div>
   </div>
 
-  <!-- 2. GAME VIEW (PUBLIC LIVE 1VS1+ PVP ARENA သီးသန့်) -->
+  <!-- 2. GAME VIEW (PVP သီးသန့်) -->
   <div class="tab-view" id="view-game">
     <div class="pvp-stage">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -387,7 +406,6 @@
         </div>
       </div>
 
-      <!-- Live Spin Wheel -->
       <div style="position:relative;">
         <div class="pvp-pointer"></div>
         <div class="pvp-wheel-outer" id="pvp-wheel">
@@ -399,16 +417,15 @@
         </div>
       </div>
 
-      <!-- Public Live Bets List -->
       <div class="public-bets-list" id="pvp-bets-list">
         <div style="color:#9c8eaf; text-align:center;" data-i18n="no_bets">မည်သူမျှ Bet မတင်ရသေးပါ။</div>
       </div>
 
       <div style="display:flex; gap:8px;">
-        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1952; border-radius:12px; color:#fff; font-size:13px; outline:none;">
+        <input type="number" id="pvp-bet-amt" step="0.001" placeholder="Bet ($0.01)" style="flex:1; padding:12px; background:#0b0617; border:1px solid #2f1c4e; border-radius:12px; color:#fff; font-size:13px; outline:none;">
         <button class="action-btn btn-purple" style="padding:0 20px;" id="btn-place-pvp" onclick="addPublicBetPvP()" data-i18n="btn_place_bet">Place bet</button>
       </div>
-      <div style="font-size:11px; color:#9c8eaf; margin-top:8px;" id="pvp-info-bar" data-i18n="pvp_rule">လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (10% Fee Admin ရမည်)။</div>
+      <div style="font-size:11px; color:#9c8eaf; margin-top:8px;" id="pvp-info-bar" data-i18n="pvp_rule">လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (10% fee အား နုတ်ယူပါမည်)။</div>
     </div>
   </div>
 
@@ -492,7 +509,7 @@
   <div class="modal-overlay" id="modal-history">
     <div class="modal-box">
       <h3 style="font-size:15px; margin-bottom:8px; text-align:center;" data-i18n="history_modal_title">📜 PvP Winners History</h3>
-      <div id="history-items-list" style="max-height:180px; overflow-y:auto; font-size:12px; margin-bottom:12px;">
+      <div id="history-items-list" style="max-height:220px; overflow-y:auto; font-size:12px; margin-bottom:12px;">
         <p style="color:#9c8eaf; text-align:center;">မှတ်တမ်း ရယူနေပါသည်...</p>
       </div>
       <button class="action-btn btn-purple" style="width:100%; padding:10px;" onclick="document.getElementById('modal-history').classList.remove('active')" data-i18n="btn_close">ပိတ်မည်</button>
@@ -546,7 +563,6 @@
 
     const PLAYER_PALETTE = ['#ff4757', '#1e90ff', '#2ed573', '#ffa502', '#9b59b6', '#e056fd', '#00d2d3'];
 
-    // Multi-Language Dictionary
     const I18N = {
       my: {
         bal_title: "လက်ကျန်ငွေ (USDT BEP-20)",
@@ -560,7 +576,7 @@
         round_pot: "ROUND POT",
         no_bets: "မည်သူမျှ Bet မတင်ရသေးပါ။",
         btn_place_bet: "Place bet",
-        pvp_rule: "လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (10% Fee Admin ရမည်)။",
+        pvp_rule: "လူ ၁ ယောက် Bet တင်ပါက ၁၀၀% ပြနေမည်ဖြစ်ပြီး၊ လူ ၂ ယောက် စုံပါက ၃၀ စက္ကန့် စတင်ရေတွက်ပါမည် (10% fee အား နုတ်ယူပါမည်)။",
         daily_title: "Daily Bonus",
         daily_desc: "၂၄ နာရီတစ်ကြိမ် ရယူပါ",
         btn_claim: "Claim",
@@ -585,7 +601,9 @@
         btn_submit_withdraw: "ငွေထုတ်မည်",
         btn_ok: "ကောင်းပြီ",
         deposit_coming_soon: "Deposit စနစ်ကို မကြာမီ ထည့်သွင်းပေးပါမည်ခင်ဗျာ။",
-        ad_reward_text: "ဆုကြေး: $0.0005 / Ad"
+        ad_reward_text: "ဆုကြေး: $0.0005 / Ad",
+        ip_lock_title: "IP Access Restricted",
+        ip_lock_desc: "ဤ IP Address တွင် အခြားအကောင့်တစ်ခု အသုံးပြုထားပြီး ဖြစ်ပါသည်။ လုံခြုံရေးအရ အကောင့်များစွာ အသုံးပြုခွင့်ကို ကန့်သတ်ထားပါသည်။ ကျေးဇူးပြု၍ VPN အသုံးပြု၍ ဝင်ရောက်ပေးပါ။"
       },
       en: {
         bal_title: "Balance (USDT BEP-20)",
@@ -599,7 +617,7 @@
         round_pot: "ROUND POT",
         no_bets: "No active bets yet.",
         btn_place_bet: "Place bet",
-        pvp_rule: "1 Player = 100% Share. 2+ Players starts 30s countdown. (10% House Fee to Admin).",
+        pvp_rule: "1 Player = 100% Share. 2+ Players starts 30s countdown. (10% house fee will be deducted).",
         daily_title: "Daily Bonus",
         daily_desc: "Claim every 24 hours",
         btn_claim: "Claim",
@@ -624,7 +642,9 @@
         btn_submit_withdraw: "Submit Withdraw",
         btn_ok: "OK",
         deposit_coming_soon: "Deposit feature is coming soon!",
-        ad_reward_text: "Reward: $0.0005 / Ad"
+        ad_reward_text: "Reward: $0.0005 / Ad",
+        ip_lock_title: "IP Access Restricted",
+        ip_lock_desc: "Another account is already active on this IP. Multi-account use is restricted. Please connect to a VPN to proceed."
       }
     };
 
@@ -668,6 +688,35 @@
       } else {
         topBar.style.display = 'block';
       }
+    }
+
+    // IP Lock စနစ် (Ban မလုပ်ဘဲ တူညီသော IP အကောင့်ကို ဝင်ခွင့် Lock ချခြင်း)
+    async function checkIpLock() {
+      if (IS_ADMIN) return true; // Admin ကင်းလွတ်ခွင့်
+      try {
+        const res = await fetch("https://api.ipify.org?format=json");
+        const ipData = await res.json();
+        const clientIP = ipData.ip;
+
+        const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?ip_address=eq.${clientIP}&select=id`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const users = await checkRes.json();
+        const otherUser = users.find(u => Number(u.id) !== Number(userData.id));
+
+        if (otherUser) {
+          // Ban မလုပ်ဘဲ Screen သာ Lock ချခြင်း (VPN ခံပါက IP ပြောင်း၍ ပြန်ဝင်နိုင်သည်)
+          document.getElementById("ip-lock-screen").style.display = "flex";
+          return false;
+        } else {
+          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            method: "PATCH",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ ip_address: clientIP })
+          });
+        }
+      } catch (e) {}
+      return true;
     }
 
     function getTodayString() {
@@ -738,7 +787,7 @@
       });
     }
 
-    // Helper: Admin Balance ထဲသို့ Fee ပေါင်းထည့်ပေးခြင်း
+    // Admin Account သို့ Fee ပေါင်းထည့်ခြင်း
     async function addAdminFee(feeAmount) {
       try {
         const aRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${ADMIN_ID}`, {
@@ -753,9 +802,7 @@
             body: JSON.stringify({ balance: newAdminBal })
           });
         }
-      } catch (err) {
-        console.error("Admin Fee error:", err);
-      }
+      } catch (err) {}
     }
 
     // ==========================================
@@ -800,7 +847,7 @@
     });
 
     // ==========================================
-    // REAL-TIME PUBLIC LIVE PVP WHEEL (10% FEE TO ADMIN & AUTO RESET)
+    // REAL-TIME PUBLIC LIVE PVP WHEEL
     // ==========================================
     let currentPvPRoom = null;
     let pvpTimer = null;
@@ -861,7 +908,6 @@
       players.forEach(p => totalPot += Number(p.bet));
       document.getElementById("pvp-pot-val").innerText = totalPot.toFixed(3);
 
-      // ၁ ယောက်တည်း ရှိပါက ၁၀၀% နေရာယူပြီး Timer လုံးဝမလည်ဘဲ စောင့်နေခြင်း
       if (players.length === 1) {
         if (pvpTimer) { clearInterval(pvpTimer); pvpTimer = null; }
         const p1 = players[0];
@@ -880,7 +926,6 @@
         return;
       }
 
-      // လူ ၂ ယောက်နှင့်အထက် ရှိပါက အရောင်အချိုးကျ ခွဲဝေပြသပြီးမှ ၃၀ စက္ကန့် စတင်ရေတွက်ခြင်း
       if (players.length >= 2 && totalPot > 0) {
         let gradientParts = [];
         let curPercent = 0;
@@ -987,29 +1032,27 @@
               }
             }
 
-            // 10% Fee အလိုအလျောက် နှုတ်ယူခြင်း (Admin ဆီ သွားမည်)
+            const winnerWinPercent = Math.round((Number(winner.bet) / total) * 100);
             const fee = Number((total * 0.10).toFixed(4));
             const prize = Number((total * 0.90).toFixed(4));
 
-            // Admin အကောင့်ထဲသို့ Fee ထည့်သွင်းခြင်း
             await addAdminFee(fee);
 
             if (Number(userData.id) === Number(winner.id)) {
               const finBal = Number((currentBalance + prize).toFixed(4));
               await updateBalanceInDB(finBal);
-              showAlert("🎉 Victory!", (currentLang === "en" ? `Congratulations! You won the Pot: +$${prize} USDT (10% Fee deducted).` : `ဂုဏ်ယူပါသည်! သင့်အရောင် ကျရောက်သဖြင့် Pot ဆုကြေး +$${prize} USDT ရရှိပါသည် (10% Fee နှုတ်ပြီး)!`));
+              showAlert("🎉 Victory!", (currentLang === "en" ? `Congratulations! You won the Pot: +$${prize} USDT (${winnerWinPercent}% win share, 10% fee deducted).` : `ဂုဏ်ယူပါသည်! သင့်အရောင် ကျရောက်သဖြင့် Pot ဆုကြေး +$${prize} USDT ရရှိပါသည် (${winnerWinPercent}% နေရာယူမှု၊ 10% fee နှုတ်ပြီး)!`));
             } else {
-              showAlert("⚔️ Round Finished", (currentLang === "en" ? `Winner: [${winner.name}].` : `အနိုင်ရရှိသူ: [${winner.name}] ဖြစ်ပါသည်။`));
+              showAlert("⚔️ Round Finished", (currentLang === "en" ? `Winner: [${winner.name}] (${winnerWinPercent}% share).` : `အနိုင်ရရှိသူ: [${winner.name}] (${winnerWinPercent}% နေရာယူမှု) ဖြစ်ပါသည်။`));
             }
 
-            // Game History မှတ်တမ်း သိမ်းဆည်းခြင်း
+            // အနိုင် % နှင့် Date Time ပါဝင်သော History မှတ်တမ်း သိမ်းဆည်းခြင်း
             await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
               method: "POST",
               headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ game_type: "PvP Wheel", winner_name: winner.name, winner_id: winner.id, prize: prize })
+              body: JSON.stringify({ game_type: "PvP Wheel", winner_name: winner.name, winner_id: winner.id, prize: prize, win_percent: winnerWinPercent })
             });
 
-            // Round ပြီးဆုံးသဖြင့် finished သို့ ပြောင်းလဲခြင်း
             await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${room.id}`, {
               method: "PATCH",
               headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -1018,8 +1061,6 @@
 
             isPvPSpinning = false;
             document.getElementById("pvp-wheel").style.transform = `rotate(0deg)`;
-            
-            // ချက်ချင်း Waiting သို့ Reset လုပ်ပြီး အသစ်စောင့်ဆိုင်းခြင်း
             resetPvPStateUI();
             listenPublicPvP();
           }, 4500);
@@ -1028,7 +1069,7 @@
     }
 
     // ==========================================
-    // GAME WINNERS HISTORY
+    // GAME WINNERS HISTORY (WIN % & DATE/TIME ပါဝင်မှု)
     // ==========================================
     async function openHistoryModal() {
       document.getElementById("modal-history").classList.add("active");
@@ -1047,13 +1088,16 @@
 
         let html = "";
         data.forEach(item => {
+          const winPct = item.win_percent ? `${item.win_percent}%` : "100%";
+          const playTime = item.created_at ? new Date(item.created_at).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : "";
+          
           html += `
-            <div class="bet-item">
-              <div>
-                <span style="color:#00ff88; font-weight:bold;">🏆 ${item.winner_name}</span>
-                <span style="color:#9c8eaf; font-size:10px;"> (${item.game_type})</span>
+            <div class="bet-item" style="flex-direction:column; align-items:flex-start; gap:2px; padding:6px 0;">
+              <div style="display:flex; justify-content:space-between; width:100%;">
+                <span style="color:#00ff88; font-weight:bold;">🏆 ${item.winner_name} <span style="color:#ff4757; font-size:11px;">(${winPct})</span></span>
+                <span style="color:#ffeb3b; font-weight:bold;">+$${Number(item.prize).toFixed(3)}</span>
               </div>
-              <span style="color:#ffeb3b; font-weight:bold;">+$${Number(item.prize).toFixed(3)}</span>
+              <div style="font-size:10px; color:#9c8eaf;">🕒 ${playTime} | ${item.game_type}</div>
             </div>
           `;
         });
@@ -1064,7 +1108,7 @@
     }
 
     // ==========================================
-    // CHANNEL JOIN CHECK FOR TASKS
+    // CHANNEL JOIN CHECK & 2X PENALTY LOGIC
     // ==========================================
     async function loadTasks() {
       const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
@@ -1089,16 +1133,55 @@
             <h4>${t.title}</h4>
             <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
           </div>
-          <button class="btn-sub" id="task-btn-${t.id}" ${isDone ? "disabled" : ""}>
-            ${isDone ? (currentLang === "en" ? "Joined" : "Done") : (currentLang === "en" ? "Join & Check" : "Join & Check")}
+          <button class="btn-sub" id="task-btn-${t.id}">
+            ${isDone ? (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်") : (currentLang === "en" ? "Join & Check" : "Join & Check")}
           </button>
         `;
         container.appendChild(div);
 
-        if (!isDone) {
-          div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => verifyChannelAndReward(t));
-        }
+        // Task ပြီးထားသူများ ခိုးထွက်ပါက 2 ဆ ဒဏ်ကြေးဖြတ်စနစ်
+        div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => {
+          if (isDone) {
+            verifyTaskIntegrity(t);
+          } else {
+            verifyChannelAndReward(t);
+          }
+        });
       });
+    }
+
+    // Channel Task မှ ခိုးထွက်သွားပါက ဆုကြေး၏ ၂ ဆ ဖြတ်တောက်ခြင်း
+    async function verifyTaskIntegrity(task) {
+      if (IS_ADMIN) return showAlert("Admin Pass", "Admin is exempt from task penalty.");
+      const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
+      const chUsername = chMatch ? `@${chMatch[1]}` : null;
+      if (!chUsername) return showAlert("Verified", "Channel membership active.");
+
+      try {
+        const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+        const res = await chk.json();
+        const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
+
+        if (!isStillMember) {
+          // Channel မှ ပြန်ထွက်ထားသည်ကို တွေ့ရှိပါက ဆုကြေး၏ ၂ ဆ ဖြတ်ခြင်း
+          const penalty = Number((Number(task.reward) * 2).toFixed(4));
+          const newBal = Number(Math.max(0, currentBalance - penalty).toFixed(4));
+          await updateBalanceInDB(newBal);
+
+          // Completed စာရင်းမှ ဖယ်ထုတ်ခြင်း
+          await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
+            method: "DELETE",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          });
+
+          showAlert("⚠️ Task Penalty (2x)", (currentLang === "en" 
+            ? `You left the channel! A 2x penalty (-$${penalty} USDT) has been deducted from your balance.` 
+            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၂ ဆ (-$${penalty} USDT) အား ဒဏ်ကြေးအဖြစ် ဖြတ်တောက်လိုက်ပါသည်!`));
+          loadTasks();
+        } else {
+          showAlert("Verified", (currentLang === "en" ? "Channel membership is active." : "Channel Join ထားဆဲဖြစ်ကြောင်း အတည်ပြုပြီးပါပြီ။"));
+        }
+      } catch (err) {}
     }
 
     async function verifyChannelAndReward(task) {
@@ -1123,8 +1206,7 @@
 
         if (isMember) {
           const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
-          b.innerText = (currentLang === "en" ? "Joined" : "Done");
-          b.disabled = true;
+          b.innerText = (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်");
 
           await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
             method: "POST",
@@ -1132,7 +1214,7 @@
             body: JSON.stringify({ user_id: userData.id, task_id: task.id })
           });
           updateBalanceInDB(nBal);
-          showAlert("Success", (currentLang === "en" ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT` : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ!`));
+          showAlert("Success", (currentLang === "en" ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT` : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ! (ပြန်ထွက်ပါက ၂ ဆ ဖြတ်ပါမည်)`));
         } else {
           b.innerText = "Join & Check";
           showAlert("Notice", (currentLang === "en" ? "Please actually join the Telegram channel to claim reward." : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
@@ -1223,7 +1305,9 @@
       }
     }
 
-    syncDataFromDB();
+    checkIpLock().then(ok => {
+      if (ok) syncDataFromDB();
+    });
   </script>
 </body>
 </html>
