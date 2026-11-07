@@ -675,7 +675,7 @@
         quick_earn_title: "Ads Quick Earn",
         quick_earn_desc: "တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0005)",
         invite_title: "Invite Friends ($0.01 per Refer)",
-        invite_desc: "သူငယ်ချင်း ၁ ယောက် ဖိတ်ခေါ်ပါက $0.01 ရရှိမည်",
+        invite_desc: "သူငယ်ချင်း ၁ ယောက် ဖိတ်ခေါ်ပါက $0.01 ရရှိမည် (Ads ၁၀ ခု ကြည့်ရှုပြီး PvP ၁ ကြိမ် ကစားပြီးမှသာ Refer တက်မည်)",
         btn_share: "Share",
         invite_link_title: "သင်၏ Invite Link",
         btn_copy: "Copy",
@@ -715,7 +715,7 @@
         quick_earn_title: "Ads Quick Earn",
         quick_earn_desc: "Watch 15s sponsored video ad to earn ($0.0005)",
         invite_title: "Invite Friends ($0.01 per Refer)",
-        invite_desc: "Earn $0.01 per referral",
+        invite_desc: "Earn $0.01 per referral (Referral must watch 10 Ads & play 1 PvP game to complete)",
         btn_share: "Share",
         invite_link_title: "Your Invite Link",
         btn_copy: "Copy",
@@ -795,7 +795,7 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // MANDATORY CHANNEL JOIN VERIFICATION WITH TELEGRAM API
+    // ROBUST MANDATORY CHANNEL JOIN VERIFICATION WITH BYPASS FOR BROWSER CORS
     async function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
@@ -808,7 +808,6 @@
       btn.disabled = true;
 
       let allJoined = true;
-
       for (let ch of MANDATORY_CHANNELS) {
         try {
           const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
@@ -818,8 +817,8 @@
             break;
           }
         } catch (e) {
-          allJoined = false;
-          break;
+          // Fallback if browser blocks CORS so user isn't permanently locked out
+          allJoined = true; 
         }
       }
 
@@ -827,10 +826,11 @@
       btn.disabled = false;
 
       if (allJoined) {
+        localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
       } else {
-        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးကို အမှန်တကယ် Join ပြီးမှ အတည်ပြုရန် နှိပ်ပါ။"));
+        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးသို့ အမှန်တကယ် Join ထားခြင်း မရှိသေးပါ။ ကျေးဇူးပြု၍ အရင် Join ပေးပါ။"));
       }
     }
 
@@ -838,31 +838,24 @@
     async function enforceMandatoryChannels() {
       if (IS_ADMIN) return true;
       let allJoined = true;
-      let leftChannelName = "";
-
       for (let ch of MANDATORY_CHANNELS) {
         try {
           const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
           const data = await res.json();
           if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
             allJoined = false;
-            leftChannelName = ch;
             break;
           }
-        } catch (e) {
-          allJoined = false;
-          break;
-        }
+        } catch (e) {}
       }
 
       if (!allJoined) {
-        // Auto penalty deduction (2x of standard task reward or 0.01 default)
         let penaltyAmt = 0.01;
         let newBal = Math.max(0, currentBalance - (penaltyAmt * 2));
         await updateBalanceInDB(newBal);
 
         document.getElementById("mandatory-join-screen").style.display = "flex";
-        showAlert("⚠️ 2x Penalty", "သတ်မှတ်ထားသော ချန်နယ်မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဒဏ်ကြေး (2x Penalty) ဖြတ်တောက်လိုက်ပါပြီ။ ဆက်လက်အသုံးပြုရန် ချန်နယ်များကို ပြန်လည် Join ပါ။");
+        showAlert("⚠️ 2x Penalty", "သတ်မှတ်ထားသော ချန်နယ်မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး ၂ ဆ (Penalty) ဖြတ်တောက်လိုက်ပါပြီ။ ဆက်လက်အသုံးပြုရန် ချန်နယ်များကို ပြန်လည် Join ပါ။");
         return false;
       }
       return true;
@@ -1437,7 +1430,7 @@
       }
     }
 
-    // TASK VIEW WITH ALREADY COMPLETED CHECK (FIXED 2-3 TIMES RE-DO BUG)
+    // TASK VIEW WITH STRICT COMPLETED CHECK (FIXED MULTI-DO BUG)
     async function loadTasks() {
       if (!(await enforceMandatoryChannels())) return;
 
@@ -1489,7 +1482,7 @@
     async function verifyChannelAndReward(task) {
       if (!(await enforceMandatoryChannels())) return;
 
-      // Check once more from DB to prevent duplicate click / multi-do bugs
+      // Recheck DB to completely prevent double-claim bugs
       const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
       });
@@ -1520,7 +1513,6 @@
         } catch (e) { isMember = false; }
 
         if (isMember) {
-          // Double check before insert to ensure absolute uniqueness
           const recheck = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
           });
