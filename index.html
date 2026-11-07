@@ -788,7 +788,7 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // MANDATORY CHANNEL JOIN VERIFICATION (AUTO CHECK & LOCK)
+    // MANDATORY CHANNEL JOIN VERIFICATION (RELIABLE BYPASS & ACCESS)
     function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
@@ -796,15 +796,16 @@
       }
 
       const btn = document.getElementById("btn-verify-channels");
-      btn.innerText = "⏳ စစ်ဆေးနေပါသည်...";
+      btn.innerText = "⏳ အတည်ပြုနေပါသည်...";
       btn.disabled = true;
 
       setTimeout(() => {
-        // Mark verified in localStorage so user can access App, but checked dynamically
         localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
-      }, 1000);
+        btn.innerText = "✅ အတည်ပြုရန် (Joined)";
+        btn.disabled = false;
+      }, 800);
     }
 
     // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
@@ -1427,7 +1428,7 @@
       if (!chUsername) return showAlert("Verified", "Channel membership active.");
 
       try {
-        const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+        const chk = await fetch(`https://api.telegram.org/bot9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
         const res = await chk.json();
         const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
 
@@ -1441,7 +1442,6 @@
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
           });
 
-          // Lock back app if user left mandatory tasks
           localStorage.removeItem(`cyber_joined_${userData.id}`);
           document.getElementById("mandatory-join-screen").style.display = "flex";
 
@@ -1467,7 +1467,7 @@
         let isMember = false;
         try {
           if (chUsername) {
-            const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+            const chk = await fetch(`https://api.telegram.org/bot9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
             const res = await chk.json();
             if (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status)) isMember = true;
           } else {
@@ -1490,7 +1490,7 @@
           b.innerText = "Join & Check";
           showAlert("Notice", (currentLang === "en" ? "Please actually join the Telegram channel to claim reward." : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
         }
-      }, 3000);
+      }, 2500);
     }
 
     // DAILY BONUS
