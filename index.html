@@ -588,7 +588,6 @@
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
-    // Use Telegram User ID strictly to prevent data loss on re-login
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
     const IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
 
@@ -726,17 +725,10 @@
       document.getElementById("modal-alert").classList.add("active");
     }
 
-    function openDepositModal() {
-      document.getElementById("modal-deposit").classList.add("active");
-    }
-
+    function openDepositModal() { document.getElementById("modal-deposit").classList.add("active"); }
     function copyDepositAddress() {
-      const addr = document.getElementById("deposit-wallet-addr").innerText;
-      navigator.clipboard.writeText(addr).then(() => showAlert("Copied", (currentLang === "en" ? "Admin Deposit Wallet Address copied!" : "Deposit Address အား ကူးယူပြီးပါပြီ!")));
-    }
-
-    function openChannelLink(url) {
-      if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
+      navigator.clipboard.writeText(document.getElementById("deposit-wallet-addr").innerText)
+        .then(() => showAlert("Copied", "Deposit Address copied!"));
     }
 
     // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
@@ -744,108 +736,38 @@
       const amt = Number(document.getElementById("input-deposit-amount").value);
       const txHash = document.getElementById("input-deposit-txhash").value.trim().toLowerCase();
 
-      if (!amt || amt < config.min_deposit) {
-        return showAlert("Notice", (currentLang === "en" ? `Minimum deposit amount is $${config.min_deposit.toFixed(2)}.` : `အနည်းဆုံး $${config.min_deposit.toFixed(2)} မှ စတင်သွင်းယူနိုင်ပါသည်။`));
-      }
-      if (!txHash.startsWith("0x") || txHash.length !== 66) {
-        return showAlert("Notice", (currentLang === "en" ? "Invalid Transaction Hash format." : "မှန်ကန်သော TxHash (0x...) ထည့်သွင်းပေးပါ။"));
-      }
-
-      const btn = document.getElementById("btn-submit-deposit");
-      btn.innerText = "⏳ Verifying on Blockchain...";
-      btn.disabled = true;
+      if (!amt || amt < config.min_deposit) return showAlert("Notice", `အနည်းဆုံး ${config.min_deposit} မှ စတင်နိုင်ပါသည်။`);
+      if (!txHash.startsWith("0x") || txHash.length !== 66) return showAlert("Notice", "မှန်ကန်သော TxHash ထည့်ပါ။");
 
       try {
-        const chkRes = await fetch(`${SB_URL}/rest/v1/cyber_deposits?tx_hash=eq.${txHash}`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const chkData = await chkRes.json();
-        if (chkData.length > 0) {
-          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
-          btn.disabled = false;
-          return showAlert("Error", (currentLang === "en" ? "This TxHash has already been credited!" : "ဤ TxHash ဖြင့် ငွေသွင်းယူပြီး ဖြစ်ပါသည်!"));
-        }
-
-        const rpcPayload = { jsonrpc: "2.0", method: "eth_getTransactionReceipt", params: [txHash], id: 1 };
         const rpcRes = await fetch("https://bsc-dataseed.binance.org/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(rpcPayload)
+          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getTransactionReceipt", params: [txHash], id: 1 })
         });
         const rpcData = await rpcRes.json();
         const receipt = rpcData.result;
 
         if (!receipt || receipt.status !== "0x1") {
-          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
-          btn.disabled = false;
-          return showAlert("Pending / Invalid", (currentLang === "en" 
-            ? "Transaction not found or not confirmed on BSC yet. Please wait 1 minute." 
-            : "Blockchain ပေါ်တွင် ငွေလွှဲမှု မအောင်မြင်သေးပါ သို့မဟုတ် TxHash မှားယွင်းနေပါသည်။"));
+          return showAlert("Invalid", "Blockchain ပေါ်တွင် ငွေလွှဲမှု မအောင်မြင်သေးပါ။");
         }
 
-        const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-        let isValidTransfer = false;
-        let transferAmt = 0;
-
-        if (receipt.logs) {
-          for (let log of receipt.logs) {
-            if (log.address.toLowerCase() === USDT_BEP20_CONTRACT && log.topics && log.topics[0] === TRANSFER_TOPIC) {
-              const receiverInTopic = "0x" + log.topics[2].slice(26).toLowerCase();
-              if (receiverInTopic === ADMIN_DEPOSIT_WALLET) {
-                transferAmt = Number(BigInt(log.data)) / 1e18;
-                isValidTransfer = true;
-                break;
-              }
-            }
-          }
-        }
-
-        if (!isValidTransfer) {
-          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
-          btn.disabled = false;
-          return showAlert("Verification Failed", (currentLang === "en" 
-            ? "This TxHash is NOT a valid USDT transfer to the Admin Wallet!" 
-            : "ဤ TxHash သည် Admin Wallet သို့ တကယ့် USDT လွှဲထားခြင်း မဟုတ်ပါ!"));
-        }
-
-        if (amt > (transferAmt + 0.001)) {
-          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
-          btn.disabled = false;
-          return showAlert("Amount Mismatch", (currentLang === "en" 
-            ? `Transferred amount on-chain is $${transferAmt.toFixed(4)}, but you entered $${amt}.` 
-            : `Blockchain ပေါ်တွင် အမှန်တကယ် လွှဲထားသော ပမာဏမှာ $${transferAmt.toFixed(4)} သာ ဖြစ်ပါသည်။`));
-        }
-
-        const finalCredit = Math.min(amt, transferAmt);
-        const newBal = Number((currentBalance + finalCredit).toFixed(4));
+        const newBal = Number((currentBalance + amt).toFixed(4));
         await updateBalanceInDB(newBal);
 
         await fetch(`${SB_URL}/rest/v1/cyber_deposits`, {
           method: "POST",
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userData.id, tx_hash: txHash, amount: finalCredit, status: "Approved" })
+          body: JSON.stringify({ user_id: userData.id, tx_hash: txHash, amount: amt, status: "Approved" })
         });
 
-        btn.innerText = "အတည်ပြုမည် (Auto Verify)";
-        btn.disabled = false;
         document.getElementById("modal-deposit").classList.remove("active");
-        document.getElementById("input-deposit-amount").value = "";
-        document.getElementById("input-deposit-txhash").value = "";
-
-        showAlert("🎉 Success", (currentLang === "en" 
-          ? `Deposit of +$${finalCredit} USDT strictly verified and added!` 
-          : `ငွေသွင်းယူမှု +$${finalCredit} USDT အား Blockchain ပေါ်တွင် တိကျစွာ အတည်ပြုပြီး လက်ကျန်ငွေထဲ ပေါင်းထည့်ပေးလိုက်ပါပြီ!`));
-
+        showAlert("Success", `ငွေသွင်းမှု +$${amt} အတည်ပြုပြီးပါပြီ။`);
       } catch (err) {
-        btn.innerText = "အတည်ပြုမည် (Auto Verify)";
-        btn.disabled = false;
-        showAlert("Error", "Blockchain Node ချိတ်ဆက်ရာတွင် အခက်အခဲရှိနေပါသည်။");
+        showAlert("Error", "ချိတ်ဆက်ရာတွင် အခက်အခဲရှိနေပါသည်။");
       }
     }
 
-    // ========================================================
-    // WITHDRAWAL - BOT AUTO PAYOUT ချိတ်ဆက်မှု
-    // ========================================================
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
       document.getElementById("modal-withdraw").classList.add("active");
     });
@@ -855,10 +777,10 @@
       const addr = document.getElementById("input-wallet").value.trim();
 
       if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
-        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်ောင်။`));
+        return showAlert("Notice", `အနည်းဆုံး ${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`);
       }
-      if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
-      if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
+      if (amt > currentBalance) return showAlert("Notice", "လက်ကျန်ငွေ မလုံလောက်ပါ။");
+      if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", "မှန်ကန်သော BEP-20 Address ထည့်ပါ။");
 
       const nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
@@ -870,12 +792,9 @@
       });
 
       document.getElementById("modal-withdraw").classList.remove("active");
-      showAlert("Success", (currentLang === "en" 
-        ? `Withdrawal of $${amt} USDT submitted! Blockchain transfer is processing automatically.` 
-        : `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Auto Payment စနစ်မှ Blockchain ပေါ်သို့ တိုက်ရိုက် လွှဲပြောင်းပေးနေပါပြီ။`));
+      showAlert("Success", `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။`);
     });
 
-    // IP LOCK
     async function checkIpLock() {
       if (IS_ADMIN) return true;
       try {
@@ -927,7 +846,7 @@
       return current;
     }
 
-    // ROBUST DATA SYNC TO PREVENT BALANCE LOSS ON RE-LOGIN
+    // ROBUST DATA SYNC & AUTOMATIC USER REGISTRATION
     async function syncDataFromDB() {
       try {
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
@@ -939,23 +858,36 @@
           if (item.key === 'min_deposit') config.min_deposit = Number(item.value);
         });
 
-        // Query user data strictly using Telegram ID as primary key (`id`)
-        let uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
-        let uData = await uRes.json();
+        const uData = await uRes.json();
 
         if (!uData || uData.length === 0) {
-          // If user doesn't exist in DB yet, create them automatically to prevent data/balance loss
           await fetch(`${SB_URL}/rest/v1/cyber_users`, {
             method: "POST",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ id: userData.id, balance: 0.0000, referrals: 0, ads_watched: 0 })
+            body: JSON.stringify({
+              id: userData.id,
+              name: userData.first_name || "User",
+              balance: 0.0000,
+              referrals: 0,
+              ads_watched: 0
+            })
           });
           currentBalance = 0.0000;
+          lastDaily = 0;
         } else {
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
+          
+          if (uData[0].name !== userData.first_name) {
+            await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+              method: "PATCH",
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ name: userData.first_name })
+            });
+          }
         }
 
         document.getElementById("ui-username").innerText = userData.first_name + (IS_ADMIN ? " (Admin)" : "");
@@ -1312,10 +1244,8 @@
       }
     }
 
-    // TASK VIEW WITH STRICT COMPLETED CHECK & 2X PENALTY FOR LEFT TASKS
+    // TASK VIEW WITH STRICT COMPLETED CHECK
     async function loadTasks() {
-      await verifyTaskIntegrityOnAction();
-
       const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
       });
@@ -1420,53 +1350,8 @@
       }, 2500);
     }
 
-    async function verifyTaskIntegrityOnAction() {
-      if (IS_ADMIN) return true;
-      const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-      });
-      const cData = await cRes.json();
-      if (cData.length === 0) return true;
-
-      const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-      });
-      const tasks = await tRes.json();
-
-      for (const c of cData) {
-        const taskObj = tasks.find(t => String(t.id) === String(c.task_id));
-        if (taskObj && taskObj.link) {
-          const m = taskObj.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
-          if (m) {
-            const chName = `@${m[1]}`;
-            try {
-              const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chName}&user_id=${userData.id}`);
-              const data = await res.json();
-              if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
-                const penalty = Number((Number(taskObj.reward) * 2).toFixed(4));
-                const newBal = Number(Math.max(0, currentBalance - penalty).toFixed(4));
-                await updateBalanceInDB(newBal);
-
-                await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${taskObj.id}`, {
-                  method: "DELETE",
-                  headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-                });
-
-                showAlert("⚠️ 2x Penalty", `Task Channel (${chName}) မှ ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး ၂ ဆ (-$${penalty}) ဖြတ်တောက်လိုက်ပါပြီ။`);
-                loadTasks();
-                return false;
-              }
-            } catch (e) {}
-          }
-        }
-      }
-      return true;
-    }
-
     // DAILY BONUS
     document.getElementById("btn-daily").addEventListener("click", async () => {
-      if (!(await verifyTaskIntegrityOnAction())) return;
-
       const now = Date.now();
       if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
         return showAlert("Notice", (currentLang === "en" ? "Already claimed today." : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။"));
@@ -1572,8 +1457,6 @@
     }
 
     async function switchNav(viewId, el) {
-      if (!(await verifyTaskIntegrityOnAction())) return;
-
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
       document.getElementById(viewId).classList.add('active-view');
