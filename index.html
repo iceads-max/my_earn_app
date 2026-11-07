@@ -630,7 +630,6 @@
     const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
     const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
-    // ပြင်ဆင်ပြီးသော သင့်ရဲ့ကိုယ်ပိုင် Bot Username
     const BOT_USERNAME = "CyberEarns_bot";
 
     const MANDATORY_CHANNELS = [
@@ -676,7 +675,7 @@
         quick_earn_title: "Ads Quick Earn",
         quick_earn_desc: "တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0005)",
         invite_title: "Invite Friends ($0.01 per Refer)",
-        invite_desc: "သူငယ်ချင်း ၁ ယောက် ဖိတ်ခေါ်ပါက $0.01 ရရှိမည် (Ads ၁၀ ခု ကြည့်ရှုပြီး PvP ၁ ကြိမ် ကစားပြီးမှသာ Refer တက်မည်)",
+        invite_desc: "သူငယ်ချင်း ၁ ယောက် ဖိတ်ခေါ်ပါက $0.01 ရရှိမည်",
         btn_share: "Share",
         invite_link_title: "သင်၏ Invite Link",
         btn_copy: "Copy",
@@ -716,7 +715,7 @@
         quick_earn_title: "Ads Quick Earn",
         quick_earn_desc: "Watch 15s sponsored video ad to earn ($0.0005)",
         invite_title: "Invite Friends ($0.01 per Refer)",
-        invite_desc: "Earn $0.01 per referral (Referral must watch 10 Ads & play 1 PvP game to complete)",
+        invite_desc: "Earn $0.01 per referral",
         btn_share: "Share",
         invite_link_title: "Your Invite Link",
         btn_copy: "Copy",
@@ -796,7 +795,7 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // MANDATORY CHANNEL JOIN VERIFICATION
+    // MANDATORY CHANNEL JOIN VERIFICATION WITH TELEGRAM API
     async function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
@@ -835,16 +834,19 @@
       }
     }
 
-    // STRICT LIVE CHECK & 2X PENALTY FOR MANDATORY CHANNELS
+    // STRICT LIVE CHECK & AUTO 2X PENALTY FOR MANDATORY CHANNELS
     async function enforceMandatoryChannels() {
       if (IS_ADMIN) return true;
       let allJoined = true;
+      let leftChannelName = "";
+
       for (let ch of MANDATORY_CHANNELS) {
         try {
           const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
           const data = await res.json();
           if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
             allJoined = false;
+            leftChannelName = ch;
             break;
           }
         } catch (e) {
@@ -854,8 +856,13 @@
       }
 
       if (!allJoined) {
+        // Auto penalty deduction (2x of standard task reward or 0.01 default)
+        let penaltyAmt = 0.01;
+        let newBal = Math.max(0, currentBalance - (penaltyAmt * 2));
+        await updateBalanceInDB(newBal);
+
         document.getElementById("mandatory-join-screen").style.display = "flex";
-        showAlert("⚠️ Notice", "သတ်မှတ်ထားသော ချန်နယ်များမှ ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး ၂ ဆ (Penalty) ဖြတ်တောက်လိုက်ပါပြီ။ ချန်နယ်များကို ပြန်လည် Join ပါ။");
+        showAlert("⚠️ 2x Penalty", "သတ်မှတ်ထားသော ချန်နယ်မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဒဏ်ကြေး (2x Penalty) ဖြတ်တောက်လိုက်ပါပြီ။ ဆက်လက်အသုံးပြုရန် ချန်နယ်များကို ပြန်လည် Join ပါ။");
         return false;
       }
       return true;
@@ -1430,13 +1437,15 @@
       }
     }
 
-    // TASK VIEW WITH ALREADY COMPLETED CHECK
+    // TASK VIEW WITH ALREADY COMPLETED CHECK (FIXED 2-3 TIMES RE-DO BUG)
     async function loadTasks() {
+      if (!(await enforceMandatoryChannels())) return;
+
       const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
       });
       const cData = await cRes.json();
-      const completedIds = cData.map(c => c.task_id);
+      const completedIds = cData.map(c => String(c.task_id));
 
       const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -1451,7 +1460,7 @@
       }
 
       tasks.forEach(t => {
-        const isDone = completedIds.includes(t.id);
+        const isDone = completedIds.includes(String(t.id));
         const div = document.createElement("div");
         div.className = "card-item";
 
@@ -1459,9 +1468,9 @@
           div.innerHTML = `
             <div>
               <h4>${t.title}</h4>
-              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT (ပြီးပြီးသား)</p>
+              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT (Completed ✅)</p>
             </div>
-            <button class="btn-sub" style="opacity:0.5; cursor:not-allowed;" disabled>Completed</button>
+            <button class="btn-sub" style="opacity:0.5; cursor:not-allowed;" disabled>ပြီးပြီးသား</button>
           `;
         } else {
           div.innerHTML = `
@@ -1479,6 +1488,18 @@
 
     async function verifyChannelAndReward(task) {
       if (!(await enforceMandatoryChannels())) return;
+
+      // Check once more from DB to prevent duplicate click / multi-do bugs
+      const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+      });
+      const checkDoneData = await checkDoneRes.json();
+      if (checkDoneData.length > 0) {
+        showAlert("Notice", "ဤ Task ကို ပြီးမြောက်ပြီးသား ဖြစ်ပါသည်။");
+        loadTasks();
+        return;
+      }
+
       if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
       const b = document.getElementById(`task-btn-${task.id}`);
       if (b) b.innerText = "Checking...";
@@ -1499,6 +1520,17 @@
         } catch (e) { isMember = false; }
 
         if (isMember) {
+          // Double check before insert to ensure absolute uniqueness
+          const recheck = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          });
+          const recheckData = await recheck.json();
+          if (recheckData.length > 0) {
+            showAlert("Notice", "ဤ Task ကို ပြီးမြောက်ပြီးသား ဖြစ်ပါသည်။");
+            loadTasks();
+            return;
+          }
+
           const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
           await updateBalanceInDB(nBal);
 
