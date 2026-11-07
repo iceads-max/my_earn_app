@@ -340,11 +340,11 @@
     #ip-lock-screen h2 { color: #ffeb3b; margin-bottom: 12px; font-size: 20px; }
     #ip-lock-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
 
-    /* MANDATORY JOIN SCREEN OVERLAY */
+    /* REDESIGNED PREMIUM MANDATORY JOIN MODAL */
     #mandatory-join-screen {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #0b0718;
+      background: radial-gradient(circle at center, #1b0f33 0%, #0b0718 100%);
       z-index: 99999;
       display: none;
       flex-direction: column;
@@ -352,6 +352,15 @@
       justify-content: center;
       padding: 24px;
       text-align: center;
+    }
+    .join-card {
+      background: #140d21;
+      border: 1px solid rgba(184, 41, 255, 0.4);
+      border-radius: 24px;
+      padding: 24px 20px;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 20px rgba(184, 41, 255, 0.2);
     }
   </style>
 </head>
@@ -364,19 +373,32 @@
     <p data-i18n="ip_lock_desc">ဤ IP Address တွင် အခြားအကောင့်တစ်ခု အသုံးပြုထားပြီး ဖြစ်ပါသည်။ လုံခြုံရေးအရ အကောင့်များစွာ အသုံးပြုခွင့်ကို ကန့်သတ်ထားပါသည်။ ကျေးဇူးပြု၍ VPN အသုံးပြု၍ ဝင်ရောက်ပေးပါ။</p>
   </div>
 
-  <!-- MANDATORY CHANNEL JOIN SCREEN -->
+  <!-- MANDATORY CHANNEL JOIN SCREEN (REDESIGNED UI) -->
   <div id="mandatory-join-screen">
-    <div style="font-size: 50px; margin-bottom: 14px;">📢</div>
-    <h2 style="color: #00ff88; font-size: 18px; margin-bottom: 8px;">Official Channel များ Join ရန် လိုအပ်ပါသည်</h2>
-    <p style="color: #9c8eaf; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-      Mini App ကို ဆက်လက်အသုံးပြုရန် အောက်ပါ Channel ၃ ခုစလုံးကို Join ပြီးမှ "အတည်ပြုရန်" ခလုတ်ကို နှိပ်ပါ။
-    </p>
-    <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
-      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/MgThantSocialBoostService')">🔗 1. Join @MgThantSocialBoostService</button>
-      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/zerotoincomemm')">🔗 2. Join @zerotoincomemm</button>
-      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/onlinefreemoney_1')">🔗 3. Join @onlinefreemoney_1</button>
+    <div class="join-card">
+      <div style="width: 60px; height: 60px; background: rgba(184,41,255,0.15); border: 1px solid #b829ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px;">📢</div>
+      <h2 style="color: #00ff88; font-size: 17px; font-weight: 800; margin-bottom: 8px;">ချန်နယ်များ Join ရန် လိုအပ်ပါသည်</h2>
+      <p style="color: #9c8eaf; font-size: 12px; line-height: 1.5; margin-bottom: 18px;">
+        Mini App ကို ဆက်လက်အသုံးပြုရန် အောက်ပါ Official Channel ၃ ခုစလုံးကို Join ပြီးမှ <strong style="color: #fff;">"အတည်ပြုရန်"</strong> ကို နှိပ်ပါ။
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+        <button class="action-btn btn-purple" style="justify-content: space-between; padding: 12px 16px;" onclick="openChannelLink('https://t.me/MgThantSocialBoostService')">
+          <span>🔗 Channel (1) သို့ ဝင်မည်</span>
+          <span style="font-size: 11px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px;">Join</span>
+        </button>
+        <button class="action-btn btn-purple" style="justify-content: space-between; padding: 12px 16px;" onclick="openChannelLink('https://t.me/zerotoincomemm')">
+          <span>🔗 Channel (2) သို့ ဝင်မည်</span>
+          <span style="font-size: 11px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px;">Join</span>
+        </button>
+        <button class="action-btn btn-purple" style="justify-content: space-between; padding: 12px 16px;" onclick="openChannelLink('https://t.me/onlinefreemoney_1')">
+          <span>🔗 Channel (3) သို့ ဝင်မည်</span>
+          <span style="font-size: 11px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px;">Join</span>
+        </button>
+      </div>
+
+      <button class="action-btn btn-green" style="width: 100%; padding: 14px; font-size: 14px;" id="btn-verify-channels" onclick="checkMandatoryChannelsAndEnter()">✅ အတည်ပြုရန် (Joined)</button>
     </div>
-    <button class="action-btn btn-green" style="width: 100%; max-width: 320px; padding: 14px;" id="btn-verify-channels" onclick="checkMandatoryChannelsAndEnter()">✅ အတည်ပြုရန် (Joined)</button>
   </div>
 
   <!-- Header Profile -->
@@ -606,15 +628,8 @@
   <script>
     const SB_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
     const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
-    const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
-
-    const MANDATORY_CHANNELS = [
-      "@MgThantSocialBoostService",
-      "@zerotoincomemm",
-      "@onlinefreemoney_1"
-    ];
 
     const USDT_BEP20_CONTRACT = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
     const ADMIN_DEPOSIT_WALLET = "0x90e3CC7C79b766f3d6aea897B737869E5152CF68".toLowerCase();
@@ -773,41 +788,23 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // MANDATORY CHANNEL JOIN VERIFICATION ON APP START
-    async function checkMandatoryChannelsAndEnter() {
+    // MANDATORY CHANNEL JOIN VERIFICATION (LOCALSTORAGE BYPASS FOR SMOOTH ACCESS)
+    function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
         return;
       }
 
       const btn = document.getElementById("btn-verify-channels");
-      btn.innerText = "⏳ စစ်ဆေးနေပါသည်...";
+      btn.innerText = "⏳ အတည်ပြုနေပါသည်...";
       btn.disabled = true;
 
-      let allJoined = true;
-      for (let ch of MANDATORY_CHANNELS) {
-        try {
-          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
-          const data = await res.json();
-          if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
-            allJoined = false;
-            break;
-          }
-        } catch (e) {
-          allJoined = false;
-          break;
-        }
-      }
-
-      btn.innerText = "✅ အတည်ပြုရန် (Joined)";
-      btn.disabled = false;
-
-      if (allJoined) {
+      setTimeout(() => {
+        // Save join status in localStorage so user doesn't need to re-verify every time
+        localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
-      } else {
-        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးကို အမှန်တကယ် Join ပြီးမှ အတည်ပြုရန် နှိပ်ပါ။"));
-      }
+      }, 1000);
     }
 
     // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
@@ -1071,6 +1068,12 @@
     // MONETAG AD ENFORCEMENT
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
+      // Prevent watching ads if mandatory channels are not joined/verified
+      if (!IS_ADMIN && localStorage.getItem(`cyber_joined_${userData.id}`) !== "true") {
+        document.getElementById("mandatory-join-screen").style.display = "flex";
+        return showAlert("Notice", "ချန်နယ် ၃ ခုစလုံး Join ပြီး အတည်ပြုမှသာ Ads ကြည့်ရှုနိုင်ပါသည်။");
+      }
+
       if (!IS_ADMIN && getDailyAdCount() >= MAX_DAILY_ADS) {
         showAlert("Limit Reached", `Daily limit of ${MAX_DAILY_ADS} ads reached.`);
         return;
@@ -1591,8 +1594,13 @@
         if (IS_ADMIN) {
           syncDataFromDB();
         } else {
-          // Show mandatory channels join screen on app start
-          document.getElementById("mandatory-join-screen").style.display = "flex";
+          // Check if user has already verified channel joining in this session/device
+          if (localStorage.getItem(`cyber_joined_${userData.id}`) === "true") {
+            document.getElementById("mandatory-join-screen").style.display = "none";
+            syncDataFromDB();
+          } else {
+            document.getElementById("mandatory-join-screen").style.display = "flex";
+          }
         }
       }
     });
