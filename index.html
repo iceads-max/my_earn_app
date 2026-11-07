@@ -846,7 +846,7 @@
       return current;
     }
 
-    // ROBUST DATA SYNC & AUTOMATIC USER REGISTRATION (FIXED BALANCE LOSS ON RE-LOGIN)
+    // ROBUST DATA SYNC & AUTOMATIC USER REGISTRATION (FIXED BALANCE LOSS)
     async function syncDataFromDB() {
       try {
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
