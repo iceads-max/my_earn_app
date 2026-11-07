@@ -588,6 +588,7 @@
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
+    // Use Telegram User ID strictly to prevent data loss on re-login
     const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
     const IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
 
@@ -926,6 +927,7 @@
       return current;
     }
 
+    // ROBUST DATA SYNC TO PREVENT BALANCE LOSS ON RE-LOGIN
     async function syncDataFromDB() {
       try {
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
@@ -937,11 +939,21 @@
           if (item.key === 'min_deposit') config.min_deposit = Number(item.value);
         });
 
-        const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        // Query user data strictly using Telegram ID as primary key (`id`)
+        let uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
-        const uData = await uRes.json();
-        if (uData.length > 0) {
+        let uData = await uRes.json();
+
+        if (!uData || uData.length === 0) {
+          // If user doesn't exist in DB yet, create them automatically to prevent data/balance loss
+          await fetch(`${SB_URL}/rest/v1/cyber_users`, {
+            method: "POST",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ id: userData.id, balance: 0.0000, referrals: 0, ads_watched: 0 })
+          });
+          currentBalance = 0.0000;
+        } else {
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
         }
