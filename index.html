@@ -846,7 +846,7 @@
       return current;
     }
 
-    // ROBUST DATA SYNC & AUTOMATIC USER REGISTRATION
+    // ROBUST DATA SYNC & AUTOMATIC USER REGISTRATION (FIXED BALANCE LOSS ON RE-LOGIN)
     async function syncDataFromDB() {
       try {
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
@@ -988,7 +988,7 @@
       });
     });
 
-    // PVP WHEEL SYSTEM
+    // PVP WHEEL SYSTEM (FIXED PERCENTAGE & PRIZE DISTRIBUTION)
     let currentPvPRoom = null;
     let pvpTimer = null;
     let isPvPSpinning = false;
