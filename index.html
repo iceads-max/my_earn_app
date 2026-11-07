@@ -795,7 +795,7 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // ROBUST MANDATORY CHANNEL JOIN VERIFICATION WITH BYPASS FOR BROWSER CORS
+    // RELIABLE MANDATORY CHANNEL JOIN VERIFICATION WITH TIMEOUT & CORS SAFEGUARD
     async function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
@@ -808,17 +808,26 @@
       btn.disabled = true;
 
       let allJoined = true;
+
       for (let ch of MANDATORY_CHANNELS) {
         try {
-          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout per request
+
+          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`, {
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+
           const data = await res.json();
           if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
             allJoined = false;
             break;
           }
         } catch (e) {
-          // Fallback if browser blocks CORS so user isn't permanently locked out
-          allJoined = true; 
+          // If network / CORS blocks, we check if user clicked join buttons or fallback to allow entry if needed, but here we require strict join
+          allJoined = false;
+          break;
         }
       }
 
@@ -826,11 +835,10 @@
       btn.disabled = false;
 
       if (allJoined) {
-        localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
       } else {
-        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးသို့ အမှန်တကယ် Join ထားခြင်း မရှိသေးပါ။ ကျေးဇူးပြု၍ အရင် Join ပေးပါ။"));
+        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးသို့ အမှန်တကယ် Join ထားခြင်း မရှိသေးပါ။ ကျေးဇူးပြု၍ ချန်နယ်အားလုံး Join ပြီးမှ အတည်ပြုပါ။"));
       }
     }
 
@@ -840,7 +848,12 @@
       let allJoined = true;
       for (let ch of MANDATORY_CHANNELS) {
         try {
-          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`, {
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
           const data = await res.json();
           if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
             allJoined = false;
@@ -1482,7 +1495,6 @@
     async function verifyChannelAndReward(task) {
       if (!(await enforceMandatoryChannels())) return;
 
-      // Recheck DB to completely prevent double-claim bugs
       const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
       });
