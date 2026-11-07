@@ -731,7 +731,6 @@
         .then(() => showAlert("Copied", "Deposit Address copied!"));
     }
 
-    // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
     async function handleStrictAutoDepositVerify() {
       const amt = Number(document.getElementById("input-deposit-amount").value);
       const txHash = document.getElementById("input-deposit-txhash").value.trim().toLowerCase();
@@ -846,7 +845,7 @@
       return current;
     }
 
-    // ROBUST DATA SYNC & AUTOMATIC USER REGISTRATION (FIXED BALANCE LOSS)
+    // ORIGINAL STABLE SYNC (PREVENTS BALANCE LOSS & RESTORES NEW USERS PROPERLY)
     async function syncDataFromDB() {
       try {
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
@@ -858,10 +857,17 @@
           if (item.key === 'min_deposit') config.min_deposit = Number(item.value);
         });
 
-        const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        let uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
-        const uData = await uRes.json();
+        let uData = await uRes.json();
+
+        if (!uData || uData.length === 0) {
+          uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?user_id=eq.${userData.id}`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          });
+          uData = await uRes.json();
+        }
 
         if (!uData || uData.length === 0) {
           await fetch(`${SB_URL}/rest/v1/cyber_users`, {
@@ -880,14 +886,6 @@
         } else {
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
-          
-          if (uData[0].name !== userData.first_name) {
-            await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
-              method: "PATCH",
-              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ name: userData.first_name })
-            });
-          }
         }
 
         document.getElementById("ui-username").innerText = userData.first_name + (IS_ADMIN ? " (Admin)" : "");
@@ -988,7 +986,7 @@
       });
     });
 
-    // PVP WHEEL SYSTEM (FIXED PERCENTAGE & PRIZE DISTRIBUTION)
+    // PVP WHEEL SYSTEM
     let currentPvPRoom = null;
     let pvpTimer = null;
     let isPvPSpinning = false;
