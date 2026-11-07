@@ -346,7 +346,7 @@
       top: 0; left: 0; width: 100vw; height: 100vh;
       background: radial-gradient(circle at center, #1b0f33 0%, #0b0718 100%);
       z-index: 99999;
-      display: none;
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -628,6 +628,7 @@
   <script>
     const SB_URL = "https://ohhzbeayfccoiqevydat.supabase.co";
     const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
+    const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
@@ -788,24 +789,49 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // MANDATORY CHANNEL JOIN VERIFICATION (RELIABLE BYPASS & ACCESS)
-    function checkMandatoryChannelsAndEnter() {
+    // MANDATORY CHANNEL JOIN VERIFICATION WITH TELEGRAM API
+    async function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
         return;
       }
 
       const btn = document.getElementById("btn-verify-channels");
-      btn.innerText = "⏳ အတည်ပြုနေပါသည်...";
+      btn.innerText = "⏳ စစ်ဆေးနေပါသည်...";
       btn.disabled = true;
 
-      setTimeout(() => {
+      const channels = [
+        "@MgThantSocialBoostService",
+        "@zerotoincomemm",
+        "@onlinefreemoney_1"
+      ];
+
+      let allJoined = true;
+
+      for (let ch of channels) {
+        try {
+          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
+          const data = await res.json();
+          if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
+            allJoined = false;
+            break;
+          }
+        } catch (e) {
+          allJoined = false;
+          break;
+        }
+      }
+
+      btn.innerText = "✅ အတည်ပြုရန် (Joined)";
+      btn.disabled = false;
+
+      if (allJoined) {
         localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
-        btn.innerText = "✅ အတည်ပြုရန် (Joined)";
-        btn.disabled = false;
-      }, 800);
+      } else {
+        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးကို အမှန်တကယ် Join ပြီးမှ အတည်ပြုရန် နှိပ်ပါ။"));
+      }
     }
 
     // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
@@ -1428,7 +1454,7 @@
       if (!chUsername) return showAlert("Verified", "Channel membership active.");
 
       try {
-        const chk = await fetch(`https://api.telegram.org/bot9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+        const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
         const res = await chk.json();
         const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
 
@@ -1467,7 +1493,7 @@
         let isMember = false;
         try {
           if (chUsername) {
-            const chk = await fetch(`https://api.telegram.org/bot9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+            const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
             const res = await chk.json();
             if (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status)) isMember = true;
           } else {
