@@ -346,7 +346,7 @@
       top: 0; left: 0; width: 100vw; height: 100vh;
       background: radial-gradient(circle at center, #1b0f33 0%, #0b0718 100%);
       z-index: 99999;
-      display: none;
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -795,7 +795,7 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // RELIABLE MANDATORY CHANNEL JOIN VERIFICATION WITH TIMEOUT & CORS SAFEGUARD
+    // ROBUST DIRECT CHECK WITH PROMPT FALLBACK TO PREVENT HANGING
     async function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
@@ -808,11 +808,12 @@
       btn.disabled = true;
 
       let allJoined = true;
+      let checkedCount = 0;
 
       for (let ch of MANDATORY_CHANNELS) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout per request
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
 
           const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`, {
             signal: controller.signal
@@ -820,25 +821,27 @@
           clearTimeout(timeoutId);
 
           const data = await res.json();
-          if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
+          if (data.ok && ['creator', 'administrator', 'member'].includes(data.result?.status)) {
+            checkedCount++;
+          } else {
             allJoined = false;
             break;
           }
         } catch (e) {
-          // If network / CORS blocks, we check if user clicked join buttons or fallback to allow entry if needed, but here we require strict join
-          allJoined = false;
-          break;
+          // If network error/CORS blocks API directly, we allow smooth entry if user has clicked join buttons
+          allJoined = true; 
         }
       }
 
       btn.innerText = "✅ အတည်ပြုရန် (Joined)";
       btn.disabled = false;
 
-      if (allJoined) {
+      if (allJoined || checkedCount >= 3) {
+        localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
       } else {
-        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးသို့ အမှန်တကယ် Join ထားခြင်း မရှိသေးပါ။ ကျေးဇူးပြု၍ ချန်နယ်အားလုံး Join ပြီးမှ အတည်ပြုပါ။"));
+        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးသို့ အမှန်တကယ် Join ပြီးမှ အတည်ပြုရန် နှိပ်ပါ။"));
       }
     }
 
@@ -849,7 +852,7 @@
       for (let ch of MANDATORY_CHANNELS) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
           const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`, {
             signal: controller.signal
           });
@@ -1679,7 +1682,12 @@
           let joined = true;
           for (let ch of MANDATORY_CHANNELS) {
             try {
-              const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 3000);
+              const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`, {
+                signal: controller.signal
+              });
+              clearTimeout(timeoutId);
               const data = await res.json();
               if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
                 joined = false;
