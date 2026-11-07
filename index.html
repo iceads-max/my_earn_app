@@ -346,7 +346,7 @@
       top: 0; left: 0; width: 100vw; height: 100vh;
       background: radial-gradient(circle at center, #1b0f33 0%, #0b0718 100%);
       z-index: 99999;
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -630,7 +630,14 @@
     const SB_KEY = "sb_publishable_ZRsi0oPdmbAY-wimQ5Cx8A_b_g_PY41";
     const BOT_TOKEN = "9006366554:AAGSMmQtUHPhzUlvDdVcmBlzBE52x3ZrzKA";
     const ADMIN_ID = 6093710107;
+    // ပြင်ဆင်ပြီးသော သင့်ရဲ့ကိုယ်ပိုင် Bot Username
     const BOT_USERNAME = "CyberEarns_bot";
+
+    const MANDATORY_CHANNELS = [
+      "@MgThantSocialBoostService",
+      "@zerotoincomemm",
+      "@onlinefreemoney_1"
+    ];
 
     const USDT_BEP20_CONTRACT = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
     const ADMIN_DEPOSIT_WALLET = "0x90e3CC7C79b766f3d6aea897B737869E5152CF68".toLowerCase();
@@ -789,10 +796,11 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // MANDATORY CHANNEL JOIN VERIFICATION WITH TELEGRAM API
+    // MANDATORY CHANNEL JOIN VERIFICATION
     async function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
+        syncDataFromDB();
         return;
       }
 
@@ -800,15 +808,9 @@
       btn.innerText = "⏳ စစ်ဆေးနေပါသည်...";
       btn.disabled = true;
 
-      const channels = [
-        "@MgThantSocialBoostService",
-        "@zerotoincomemm",
-        "@onlinefreemoney_1"
-      ];
-
       let allJoined = true;
 
-      for (let ch of channels) {
+      for (let ch of MANDATORY_CHANNELS) {
         try {
           const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
           const data = await res.json();
@@ -826,12 +828,37 @@
       btn.disabled = false;
 
       if (allJoined) {
-        localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
       } else {
         showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးကို အမှန်တကယ် Join ပြီးမှ အတည်ပြုရန် နှိပ်ပါ။"));
       }
+    }
+
+    // STRICT LIVE CHECK & 2X PENALTY FOR MANDATORY CHANNELS
+    async function enforceMandatoryChannels() {
+      if (IS_ADMIN) return true;
+      let allJoined = true;
+      for (let ch of MANDATORY_CHANNELS) {
+        try {
+          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
+          const data = await res.json();
+          if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
+            allJoined = false;
+            break;
+          }
+        } catch (e) {
+          allJoined = false;
+          break;
+        }
+      }
+
+      if (!allJoined) {
+        document.getElementById("mandatory-join-screen").style.display = "flex";
+        showAlert("⚠️ Notice", "သတ်မှတ်ထားသော ချန်နယ်များမှ ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး ၂ ဆ (Penalty) ဖြတ်တောက်လိုက်ပါပြီ။ ချန်နယ်များကို ပြန်လည် Join ပါ။");
+        return false;
+      }
+      return true;
     }
 
     // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
@@ -941,11 +968,14 @@
     // ========================================================
     // WITHDRAWAL - BOT AUTO PAYOUT ချိတ်ဆက်မှု
     // ========================================================
-    document.getElementById("btn-open-withdraw").addEventListener("click", () => {
+    document.getElementById("btn-open-withdraw").addEventListener("click", async () => {
+      if (!(await enforceMandatoryChannels())) return;
       document.getElementById("modal-withdraw").classList.add("active");
     });
 
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
+      if (!(await enforceMandatoryChannels())) return;
+
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
@@ -1048,7 +1078,6 @@
         document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
         document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
         
-        // REFINED PROFESSIONAL INVITE MESSAGE FORMAT
         const refLink = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
         const refFormattedText = 
           `🚀 𝕮𝖞𝖇𝖊𝖗 𝕰𝖆𝖗𝖓 - Official USDT Mining & Ads Platform ⚡\n\n` +
@@ -1104,11 +1133,8 @@
 
     // MONETAG AD ENFORCEMENT & MANDATORY CHANNEL GATE
     let isShowingAd = false;
-    document.getElementById("btn-watch-ad").addEventListener("click", () => {
-      if (!IS_ADMIN && localStorage.getItem(`cyber_joined_${userData.id}`) !== "true") {
-        document.getElementById("mandatory-join-screen").style.display = "flex";
-        return showAlert("Notice", "ချန်နယ် ၃ ခုစလုံး Join ပြီး အတည်ပြုမှသာ Ads ကြည့်ရှုနိုင်ပါသည်။");
-      }
+    document.getElementById("btn-watch-ad").addEventListener("click", async () => {
+      if (!(await enforceMandatoryChannels())) return;
 
       if (!IS_ADMIN && getDailyAdCount() >= MAX_DAILY_ADS) {
         showAlert("Limit Reached", `Daily limit of ${MAX_DAILY_ADS} ads reached.`);
@@ -1253,10 +1279,7 @@
     }
 
     async function addPublicBetPvP() {
-      if (localStorage.getItem(`cyber_joined_${userData.id}`) !== "true" && !IS_ADMIN) {
-        document.getElementById("mandatory-join-screen").style.display = "flex";
-        return showAlert("Notice", "ချန်နယ်များ Join ပြီး အတည်ပြုမှသာ ဂိမ်းကစားနိုင်ပါသည်။");
-      }
+      if (!(await enforceMandatoryChannels())) return;
 
       const amt = Number(document.getElementById("pvp-bet-amt").value);
       if (!amt || amt < 0.01) return showAlert("Notice", (currentLang === "en" ? "Minimum bet is $0.01" : "အနည်းဆုံး $0.01 Bet ထိုးရပါမည်။"));
@@ -1407,13 +1430,13 @@
       }
     }
 
-    // CHANNEL JOIN CHECK & 2X PENALTY
+    // TASK VIEW WITH ALREADY COMPLETED CHECK
     async function loadTasks() {
       const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
       });
       const cData = await cRes.json();
-      const completed = cData.map(c => c.task_id);
+      const completedIds = cData.map(c => c.task_id);
 
       const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -1422,69 +1445,43 @@
       const container = document.getElementById("tasks-container");
       container.innerHTML = "";
 
+      if (tasks.length === 0) {
+        container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>လက်ရှိ Task မရှိသေးပါ။</p>";
+        return;
+      }
+
       tasks.forEach(t => {
-        const isDone = completed.includes(t.id);
+        const isDone = completedIds.includes(t.id);
         const div = document.createElement("div");
         div.className = "card-item";
-        div.innerHTML = `
-          <div>
-            <h4>${t.title}</h4>
-            <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
-          </div>
-          <button class="btn-sub" id="task-btn-${t.id}">
-            ${isDone ? (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်") : (currentLang === "en" ? "Join & Check" : "Join & Check")}
-          </button>
-        `;
-        container.appendChild(div);
 
-        div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => {
-          if (isDone) {
-            verifyTaskIntegrity(t);
-          } else {
-            verifyChannelAndReward(t);
-          }
-        });
+        if (isDone) {
+          div.innerHTML = `
+            <div>
+              <h4>${t.title}</h4>
+              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT (ပြီးပြီးသား)</p>
+            </div>
+            <button class="btn-sub" style="opacity:0.5; cursor:not-allowed;" disabled>Completed</button>
+          `;
+        } else {
+          div.innerHTML = `
+            <div>
+              <h4>${t.title}</h4>
+              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
+            </div>
+            <button class="btn-sub" id="task-btn-${t.id}">Join & Check</button>
+          `;
+          div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => verifyChannelAndReward(t));
+        }
+        container.appendChild(div);
       });
     }
 
-    async function verifyTaskIntegrity(task) {
-      if (IS_ADMIN) return showAlert("Admin Pass", "Admin is exempt from task penalty.");
-      const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
-      const chUsername = chMatch ? `@${chMatch[1]}` : null;
-      if (!chUsername) return showAlert("Verified", "Channel membership active.");
-
-      try {
-        const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
-        const res = await chk.json();
-        const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
-
-        if (!isStillMember) {
-          const penalty = Number((Number(task.reward) * 2).toFixed(4));
-          const newBal = Number(Math.max(0, currentBalance - penalty).toFixed(4));
-          await updateBalanceInDB(newBal);
-
-          await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
-            method: "DELETE",
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          });
-
-          localStorage.removeItem(`cyber_joined_${userData.id}`);
-          document.getElementById("mandatory-join-screen").style.display = "flex";
-
-          showAlert("⚠️ Task Penalty (2x)", (currentLang === "en" 
-            ? `You left the channel! A 2x penalty (-$${penalty} USDT) has been deducted.` 
-            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဒဏ်ကြေး (-$${penalty} USDT) ဖြတ်တောက်လိုက်ပါပြီ!`));
-          loadTasks();
-        } else {
-          showAlert("Verified", (currentLang === "en" ? "Channel membership is active." : "Channel Join ထားဆဲဖြစ်ကြောင်း အတည်ပြုပြီးပါပြီ။"));
-        }
-      } catch (err) {}
-    }
-
     async function verifyChannelAndReward(task) {
+      if (!(await enforceMandatoryChannels())) return;
       if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
       const b = document.getElementById(`task-btn-${task.id}`);
-      b.innerText = "Checking...";
+      if (b) b.innerText = "Checking...";
 
       const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
       const chUsername = chMatch ? `@${chMatch[1]}` : null;
@@ -1503,28 +1500,26 @@
 
         if (isMember) {
           const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
-          b.innerText = (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်");
+          await updateBalanceInDB(nBal);
 
           await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
             method: "POST",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ user_id: userData.id, task_id: task.id })
           });
-          updateBalanceInDB(nBal);
-          showAlert("Success", (currentLang === "en" ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT` : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ!`));
+
+          showAlert("Success", `Task ပြီးမြောက်ပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ!`);
+          loadTasks();
         } else {
-          b.innerText = "Join & Check";
-          showAlert("Notice", (currentLang === "en" ? "Please actually join the Telegram channel to claim reward." : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
+          if (b) b.innerText = "Join & Check";
+          showAlert("Notice", "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။");
         }
       }, 2500);
     }
 
     // DAILY BONUS
     document.getElementById("btn-daily").addEventListener("click", async () => {
-      if (localStorage.getItem(`cyber_joined_${userData.id}`) !== "true" && !IS_ADMIN) {
-        document.getElementById("mandatory-join-screen").style.display = "flex";
-        return showAlert("Notice", "ချန်နယ်များ Join ပြီး အတည်ပြုမှသာ Daily Bonus ရယူနိုင်ပါသည်။");
-      }
+      if (!(await enforceMandatoryChannels())) return;
 
       const now = Date.now();
       if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
@@ -1630,11 +1625,8 @@
       }
     }
 
-    function switchNav(viewId, el) {
-      if (localStorage.getItem(`cyber_joined_${userData.id}`) !== "true" && !IS_ADMIN) {
-        document.getElementById("mandatory-join-screen").style.display = "flex";
-        return showAlert("Notice", "ချန်နယ်များ Join ပြီး အတည်ပြုမှသာ အသုံးပြုနိုင်ပါသည်။");
-      }
+    async function switchNav(viewId, el) {
+      if (!(await enforceMandatoryChannels())) return;
 
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
@@ -1643,12 +1635,24 @@
       document.getElementById("persistent-top-bar").style.display = (viewId === 'view-game') ? 'none' : 'block';
     }
 
-    checkIpLock().then(ok => {
+    checkIpLock().then(async ok => {
       if (ok) {
         if (IS_ADMIN) {
           syncDataFromDB();
         } else {
-          if (localStorage.getItem(`cyber_joined_${userData.id}`) === "true") {
+          let joined = true;
+          for (let ch of MANDATORY_CHANNELS) {
+            try {
+              const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
+              const data = await res.json();
+              if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
+                joined = false;
+                break;
+              }
+            } catch (e) { joined = false; break; }
+          }
+
+          if (joined) {
             document.getElementById("mandatory-join-screen").style.display = "none";
             syncDataFromDB();
           } else {
