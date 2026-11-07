@@ -339,6 +339,20 @@
     }
     #ip-lock-screen h2 { color: #ffeb3b; margin-bottom: 12px; font-size: 20px; }
     #ip-lock-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
+
+    /* MANDATORY JOIN SCREEN OVERLAY */
+    #mandatory-join-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #0b0718;
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -348,6 +362,21 @@
     <div style="font-size: 60px; margin-bottom: 16px;">🔒</div>
     <h2 data-i18n="ip_lock_title">IP Access Restricted</h2>
     <p data-i18n="ip_lock_desc">ဤ IP Address တွင် အခြားအကောင့်တစ်ခု အသုံးပြုထားပြီး ဖြစ်ပါသည်။ လုံခြုံရေးအရ အကောင့်များစွာ အသုံးပြုခွင့်ကို ကန့်သတ်ထားပါသည်။ ကျေးဇူးပြု၍ VPN အသုံးပြု၍ ဝင်ရောက်ပေးပါ။</p>
+  </div>
+
+  <!-- MANDATORY CHANNEL JOIN SCREEN -->
+  <div id="mandatory-join-screen">
+    <div style="font-size: 50px; margin-bottom: 14px;">📢</div>
+    <h2 style="color: #00ff88; font-size: 18px; margin-bottom: 8px;">Channel များ Join ရန် လိုအပ်ပါသည်</h2>
+    <p style="color: #9c8eaf; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
+      Mini App ကို အသုံးပြုရန် အောက်ပါ Official Channel ၃ ခုကို မဖြစ်မနေ Join ထားရပါမည်။ Channel တစ်ခုခုမှ ပြန်ထွက်သွားပါက Task Reward ၏ ၂ ဆ (Penalty) ဖြတ်တောက်ခံရမည် ဖြစ်သည်။
+    </p>
+    <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/MgThantSocialBoostService')">🔗 Join @MgThantSocialBoostService</button>
+      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/zerotoincomemm')">🔗 Join @zerotoincomemm</button>
+      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/onlinefreemoney_1')">🔗 Join @onlinefreemoney_1</button>
+    </div>
+    <button class="action-btn btn-green" style="width: 100%; max-width: 320px; padding: 14px;" onclick="checkMandatoryChannelsAndEnter()">🔄 Joined ပြီးပါပြီ (စစ်ဆေးမည်)</button>
   </div>
 
   <!-- Header Profile -->
@@ -581,6 +610,12 @@
     const ADMIN_ID = 6093710107;
     const BOT_USERNAME = "CyberEarns_bot";
 
+    const MANDATORY_CHANNELS = [
+      "@MgThantSocialBoostService",
+      "@zerotoincomemm",
+      "@onlinefreemoney_1"
+    ];
+
     const USDT_BEP20_CONTRACT = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
     const ADMIN_DEPOSIT_WALLET = "0x90e3CC7C79b766f3d6aea897B737869E5152CF68".toLowerCase();
 
@@ -734,6 +769,40 @@
       navigator.clipboard.writeText(addr).then(() => showAlert("Copied", (currentLang === "en" ? "Admin Deposit Wallet Address copied!" : "Deposit Address အား ကူးယူပြီးပါပြီ!")));
     }
 
+    function openChannelLink(url) {
+      if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
+    }
+
+    // MANDATORY CHANNEL JOIN VERIFICATION ON APP START
+    async function checkMandatoryChannelsAndEnter() {
+      if (IS_ADMIN) {
+        document.getElementById("mandatory-join-screen").style.display = "none";
+        return;
+      }
+
+      let allJoined = true;
+      for (let ch of MANDATORY_CHANNELS) {
+        try {
+          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${ch}&user_id=${userData.id}`);
+          const data = await res.json();
+          if (!data.ok || !['creator', 'administrator', 'member'].includes(data.result?.status)) {
+            allJoined = false;
+            break;
+          }
+        } catch (e) {
+          allJoined = false;
+          break;
+        }
+      }
+
+      if (allJoined) {
+        document.getElementById("mandatory-join-screen").style.display = "none";
+        syncDataFromDB();
+      } else {
+        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးကို အမှန်တကယ် Join ပြီးမှ စစ်ဆေးပေးပါ။"));
+      }
+    }
+
     // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
     async function handleStrictAutoDepositVerify() {
       const amt = Number(document.getElementById("input-deposit-amount").value);
@@ -839,7 +908,7 @@
     }
 
     // ========================================================
-    // WITHDRAWAL - BOT AUTO PAYOUT ချိတ်ဆက်မှု အဓိကနေရာ
+    // WITHDRAWAL - BOT AUTO PAYOUT ချိတ်ဆက်မှု
     // ========================================================
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
       document.getElementById("modal-withdraw").classList.add("active");
@@ -855,11 +924,9 @@
       if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
       if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
 
-      // Balance ချက်ချင်း နုတ်ယူခြင်း
       const nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
 
-      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (Termux Bot က Auto ဖတ်ပြီး လွှဲပေးရန်)
       await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -1352,7 +1419,7 @@
 
           showAlert("⚠️ Task Penalty (2x)", (currentLang === "en" 
             ? `You left the channel! A 2x penalty (-$${penalty} USDT) has been deducted from your balance.` 
-            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၂ ဆ (-$${penalty} USDT) အား ဒဏ်ကြေးအဖြစ် ဖြတ်တောက်လိုက်ပါသည်!`));
+            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၂ ဆ (-$${penalty} USDT) အား ဒဏ်ကြေးအဖြစ် ဖြတ်တောက်လိုက်ပါပြီ!`));
           loadTasks();
         } else {
           showAlert("Verified", (currentLang === "en" ? "Channel membership is active." : "Channel Join ထားဆဲဖြစ်ကြောင်း အတည်ပြုပြီးပါပြီ။"));
@@ -1513,7 +1580,16 @@
     }
 
     checkIpLock().then(ok => {
-      if (ok) syncDataFromDB();
+      if (ok) {
+        if (IS_ADMIN) {
+          syncDataFromDB();
+        } else {
+          // Check mandatory channel join on app startup
+          checkMandatoryChannelsAndEnter().catch(() => {
+            document.getElementById("mandatory-join-screen").style.display = "flex";
+          });
+        }
+      }
     });
   </script>
 </body>
