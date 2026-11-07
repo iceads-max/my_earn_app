@@ -340,7 +340,7 @@
     #ip-lock-screen h2 { color: #ffeb3b; margin-bottom: 12px; font-size: 20px; }
     #ip-lock-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
 
-    /* REDESIGNED PREMIUM MANDATORY JOIN MODAL */
+    /* MANDATORY CHANNEL JOIN SCREEN OVERLAY */
     #mandatory-join-screen {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -373,13 +373,13 @@
     <p data-i18n="ip_lock_desc">ဤ IP Address တွင် အခြားအကောင့်တစ်ခု အသုံးပြုထားပြီး ဖြစ်ပါသည်။ လုံခြုံရေးအရ အကောင့်များစွာ အသုံးပြုခွင့်ကို ကန့်သတ်ထားပါသည်။ ကျေးဇူးပြု၍ VPN အသုံးပြု၍ ဝင်ရောက်ပေးပါ။</p>
   </div>
 
-  <!-- MANDATORY CHANNEL JOIN SCREEN (REDESIGNED UI) -->
+  <!-- MANDATORY CHANNEL JOIN SCREEN -->
   <div id="mandatory-join-screen">
     <div class="join-card">
       <div style="width: 60px; height: 60px; background: rgba(184,41,255,0.15); border: 1px solid #b829ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px;">📢</div>
       <h2 style="color: #00ff88; font-size: 17px; font-weight: 800; margin-bottom: 8px;">ချန်နယ်များ Join ရန် လိုအပ်ပါသည်</h2>
       <p style="color: #9c8eaf; font-size: 12px; line-height: 1.5; margin-bottom: 18px;">
-        Mini App ကို ဆက်လက်အသုံးပြုရန် အောက်ပါ Official Channel ၃ ခုစလုံးကို Join ပြီးမှ <strong style="color: #fff;">"အတည်ပြုရန်"</strong> ကို နှိပ်ပါ။
+        Mini App ကို ဆက်လက်အသုံးပြုရန် အောက်ပါ Official Channel ၃ ခုစလုံးကို Join ပြီးမှ <strong style="color: #fff;">"အတည်ပြုရန်"</strong> ကို နှိပ်ပါ။ (ပြန်ထွက်သွားပါက ဒဏ်ကြေး ဖြတ်တောက်ခံရပါမည်)။
       </p>
       
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
@@ -788,7 +788,7 @@
       if (tg?.openLink) { tg.openLink(url); } else { window.open(url, "_blank"); }
     }
 
-    // MANDATORY CHANNEL JOIN VERIFICATION (LOCALSTORAGE BYPASS FOR SMOOTH ACCESS)
+    // MANDATORY CHANNEL JOIN VERIFICATION (AUTO CHECK & LOCK)
     function checkMandatoryChannelsAndEnter() {
       if (IS_ADMIN) {
         document.getElementById("mandatory-join-screen").style.display = "none";
@@ -796,11 +796,11 @@
       }
 
       const btn = document.getElementById("btn-verify-channels");
-      btn.innerText = "⏳ အတည်ပြုနေပါသည်...";
+      btn.innerText = "⏳ စစ်ဆေးနေပါသည်...";
       btn.disabled = true;
 
       setTimeout(() => {
-        // Save join status in localStorage so user doesn't need to re-verify every time
+        // Mark verified in localStorage so user can access App, but checked dynamically
         localStorage.setItem(`cyber_joined_${userData.id}`, "true");
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
@@ -1020,7 +1020,17 @@
         document.getElementById("profile-name").innerText = userData.first_name;
         document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
         document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
-        document.getElementById("invite-link-input").value = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
+        
+        // REFINED PROFESSIONAL INVITE MESSAGE FORMAT
+        const refLink = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
+        const refFormattedText = 
+          `🚀 𝕮𝖞𝖇𝖊𝖗 𝕰𝖆𝖗𝖓 - Official USDT Mining & Ads Platform ⚡\n\n` +
+          `💰 နေ့စဉ် Ads များကြည့်ရှု၍ USDT ဒေါ်လာများ အလွယ်တကူ ရှာဖွေလိုက်ပါ။\n` +
+          `🎮 1vs1 PvP Game များကစားပြီး ဝင်ငွေများ တိုးမြှင့်ပါ။\n\n` +
+          `👇 ယခုပဲ အောက်ပါလင့်ခ်မှတဆင့် ဝင်ရောက်လိုက်ပါ:\n` +
+          refLink;
+
+        document.getElementById("invite-link-input").value = refFormattedText;
 
         if (IS_ADMIN) {
           document.getElementById("admin-limit-container").style.display = "none";
@@ -1065,10 +1075,9 @@
       } catch (err) {}
     }
 
-    // MONETAG AD ENFORCEMENT
+    // MONETAG AD ENFORCEMENT & MANDATORY CHANNEL GATE
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
-      // Prevent watching ads if mandatory channels are not joined/verified
       if (!IS_ADMIN && localStorage.getItem(`cyber_joined_${userData.id}`) !== "true") {
         document.getElementById("mandatory-join-screen").style.display = "flex";
         return showAlert("Notice", "ချန်နယ် ၃ ခုစလုံး Join ပြီး အတည်ပြုမှသာ Ads ကြည့်ရှုနိုင်ပါသည်။");
@@ -1217,6 +1226,11 @@
     }
 
     async function addPublicBetPvP() {
+      if (localStorage.getItem(`cyber_joined_${userData.id}`) !== "true" && !IS_ADMIN) {
+        document.getElementById("mandatory-join-screen").style.display = "flex";
+        return showAlert("Notice", "ချန်နယ်များ Join ပြီး အတည်ပြုမှသာ ဂိမ်းကစားနိုင်ပါသည်။");
+      }
+
       const amt = Number(document.getElementById("pvp-bet-amt").value);
       if (!amt || amt < 0.01) return showAlert("Notice", (currentLang === "en" ? "Minimum bet is $0.01" : "အနည်းဆုံး $0.01 Bet ထိုးရပါမည်။"));
       if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
@@ -1427,9 +1441,13 @@
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
           });
 
+          // Lock back app if user left mandatory tasks
+          localStorage.removeItem(`cyber_joined_${userData.id}`);
+          document.getElementById("mandatory-join-screen").style.display = "flex";
+
           showAlert("⚠️ Task Penalty (2x)", (currentLang === "en" 
-            ? `You left the channel! A 2x penalty (-$${penalty} USDT) has been deducted from your balance.` 
-            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၂ ဆ (-$${penalty} USDT) အား ဒဏ်ကြေးအဖြစ် ဖြတ်တောက်လိုက်ပါပြီ!`));
+            ? `You left the channel! A 2x penalty (-$${penalty} USDT) has been deducted.` 
+            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဒဏ်ကြေး (-$${penalty} USDT) ဖြတ်တောက်လိုက်ပါပြီ!`));
           loadTasks();
         } else {
           showAlert("Verified", (currentLang === "en" ? "Channel membership is active." : "Channel Join ထားဆဲဖြစ်ကြောင်း အတည်ပြုပြီးပါပြီ။"));
@@ -1467,7 +1485,7 @@
             body: JSON.stringify({ user_id: userData.id, task_id: task.id })
           });
           updateBalanceInDB(nBal);
-          showAlert("Success", (currentLang === "en" ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT` : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ! (ပြန်ထွက်ပါက ၂ ဆ ဖြတ်ပါမည်)`));
+          showAlert("Success", (currentLang === "en" ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT` : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ!`));
         } else {
           b.innerText = "Join & Check";
           showAlert("Notice", (currentLang === "en" ? "Please actually join the Telegram channel to claim reward." : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
@@ -1477,6 +1495,11 @@
 
     // DAILY BONUS
     document.getElementById("btn-daily").addEventListener("click", async () => {
+      if (localStorage.getItem(`cyber_joined_${userData.id}`) !== "true" && !IS_ADMIN) {
+        document.getElementById("mandatory-join-screen").style.display = "flex";
+        return showAlert("Notice", "ချန်နယ်များ Join ပြီး အတည်ပြုမှသာ Daily Bonus ရယူနိုင်ပါသည်။");
+      }
+
       const now = Date.now();
       if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
         return showAlert("Notice", (currentLang === "en" ? "Already claimed today." : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။"));
@@ -1495,14 +1518,14 @@
     });
 
     function copyInviteLink() {
-      const link = document.getElementById("invite-link-input").value;
-      navigator.clipboard.writeText(link).then(() => showAlert("Success", (currentLang === "en" ? "Invite link copied!" : "Invite Link ကူးယူပြီးပါပြီ!")));
+      const inviteText = document.getElementById("invite-link-input").value;
+      navigator.clipboard.writeText(inviteText).then(() => showAlert("Success", (currentLang === "en" ? "Invite message copied!" : "ဖိတ်ခေါ်စာသား အား ကူးယူပြီးပါပြီ!")));
     }
 
     document.getElementById("btn-share-ref").addEventListener("click", () => {
-      const link = document.getElementById("invite-link-input").value;
+      const inviteText = document.getElementById("invite-link-input").value;
       if (tg?.openTelegramLink) {
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Join Cyber Earn and make USDT daily!")}`);
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent("https://t.me/" + BOT_USERNAME + "?start=" + userData.id)}&text=${encodeURIComponent(inviteText)}`);
       }
     });
 
@@ -1582,6 +1605,11 @@
     }
 
     function switchNav(viewId, el) {
+      if (localStorage.getItem(`cyber_joined_${userData.id}`) !== "true" && !IS_ADMIN) {
+        document.getElementById("mandatory-join-screen").style.display = "flex";
+        return showAlert("Notice", "ချန်နယ်များ Join ပြီး အတည်ပြုမှသာ အသုံးပြုနိုင်ပါသည်။");
+      }
+
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
       document.getElementById(viewId).classList.add('active-view');
@@ -1594,7 +1622,6 @@
         if (IS_ADMIN) {
           syncDataFromDB();
         } else {
-          // Check if user has already verified channel joining in this session/device
           if (localStorage.getItem(`cyber_joined_${userData.id}`) === "true") {
             document.getElementById("mandatory-join-screen").style.display = "none";
             syncDataFromDB();
