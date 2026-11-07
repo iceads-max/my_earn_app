@@ -367,16 +367,16 @@
   <!-- MANDATORY CHANNEL JOIN SCREEN -->
   <div id="mandatory-join-screen">
     <div style="font-size: 50px; margin-bottom: 14px;">📢</div>
-    <h2 style="color: #00ff88; font-size: 18px; margin-bottom: 8px;">Channel များ Join ရန် လိုအပ်ပါသည်</h2>
+    <h2 style="color: #00ff88; font-size: 18px; margin-bottom: 8px;">Official Channel များ Join ရန် လိုအပ်ပါသည်</h2>
     <p style="color: #9c8eaf; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-      Mini App ကို အသုံးပြုရန် အောက်ပါ Official Channel ၃ ခုကို မဖြစ်မနေ Join ထားရပါမည်။ Channel တစ်ခုခုမှ ပြန်ထွက်သွားပါက Task Reward ၏ ၂ ဆ (Penalty) ဖြတ်တောက်ခံရမည် ဖြစ်သည်။
+      Mini App ကို ဆက်လက်အသုံးပြုရန် အောက်ပါ Channel ၃ ခုစလုံးကို Join ပြီးမှ "အတည်ပြုရန်" ခလုတ်ကို နှိပ်ပါ။
     </p>
     <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
-      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/MgThantSocialBoostService')">🔗 Join @MgThantSocialBoostService</button>
-      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/zerotoincomemm')">🔗 Join @zerotoincomemm</button>
-      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/onlinefreemoney_1')">🔗 Join @onlinefreemoney_1</button>
+      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/MgThantSocialBoostService')">🔗 1. Join @MgThantSocialBoostService</button>
+      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/zerotoincomemm')">🔗 2. Join @zerotoincomemm</button>
+      <button class="action-btn btn-purple" onclick="openChannelLink('https://t.me/onlinefreemoney_1')">🔗 3. Join @onlinefreemoney_1</button>
     </div>
-    <button class="action-btn btn-green" style="width: 100%; max-width: 320px; padding: 14px;" onclick="checkMandatoryChannelsAndEnter()">🔄 Joined ပြီးပါပြီ (စစ်ဆေးမည်)</button>
+    <button class="action-btn btn-green" style="width: 100%; max-width: 320px; padding: 14px;" id="btn-verify-channels" onclick="checkMandatoryChannelsAndEnter()">✅ အတည်ပြုရန် (Joined)</button>
   </div>
 
   <!-- Header Profile -->
@@ -780,6 +780,10 @@
         return;
       }
 
+      const btn = document.getElementById("btn-verify-channels");
+      btn.innerText = "⏳ စစ်ဆေးနေပါသည်...";
+      btn.disabled = true;
+
       let allJoined = true;
       for (let ch of MANDATORY_CHANNELS) {
         try {
@@ -795,11 +799,14 @@
         }
       }
 
+      btn.innerText = "✅ အတည်ပြုရန် (Joined)";
+      btn.disabled = false;
+
       if (allJoined) {
         document.getElementById("mandatory-join-screen").style.display = "none";
         syncDataFromDB();
       } else {
-        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးကို အမှန်တကယ် Join ပြီးမှ စစ်ဆေးပေးပါ။"));
+        showAlert("Notice", (currentLang === "en" ? "Please join all 3 mandatory channels first!" : "ချန်နယ် ၃ ခုစလုံးကို အမှန်တကယ် Join ပြီးမှ အတည်ပြုရန် နှိပ်ပါ။"));
       }
     }
 
@@ -1584,10 +1591,8 @@
         if (IS_ADMIN) {
           syncDataFromDB();
         } else {
-          // Check mandatory channel join on app startup
-          checkMandatoryChannelsAndEnter().catch(() => {
-            document.getElementById("mandatory-join-screen").style.display = "flex";
-          });
+          // Show mandatory channels join screen on app start
+          document.getElementById("mandatory-join-screen").style.display = "flex";
         }
       }
     });
