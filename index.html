@@ -131,9 +131,9 @@
       align-items: center;
       justify-content: center;
       gap: 5px;
-      transition: all 0.2s;
+      transition: transform 0.1s ease;
     }
-    .action-btn:active:not(:disabled) { transform: scale(0.96); }
+    .action-btn:active:not(:disabled) { transform: scale(0.95); }
     .btn-purple {
       background: linear-gradient(135deg, #8712c9, #b829ff) !important;
       color: #ffffff !important;
@@ -191,7 +191,9 @@
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
+      transition: transform 0.1s ease;
     }
+    .btn-sub:active:not(:disabled) { transform: scale(0.95); }
     .btn-sub:disabled {
       opacity: 0.55;
       cursor: not-allowed;
@@ -288,6 +290,7 @@
     }
     .cnav-item {
       flex: 1;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -298,6 +301,7 @@
       font-weight: 800;
       cursor: pointer;
     }
+    .cnav-item:active { opacity: 0.7; }
     .cnav-item.active { color: #00ff88 !important; }
 
     /* MODALS */
@@ -308,7 +312,7 @@
       display: flex; align-items: center; justify-content: center;
       z-index: 1000;
       opacity: 0; visibility: hidden;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       padding: 20px;
       backdrop-filter: blur(8px);
     }
@@ -619,7 +623,7 @@
     let userData = extractTelegramUser();
     let IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
 
-    // Immediately display user info so UI never hangs at "..."
+    // Immediately display user info & cached balance so UI is 100% responsive right away
     document.getElementById("ui-username").innerText = (userData.first_name || "User") + (IS_ADMIN ? " (Admin)" : "");
     document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
     document.getElementById("profile-name").innerText = userData.first_name || "User";
@@ -627,8 +631,10 @@
 
     let currentLang = localStorage.getItem("cyber_lang") || "my";
     let config = { bot_status: 'ON', ad_reward: 0.0005, min_withdraw: 0.05, min_deposit: 0.05, daily_bonus: 0.005, ref_reward: 0.01 };
-    let currentBalance = 0.0000;
+    let currentBalance = Number(localStorage.getItem(`cyber_bal_${userData.id}`) || 0);
     let lastDaily = 0;
+
+    document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
 
     const PLAYER_PALETTE = ['#ff4757', '#1e90ff', '#2ed573', '#ffa502', '#9b59b6', '#e056fd', '#00d2d3'];
 
@@ -880,13 +886,7 @@
     });
 
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
-      // ငွေမထုတ်မီ Channel များမှ ခိုးထွက်ထားခြင်း ရှိမရှိ အရင်စစ်ဆေးမည် (ထွက်ထားပါက 3x နုတ်မည်)
-      const isClean = await autoCheckLeftChannelsAndPenalize3x();
-      if (!isClean) {
-        document.getElementById("modal-withdraw").classList.remove("active");
-        return;
-      }
-
+      const btn = document.getElementById("btn-submit-withdraw");
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
@@ -896,11 +896,24 @@
       if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
       if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
 
+      btn.disabled = true;
+      btn.innerText = "⏳ Checking...";
+
+      // ငွေမထုတ်မီ Channel များမှ ခိုးထွက်ထားခြင်း ရှိမရှိ စစ်ဆေးမည် (ထွက်ထားပါက 3x နုတ်မည်)
+      const isClean = await autoCheckLeftChannelsAndPenalize3x(true);
+      btn.disabled = false;
+      btn.innerText = I18N[currentLang].btn_submit_withdraw;
+
+      if (!isClean || amt > currentBalance) {
+        document.getElementById("modal-withdraw").classList.remove("active");
+        return;
+      }
+
       // Balance ချက်ချင်း နုတ်ယူခြင်း
       const nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
 
-      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (VPS/Termux Bot က Auto ဖတ်ပြီး လွှဲပေးကာ Channel နှင့် User ဆီ Auto ပို့ပေးရန်)
+      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (VPS/Termux Bot က Auto ဖတ်ပြီး လွှဲပေးရန်)
       await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -913,7 +926,7 @@
         : `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Auto Payment စနစ်မှ Blockchain ပေါ်သို့ တိုက်ရိုက် လွှဲပြောင်းပေးနေပါပြီ။`));
     });
 
-    // IP LOCK
+    // IP LOCK (Runs asynchronously without blocking UI startup)
     async function checkIpLock() {
       if (IS_ADMIN) return true;
       try {
@@ -931,11 +944,11 @@
             document.getElementById("ip-lock-screen").style.display = "flex";
             return false;
           } else {
-            await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
               method: "PATCH",
               headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({ ip_address: clientIP })
-            });
+            }).catch(() => {});
           }
         }
       } catch (e) {}
@@ -967,11 +980,10 @@
     }
 
     // ========================================================
-    // ROBUST DATABASE SYNC & NEW USER REGISTRATION (EXACT SCHEMA MATCH)
+    // FAST PARALLEL DATABASE SYNC & NEW USER REGISTRATION
     // ========================================================
     async function syncDataFromDB() {
       try {
-        // Refresh Telegram User if WebApp initialized late
         const freshUser = extractTelegramUser();
         if (freshUser && freshUser.id) {
           userData = freshUser;
@@ -984,40 +996,50 @@
         document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
         document.getElementById("invite-link-input").value = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
 
-        // 1. Fetch settings
-        const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const setData = await setRes.json();
+        if (IS_ADMIN) {
+          document.getElementById("admin-limit-container").style.display = "none";
+        } else {
+          const currentAds = getDailyAdCount();
+          document.getElementById("ads-watched-count").innerText = currentAds;
+          document.getElementById("ads-progress-fill").style.width = `${Math.min(100, Math.round((currentAds / MAX_DAILY_ADS) * 100))}%`;
+        }
+
+        applyLanguage(currentLang);
+
+        // Fetch Settings & User Profile in parallel for maximum speed
+        const [setRes, uRes] = await Promise.all([
+          fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          }),
+          fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=*`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          })
+        ]);
+
+        const [setData, uData] = await Promise.all([setRes.json(), uRes.json()]);
+
         if (Array.isArray(setData)) {
           setData.forEach(item => {
             if (item.key === 'min_withdraw') config.min_withdraw = Number(item.value);
             if (item.key === 'min_deposit') config.min_deposit = Number(item.value);
             if (item.key === 'ref_reward') config.ref_reward = Number(item.value);
           });
+          updateMinLimitsDisplay();
         }
 
-        // 2. Fetch or Create User in cyber_users (Matches exact Supabase schema: id, name, balance, referrer, last_daily, is_banned)
-        const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=*`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const uData = await uRes.json();
-
         if (Array.isArray(uData) && uData.length > 0) {
-          // Existing user: restore balance from DB
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
           localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
 
           if (uData[0].name !== (userData.first_name || "User")) {
-            await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+            fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
               method: "PATCH",
               headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({ name: userData.first_name || "User" })
-            });
+            }).catch(() => {});
           }
         } else {
-          // New user: Insert using ONLY valid columns in cyber_users table
           const savedLocalBal = Number(localStorage.getItem(`cyber_bal_${userData.id}`) || 0);
           const startParam = tg?.initDataUnsafe?.start_param;
           const refId = (startParam && !isNaN(Number(startParam)) && Number(startParam) !== Number(userData.id)) ? Number(startParam) : null;
@@ -1054,18 +1076,11 @@
 
         document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
 
-        if (IS_ADMIN) {
-          document.getElementById("admin-limit-container").style.display = "none";
-        } else {
-          const currentAds = getDailyAdCount();
-          document.getElementById("ads-watched-count").innerText = currentAds;
-          document.getElementById("ads-progress-fill").style.width = `${Math.min(100, Math.round((currentAds / MAX_DAILY_ADS) * 100))}%`;
-        }
-
-        await autoCheckLeftChannelsAndPenalize3x();
+        // Load tasks, PvP, IP lock, and 3x penalty check in background without freezing UI
         loadTasks();
         listenPublicPvP();
-        applyLanguage(currentLang);
+        checkIpLock();
+        autoCheckLeftChannelsAndPenalize3x(false);
       } catch (e) {
         console.error("Sync Error:", e);
       }
@@ -1090,7 +1105,6 @@
         });
         const patched = await patchRes.json();
 
-        // If user row didn't exist yet, insert it immediately so balance is never lost
         if (!Array.isArray(patched) || patched.length === 0) {
           await fetch(`${SB_URL}/rest/v1/cyber_users`, {
             method: "POST",
@@ -1163,7 +1177,7 @@
           return;
         }
 
-        const newCount = incrementDailyAdCount();
+        incrementDailyAdCount();
         const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
         updateBalanceInDB(nBal);
         showAlert("Success", (currentLang === "en" ? `Reward +$${config.ad_reward} credited!` : `ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်!`));
@@ -1514,8 +1528,12 @@
     }
 
     // ========================================================
-    // STRICT ONE-TIME TASK SYSTEM & AUTO 3X PENALTY ON LEAVE
+    // FAST NON-BLOCKING ONE-TIME TASK SYSTEM & AUTO 3X PENALTY
     // ========================================================
+    let cachedTasksList = null;
+    let lastPenaltyCheckTime = 0;
+    let isCheckingPenalty = false;
+
     function getEverClaimedTasks() {
       try {
         return JSON.parse(localStorage.getItem(`cyber_ever_claimed_${userData.id}`) || "[]");
@@ -1541,78 +1559,114 @@
       localStorage.setItem(`cyber_penalized_left_${userData.id}`, JSON.stringify(list));
     }
 
-    // Channel မှ ခိုးထွက်ထားပါက အလိုအလျောက် ဆုကြေး ၃ ဆ (3x) နုတ်ယူမည့် ဖန်ရှင်
-    async function autoCheckLeftChannelsAndPenalize3x() {
+    // Channel မှ ခိုးထွက်ထားပါက နောက်ကွယ်မှ အမြန်စစ်ဆေးပြီး ဆုကြေး ၃ ဆ (3x) နုတ်ယူမည့် ဖန်ရှင်
+    async function autoCheckLeftChannelsAndPenalize3x(forceImmediate = false) {
       if (IS_ADMIN) return true;
+      const now = Date.now();
+      if (!forceImmediate && (isCheckingPenalty || (now - lastPenaltyCheckTime < 25000))) {
+        return true;
+      }
+
+      isCheckingPenalty = true;
+      lastPenaltyCheckTime = now;
+
       try {
         const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const cData = await cRes.json();
-        if (!Array.isArray(cData) || cData.length === 0) return true;
+        if (!Array.isArray(cData) || cData.length === 0) {
+          isCheckingPenalty = false;
+          return true;
+        }
 
-        const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const tasks = await tRes.json();
-        if (!Array.isArray(tasks)) return true;
+        if (!cachedTasksList) {
+          const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          });
+          const tData = await tRes.json();
+          if (Array.isArray(tData)) cachedTasksList = tData;
+        }
 
+        const tasks = cachedTasksList || [];
         let penalizedList = getPenalizedLeftTasks();
 
-        for (const c of cData) {
+        const checkPromises = cData.map(async (c) => {
           const sTaskId = String(c.task_id);
           markTaskEverClaimed(sTaskId);
-
-          // ယခင်က ၃ ဆ ဒဏ်ကြေးဖြတ်ပြီးသားဖြစ်လျှင် ထပ်မဖြတ်ရန်
-          if (penalizedList.includes(sTaskId)) continue;
+          if (penalizedList.includes(sTaskId)) return null;
 
           const taskObj = tasks.find(t => String(t.id) === sTaskId);
-          if (taskObj && taskObj.link) {
-            const chMatch = taskObj.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
-            const chUsername = chMatch ? `@${chMatch[1]}` : null;
-            if (chUsername) {
-              const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
-              const res = await chk.json();
-              const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
+          if (!taskObj || !taskObj.link) return null;
 
-              if (!isStillMember) {
-                // ဆုကြေး၏ ၃ ဆ (3x Penalty) တွက်ချက်၍ လက်ကျန်ငွေမှ ချက်ချင်းနုတ်ယူခြင်း
-                const penalty3x = Number((Number(taskObj.reward) * 3).toFixed(4));
-                const newBal = Number(Math.max(0, currentBalance - penalty3x).toFixed(4));
-                await updateBalanceInDB(newBal);
+          const chMatch = taskObj.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
+          const chUsername = chMatch ? `@${chMatch[1]}` : null;
+          if (!chUsername) return null;
 
-                penalizedList.push(sTaskId);
-                setPenalizedLeftTasks(penalizedList);
-
-                showAlert("⚠️ 3x Task Penalty!", (currentLang === "en"
-                  ? `You left ${chUsername}! A 3x penalty (-$${penalty3x} USDT) has been deducted. Re-joining will NOT grant any reward again.`
-                  : `သတ်မှတ်ထားသော Channel (${chUsername}) မှ ခိုးထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၃ ဆ (-$${penalty3x} USDT) အား အလိုအလျောက် နုတ်ယူလိုက်ပါပြီ! (နောက်တစ်ကြိမ် ပြန်လုပ်လျှင် ဆုကြေးထပ်မရပါ)`));
-                loadTasks();
-                return false;
-              }
+          try {
+            const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+            const res = await chk.json();
+            const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
+            if (!isStillMember) {
+              return { sTaskId, taskObj, chUsername };
             }
-          }
+          } catch (e) {}
+          return null;
+        });
+
+        const results = await Promise.all(checkPromises);
+        const leftItems = results.filter(Boolean);
+
+        if (leftItems.length > 0) {
+          let totalPenalty = 0;
+          let leftNames = [];
+
+          leftItems.forEach(item => {
+            const p3x = Number((Number(item.taskObj.reward) * 3).toFixed(4));
+            totalPenalty = Number((totalPenalty + p3x).toFixed(4));
+            leftNames.push(item.chUsername);
+            if (!penalizedList.includes(item.sTaskId)) {
+              penalizedList.push(item.sTaskId);
+            }
+          });
+
+          setPenalizedLeftTasks(penalizedList);
+          const newBal = Number(Math.max(0, currentBalance - totalPenalty).toFixed(4));
+          await updateBalanceInDB(newBal);
+
+          showAlert("⚠️ 3x Task Penalty!", (currentLang === "en"
+            ? `You left ${leftNames.join(", ")}! A 3x penalty (-$${totalPenalty} USDT) has been deducted. Re-joining will NOT grant any reward again.`
+            : `သတ်မှတ်ထားသော Channel (${leftNames.join(", ")}) မှ ခိုးထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၃ ဆ (-$${totalPenalty} USDT) အား အလိုအလျောက် နုတ်ယူလိုက်ပါပြီ! (နောက်တစ်ကြိမ် ပြန်လုပ်လျှင် ဆုကြေးထပ်မရပါ)`));
+          loadTasks();
+          isCheckingPenalty = false;
+          return false;
         }
       } catch (e) {}
+
+      isCheckingPenalty = false;
       return true;
     }
 
     async function loadTasks() {
       try {
-        const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const cData = await cRes.json();
+        const [cRes, tRes] = await Promise.all([
+          fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          }),
+          fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          })
+        ]);
+
+        const [cData, tasks] = await Promise.all([cRes.json(), tRes.json()]);
+        if (Array.isArray(tasks)) cachedTasksList = tasks;
+
         const dbCompleted = Array.isArray(cData) ? cData.map(c => String(c.task_id)) : [];
         dbCompleted.forEach(id => markTaskEverClaimed(id));
 
         const everClaimed = getEverClaimedTasks();
         const penalizedLeft = getPenalizedLeftTasks();
 
-        const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const tasks = await tRes.json();
         const container = document.getElementById("tasks-container");
         container.innerHTML = "";
 
@@ -1631,7 +1685,6 @@
 
           if (isDone) {
             if (isLeftPenalized) {
-              // ခိုးထွက်ထားသဖြင့် ၃ ဆ အဖြတ်ခံထားရသော Task (ပြန် Join လျှင်လည်း Reward လုံးဝမပေးပါ)
               div.innerHTML = `
                 <div>
                   <h4>${t.title}</h4>
@@ -1648,7 +1701,6 @@
                   : "ဤ Task ကို တစ်ကြိမ် လုပ်ဆောင်ပြီးဖြစ်သဖြင့် နောက်တစ်ကြိမ် ပြန်လုပ်လျှင် ဆုကြေးထပ်မပေးပါ။"));
               });
             } else {
-              // တစ်ကြိမ်လုပ်ပြီးသား Task ကို ထပ်နှိပ်မရအောင် အပြီးပိတ်ထားမည်
               div.innerHTML = `
                 <div>
                   <h4>${t.title}</h4>
@@ -1680,7 +1732,7 @@
     async function verifyChannelAndReward(task) {
       const sTaskId = String(task.id);
 
-      // ၁။ ယခင်က လုပ်ပြီးသား ဟုတ်မဟုတ် Local နှင့် Database နှစ်ထပ် စစ်ဆေးခြင်း (တစ်ကြိမ်သာ ဆုပေးရန်)
+      // ချက်ချင်း Local စစ်ပြီး လုပ်ပြီးသားဆိုလျှင် ပိတ်မည်
       if (getEverClaimedTasks().includes(sTaskId)) {
         showAlert("Notice", (currentLang === "en"
           ? "You have already claimed the reward for this task once!"
@@ -1689,21 +1741,7 @@
         return;
       }
 
-      try {
-        const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const checkDoneData = await checkDoneRes.json();
-        if (Array.isArray(checkDoneData) && checkDoneData.length > 0) {
-          markTaskEverClaimed(sTaskId);
-          showAlert("Notice", (currentLang === "en"
-            ? "You have already completed this task! Reward is only given once."
-            : "ဤ Task ကို လုပ်ဆောင်ပြီးသား ဖြစ်ပါသည်။ ဆုကြေးကို တစ်ကြိမ်သာ ပေးအပ်ပါသည်။"));
-          loadTasks();
-          return;
-        }
-      } catch (e) {}
-
+      // နှိပ်လိုက်သည်နှင့် ချက်ချင်း Channel Link ဖွင့်ပေးမည် (လုံးဝ မလေးစေရန်)
       if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
       const b = document.getElementById(`task-btn-${task.id}`);
       if (b) {
@@ -1715,6 +1753,19 @@
       const chUsername = chMatch ? `@${chMatch[1]}` : null;
 
       setTimeout(async () => {
+        try {
+          const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          });
+          const checkDoneData = await checkDoneRes.json();
+          if ((Array.isArray(checkDoneData) && checkDoneData.length > 0) || getEverClaimedTasks().includes(sTaskId)) {
+            markTaskEverClaimed(sTaskId);
+            showAlert("Notice", "ဤ Task အတွက် ဆုကြေးရယူပြီးသား ဖြစ်ပါသည်။");
+            loadTasks();
+            return;
+          }
+        } catch (e) {}
+
         let isMember = false;
         try {
           if (chUsername) {
@@ -1727,18 +1778,6 @@
         } catch (e) { isMember = false; }
 
         if (isMember) {
-          // ဆုကြေးမပေးမီ နောက်ဆုံးအကြိမ် Database ထပ်စစ်ခြင်း (Double Claim လုံးဝမရစေရန်)
-          const recheckRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          });
-          const recheckData = await recheckRes.json();
-          if ((Array.isArray(recheckData) && recheckData.length > 0) || getEverClaimedTasks().includes(sTaskId)) {
-            markTaskEverClaimed(sTaskId);
-            showAlert("Notice", "ဤ Task အတွက် ဆုကြေးရယူပြီးသား ဖြစ်ပါသည်။");
-            loadTasks();
-            return;
-          }
-
           markTaskEverClaimed(sTaskId);
 
           await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
@@ -1766,10 +1805,8 @@
       }, 3000);
     }
 
-    // DAILY BONUS
+    // DAILY BONUS (Instant response without blocking UI)
     document.getElementById("btn-daily").addEventListener("click", async () => {
-      if (!(await autoCheckLeftChannelsAndPenalize3x())) return;
-
       const now = Date.now();
       if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
         return showAlert("Notice", (currentLang === "en" ? "Already claimed today." : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။"));
@@ -1777,13 +1814,16 @@
 
       const nBal = Number((currentBalance + config.daily_bonus).toFixed(4));
       lastDaily = now;
+      showAlert("Daily Bonus", (currentLang === "en" ? `Claimed +$${config.daily_bonus} USDT!` : `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
+
       await updateBalanceInDB(nBal);
-      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+      fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
         method: "PATCH",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ last_daily: now })
-      });
-      showAlert("Daily Bonus", (currentLang === "en" ? `Claimed +$${config.daily_bonus} USDT!` : `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
+      }).catch(() => {});
+
+      autoCheckLeftChannelsAndPenalize3x(false);
     });
 
     function copyInviteLink() {
@@ -1873,19 +1913,20 @@
       }
     }
 
-    async function switchNav(viewId, el) {
-      await autoCheckLeftChannelsAndPenalize3x();
-
+    // INSTANT TAB SWITCHING (0ms Delay - Runs 3x Penalty Check in Background)
+    function switchNav(viewId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
       document.getElementById(viewId).classList.add('active-view');
       if (el) el.classList.add('active');
       document.getElementById("persistent-top-bar").style.display = (viewId === 'view-game') ? 'none' : 'block';
+
+      // Trigger non-blocking background check
+      autoCheckLeftChannelsAndPenalize3x(false);
     }
 
-    checkIpLock().then(ok => {
-      if (ok) syncDataFromDB();
-    });
+    // Start app immediately without waiting for slow IP API
+    syncDataFromDB();
   </script>
 </body>
 </html>
