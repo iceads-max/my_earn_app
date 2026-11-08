@@ -630,7 +630,7 @@
     let currentLang = localStorage.getItem("cyber_lang") || "my";
     let config = { bot_status: 'ON', ad_reward: 0.0005, min_withdraw: 0.05, min_deposit: 0.05, daily_bonus: 0.005, ref_reward: 0.01 };
     let currentBalance = Number(localStorage.getItem(`cyber_bal_${userData.id}`) || 0);
-    let lastDaily = 0;
+    let lastDailyDate = ""; // Database မှ ရလာသော နေ့စွဲအမှန် (YYYY-MM-DD)
 
     document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
 
@@ -947,7 +947,7 @@
 
     function getTodayString() {
       const d = new Date();
-      return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
     }
 
     function getDailyAdCount() {
@@ -969,9 +969,6 @@
       return current;
     }
 
-    // ========================================================
-    // FAST PARALLEL DATABASE SYNC & SECURE DAILY LOGIN CHECK
-    // ========================================================
     async function syncDataFromDB() {
       try {
         const freshUser = extractTelegramUser();
@@ -1018,7 +1015,7 @@
 
         if (Array.isArray(uData) && uData.length > 0) {
           currentBalance = Number(uData[0].balance || 0);
-          lastDaily = Number(uData[0].last_daily || 0); // DATABASE မှ အချိန်မှန် ဆွဲထုတ်ခြင်း
+          lastDailyDate = uData[0].last_daily || ""; // Database မှ နေ့စွဲအမှန်ကို ရယူခြင်း
           localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
 
           if (uData[0].name !== (userData.first_name || "User")) {
@@ -1038,7 +1035,7 @@
             name: userData.first_name || "User",
             balance: savedLocalBal,
             referrer: refId,
-            last_daily: 0,
+            last_daily: "",
             is_banned: false
           };
 
@@ -1056,10 +1053,10 @@
           const createdRows = await createRes.json();
           if (Array.isArray(createdRows) && createdRows.length > 0) {
             currentBalance = Number(createdRows[0].balance || 0);
-            lastDaily = Number(createdRows[0].last_daily || 0);
+            lastDailyDate = createdRows[0].last_daily || "";
           } else {
             currentBalance = savedLocalBal;
-            lastDaily = 0;
+            lastDailyDate = "";
           }
         }
 
@@ -1105,7 +1102,7 @@
               id: Number(userData.id),
               name: userData.first_name || "User",
               balance: currentBalance,
-              last_daily: lastDaily || 0,
+              last_daily: lastDailyDate || "",
               is_banned: false
             })
           });
@@ -1166,7 +1163,7 @@
         incrementDailyAdCount();
         const nBal = Number((currentBalance + config.ad_reward).toFixed(4));
         updateBalanceInDB(nBal);
-        showAlert("Success", (currentLang === "en" ? `Reward +$${config.ad_reward} credited!` : `ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်ရှုမှုအတွက်သမား +$${config.ad_reward} ရရှိပါသည်!`));
+        showAlert("Success", (currentLang === "en" ? `Reward +$${config.ad_reward} credited!` : `ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်ရှုမှုအတွက် +$${config.ad_reward} ရရှိပါသည်!`));
       }).catch(() => {
         isShowingAd = false;
         btn.innerText = `⚡ ${I18N[currentLang].btn_watch}`;
@@ -1782,31 +1779,40 @@
     }
 
     // ========================================================
-    // SECURE DATABASE-FIRST DAILY BONUS (FIXED EXPLOIT)
+    // SECURE STRICT DATE-BASED DAILY BONUS (RELOAD PROOF)
     // ========================================================
     document.getElementById("btn-daily").addEventListener("click", async () => {
-      const now = Date.now();
-      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+      const todayStr = getTodayString(); // ယနေ့ရက်စွဲ (ဥပမာ: "2026-11-08")
 
-      // 1. Database မှ ရရှိလာသော last_daily ကို အခြေခံ၍ ၂၄ နာရီ ပြည့်/မပြည့် တိကျစွာ စစ်ဆေးခြင်း
-      if (!IS_ADMIN && lastDaily && (now - lastDaily < TWENTY_FOUR_HOURS)) {
-        const hoursLeft = Math.ceil((TWENTY_FOUR_HOURS - (now - lastDaily)) / (1000 * 60 * 60));
+      // 1. Database မှ အဲ့ဒီ User ရဲ့ last_daily (ရက်စွဲ) ကို တိုက်ရိုက် တောင်းခံစစ်ဆေးခြင်း
+      try {
+        const freshRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=last_daily`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const freshData = await freshRes.json();
+        if (Array.isArray(freshData) && freshData.length > 0) {
+          lastDailyDate = freshData[0].last_daily || "";
+        }
+      } catch (e) {}
+
+      // 2. ယနေ့ရက်စွဲနှင့် တူနေပါက Reload လုပ်ထားလည်း လုံးဝ ထပ်မရအောင် တားဆီးခြင်း
+      if (!IS_ADMIN && lastDailyDate === todayStr) {
         return showAlert("Notice", (currentLang === "en" 
-          ? `Already claimed today. Please wait ${hoursLeft} hours.` 
-          : `ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။ နောက်ထပ် ${hoursLeft} နာရီ စောင့်ဆိုင်းပေးပါ။`));
+          ? "Already claimed today. Please come back tomorrow!" 
+          : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။ မနက်ဖြန်မှ ထပ်မံရယူပါခင်ဗျာ။"));
       }
 
       const nBal = Number((currentBalance + config.daily_bonus).toFixed(4));
-      lastDaily = now; // Local variable ကိုပါ တပြိုင်နက် update လုပ်မည်
+      lastDailyDate = todayStr; // ယနေ့ရက်စွဲဖြင့် အပ်ဒိတ်လုပ်မည်
       
       showAlert("Daily Bonus", (currentLang === "en" ? `Claimed +$${config.daily_bonus} USDT!` : `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
 
-      // Balance နှင့် Database ၏ last_daily အချိန်ကို တစ်ခါတည်း တိကျစွာ သိမ်းဆည်းခြင်း
+      // Balance နှင့် Database ၏ last_daily (ရက်စွဲ) ကို တစ်ခါတည်း တိကျစွာ သိမ်းဆည်းခြင်း
       await updateBalanceInDB(nBal);
-      fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
         method: "PATCH",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ last_daily: now })
+        body: JSON.stringify({ last_daily: todayStr })
       }).catch(() => {});
 
       autoCheckLeftChannelsAndPenalize3x(false);
@@ -1818,7 +1824,7 @@
     }
 
     document.getElementById("btn-share-ref").addEventListener("click", () => {
-      const link = document.getElementById("invite-link-input-input")?.value || document.getElementById("invite-link-input").value;
+      const link = document.getElementById("invite-link-input").value;
       if (tg?.openTelegramLink) {
         tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Join Cyber Earn and make USDT daily!")}`);
       }
