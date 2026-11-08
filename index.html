@@ -203,6 +203,23 @@
     }
 
     /* PVP WHEEL STYLES */
+    #view-game {
+      min-height: calc(100vh - 24px);
+      margin: -16px;
+      padding: 18px 14px 96px;
+      background:
+        radial-gradient(ellipse at 50% 5%, rgba(142, 36, 220, .24), transparent 55%),
+        linear-gradient(180deg, #10071f 0%, #07040d 100%);
+    }
+    #view-game .pvp-stage {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 22px 16px;
+      border-radius: 28px;
+      background: linear-gradient(160deg, rgba(38,17,74,.98), rgba(10,6,22,.99));
+      border: 1px solid rgba(184, 41, 255, .75);
+      box-shadow: 0 18px 50px rgba(0,0,0,.48), 0 0 30px rgba(168,85,247,.16);
+    }
     .pvp-stage {
       background: radial-gradient(circle at center, #26114a 0%, #0d061c 100%);
       border: 1.5px solid #a855f7;
@@ -214,8 +231,8 @@
       margin-bottom: 14px;
     }
     .pvp-wheel-outer {
-      width: 220px;
-      height: 220px;
+      width: min( min(82vw, 320px), 320px);
+      height: min( min(82vw, 320px), 320px);
       margin: 15px auto;
       border-radius: 50%;
       border: 8px solid #a855f7;
@@ -224,12 +241,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+      transition: transform 4.5s cubic-bezier(0.12, 0.82, 0.16, 1);
+      will-change: transform;
       background: conic-gradient(#2f1a52 0% 100%);
     }
     .pvp-wheel-inner {
-      width: 140px;
-      height: 140px;
+      width: 56%;
+      height: 56%;
       background: #110722;
       border-radius: 50%;
       display: flex;
@@ -1700,10 +1718,8 @@
 
           setTimeout(async () => {
             const winnerWinPercent = Math.max(1, Math.round((Number(winner.bet) / total) * 100));
-            // Fee is 10% of the winner's net profit only (pool - winner's own stake).
-            // The winner's original stake is not charged a fee.
-            const winnerProfit = Math.max(0, total - Number(winner.bet || 0));
-            const fee = Number((winnerProfit * 0.10).toFixed(4));
+            // Requested rule: deduct 10% from the complete winning pot.
+            const fee = Number((total * 0.10).toFixed(4));
             const prize = Number((total - fee).toFixed(4));
 
             let payoutSucceeded = false;
@@ -1822,9 +1838,9 @@
                 ? `Winner: ${winner.name}. Prize credited: $${prize.toFixed(4)} USDT.`
                 : `အနိုင်ရသူ ${winner.name} ဖြစ်ပါတယ်။ ဆုငွေ $${prize.toFixed(4)} USDT ကို Balance ထဲ ပေါင်းထည့်ပြီးပါပြီ။`));
             } else {
-              showAlert("⚠️ PvP Payout Needs Checking", (currentLang === "en"
-                ? `The payout could not be confirmed. Room ${roomId} is locked to prevent duplicate payment. Admin must check Supabase cyber_users and cyber_pvp_rooms. Error: ${payoutError}`
-                : `ဆုငွေထည့်သွင်းမှုကို Database က အတည်မပြုနိုင်သေးပါ။ Room ${roomId} ကို နှစ်ခါမပေးမိစေရန် ယာယီ Lock လုပ်ထားပါတယ်။ Admin က Supabase ရှိ cyber_users နှင့် cyber_pvp_rooms ကို စစ်ဆေးပေးပါ။ Error: ${payoutError}`));
+              showAlert("PvP", (currentLang === "en"
+                ? "The round result is being confirmed. Please check your balance again shortly."
+                : "ပွဲရလဒ်ကို အတည်ပြုနေပါသည်။ ခဏအကြာတွင် Balance ကို ပြန်စစ်ပေးပါ။"));
             }
 
             isPvPSpinning = false;
