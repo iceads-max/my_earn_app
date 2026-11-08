@@ -1548,9 +1548,62 @@
             const fee = Number((winnerProfit * 0.10).toFixed(4));
             const prize = Number((total - fee).toFixed(4));
 
-            let shouldProcessPayout = false;
+            let payoutSucceeded = false;
+            let payoutError = "";
+
+            // Claim this room exactly once. Do NOT mark it finished before the winner is credited.
             try {
-              const lockRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=neq.finished`, {
+              const lockRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=eq.playing`, {
+                method: "PATCH",
+                headers: {
+                  "apikey": SB_KEY,
+                  "Authorization": `Bearer ${SB_KEY}`,
+                  "Content-Type": "application/json",
+                  "Prefer": "return=representation"
+                },
+                body: JSON.stringify({ status: "paying" })
+              });
+
+              if (!lockRes.ok) throw new Error(`Room lock failed (${lockRes.status})`);
+              const lockedRows = await lockRes.json();
+              if (!Array.isArray(lockedRows) || lockedRows.length === 0) {
+                throw new Error("This PvP round is already being settled or has finished.");
+              }
+
+              // Read the winner's latest database balance, then credit the full prize (stake + net winnings).
+              const winnerId = encodeURIComponent(String(winner.id));
+              const wRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winnerId}&select=id,balance`, {
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
+              });
+              if (!wRes.ok) throw new Error(`Winner balance read failed (${wRes.status})`);
+              const wData = await wRes.json();
+              if (!Array.isArray(wData) || wData.length === 0) {
+                throw new Error(`Winner account ${winner.id} was not found in cyber_users.`);
+              }
+
+              const currentWinnerDbBal = Number(wData[0].balance || 0);
+              const updatedWinnerBal = Number((currentWinnerDbBal + prize).toFixed(4));
+              const creditRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winnerId}`, {
+                method: "PATCH",
+                headers: {
+                  "apikey": SB_KEY,
+                  "Authorization": `Bearer ${SB_KEY}`,
+                  "Content-Type": "application/json",
+                  "Prefer": "return=representation"
+                },
+                body: JSON.stringify({ balance: updatedWinnerBal })
+              });
+              if (!creditRes.ok) {
+                const errText = await creditRes.text();
+                throw new Error(`Winner balance update failed (${creditRes.status}): ${errText}`);
+              }
+              const creditedRows = await creditRes.json();
+              if (!Array.isArray(creditedRows) || creditedRows.length === 0) {
+                throw new Error("Database did not confirm the winner balance update.");
+              }
+
+              // Credit is confirmed. Finish the round only after this point.
+              const finishRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=eq.paying`, {
                 method: "PATCH",
                 headers: {
                   "apikey": SB_KEY,
@@ -1560,35 +1613,34 @@
                 },
                 body: JSON.stringify({ status: "finished" })
               });
-              const lockedRows = await lockRes.json();
-              if (Array.isArray(lockedRows) && lockedRows.length > 0) {
-                shouldProcessPayout = true;
+              if (!finishRes.ok) throw new Error(`Prize was credited, but room finalization failed (${finishRes.status}).`);
+              const finishedRows = await finishRes.json();
+              if (!Array.isArray(finishedRows) || finishedRows.length === 0) {
+                throw new Error("Prize was credited; room is awaiting final status confirmation. Do not replay this round.");
               }
-            } catch (e) {}
 
-            if (shouldProcessPayout) {
+              payoutSucceeded = true;
               await addAdminFee(fee);
-
-              try {
-                const wRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winner.id}&select=balance`, {
-                  headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-                });
-                const wData = await wRes.json();
-                const currentWinnerDbBal = (Array.isArray(wData) && wData.length > 0) ? Number(wData[0].balance || 0) : 0;
-                const updatedWinnerBal = Number((currentWinnerDbBal + prize).toFixed(4));
-
-                await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winner.id}`, {
-                  method: "PATCH",
-                  headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-                  body: JSON.stringify({ balance: updatedWinnerBal })
-                });
-              } catch (e) {}
 
               await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
                 method: "POST",
-                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ game_type: "PvP Wheel", winner_name: winner.name, winner_id: winner.id, prize: prize, win_percent: winnerWinPercent })
+                headers: {
+                  "apikey": SB_KEY,
+                  "Authorization": `Bearer ${SB_KEY}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  game_type: "PvP Wheel",
+                  winner_name: winner.name,
+                  winner_id: winner.id,
+                  prize: prize,
+                  win_percent: winnerWinPercent
+                })
               });
+            } catch (e) {
+              payoutError = e?.message || String(e);
+              console.error("PvP payout error:", payoutError);
+              // Keep status=paying on an uncertain result to prevent duplicate payouts.
             }
 
             try {
@@ -1603,14 +1655,18 @@
               }
             } catch (e) {}
 
-            if (Number(userData.id) === Number(winner.id)) {
-              showAlert("🎉 Victory!", (currentLang === "en" 
-                ? `Congratulations! You won with ${winnerWinPercent}% Win! Pot: +$${prize} USDT.` 
-                : `ဂုဏ်ယူပါသည်! သင်သည် ${winnerWinPercent}% Win ဖြင့် အနိုင်ရရှိခဲ့ပါသည်! Pot: +$${prize} USDT!`));
+            if (payoutSucceeded && Number(userData.id) === Number(winner.id)) {
+              showAlert("🎉 Victory!", (currentLang === "en"
+                ? `Your prize of $${prize.toFixed(4)} USDT has been credited to your balance.`
+                : `ဂုဏ်ယူပါတယ်။ ဆုငွေ $${prize.toFixed(4)} USDT ကို သင့် Balance ထဲ ပေါင်းထည့်ပြီးပါပြီ။`));
+            } else if (payoutSucceeded) {
+              showAlert("⚔️ Round Finished", (currentLang === "en"
+                ? `Winner: ${winner.name}. Prize credited: $${prize.toFixed(4)} USDT.`
+                : `အနိုင်ရသူ ${winner.name} ဖြစ်ပါတယ်။ ဆုငွေ $${prize.toFixed(4)} USDT ကို Balance ထဲ ပေါင်းထည့်ပြီးပါပြီ။`));
             } else {
-              showAlert("⚔️ Round Finished", (currentLang === "en" 
-                ? `Winner: [${winner.name}] with ${winnerWinPercent}% Win (Prize: $${prize} USDT).` 
-                : `အနိုင်ရရှိသူ: [${winner.name}] (${winnerWinPercent}% Win | ဆုကြေး: $${prize} USDT) ဖြစ်ပါသည်။`));
+              showAlert("⚠️ PvP Payout Needs Checking", (currentLang === "en"
+                ? `The payout could not be confirmed. Room ${roomId} is locked to prevent duplicate payment. Admin must check Supabase cyber_users and cyber_pvp_rooms. Error: ${payoutError}`
+                : `ဆုငွေထည့်သွင်းမှုကို Database က အတည်မပြုနိုင်သေးပါ။ Room ${roomId} ကို နှစ်ခါမပေးမိစေရန် ယာယီ Lock လုပ်ထားပါတယ်။ Admin က Supabase ရှိ cyber_users နှင့် cyber_pvp_rooms ကို စစ်ဆေးပေးပါ။ Error: ${payoutError}`));
             }
 
             isPvPSpinning = false;
