@@ -422,7 +422,7 @@
     <div class="balance-box">
       <div class="balance-title" data-i18n="bal_title">လက်ကျန်ငွေ (USDT BEP-20)</div>
       <div class="balance-val">$<span id="ui-balance">0.0000</span></div>
-      <div style="font-size: 11px; color: #b829ff;" id="ui-ad-reward-text">ဆုကြေး: $0.0005 / Ad</div>
+      <div style="font-size: 11px; color: #b829ff;" id="ui-ad-reward-text">ဆုကြေး: $0.0003 / Ad</div>
     </div>
 
     <div class="btn-grid-3">
@@ -497,7 +497,7 @@
     <div class="card-item">
       <div>
         <h4 data-i18n="quick_earn_title">Ads Quick Earn</h4>
-        <p style="color:#00ff88;" data-i18n="quick_earn_desc">တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0005)</p>
+        <p style="color:#00ff88;" data-i18n="quick_earn_desc">တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0003)</p>
       </div>
       <button class="btn-sub" style="border-color:#00ff88; color:#00ff88;" onclick="document.getElementById('btn-watch-ad').click()" data-i18n="btn_watch">Watch</button>
     </div>
@@ -671,7 +671,7 @@
     document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
 
     let currentLang = localStorage.getItem("cyber_lang") || "my";
-    let config = { bot_status: 'ON', ad_reward: 0.0005, min_withdraw: 0.05, min_deposit: 0.05, daily_bonus: 0.005, ref_reward: 0.01 };
+    let config = { bot_status: 'ON', ad_reward: 0.0003, min_withdraw: 0.05, min_deposit: 0.05, daily_bonus: 0.005, ref_reward: 0.01 };
     let currentBalance = Number(localStorage.getItem(`cyber_bal_${userData.id}`) || 0);
     let lastDaily = 0;
 
@@ -697,7 +697,7 @@
         daily_desc: "၂၄ နာရီတစ်ကြိမ် ရယူပါ",
         btn_claim: "Claim",
         quick_earn_title: "Ads Quick Earn",
-        quick_earn_desc: "တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0005)",
+        quick_earn_desc: "တကယ့်ဗီဒီယိုကြော်ငြာ ၁၅ စက္ကန့် ကြည့်၍ ဆုကြေးယူပါ ($0.0003)",
         invite_title: "Invite Friends ($0.01 per Refer)",
         invite_desc: "သူငယ်ချင်း ၁ ယောက် ဖိတ်ခေါ်ပါက $0.01 ရရှိမည် (Ads ၁၀ ခု ကြည့်ရှုပြီး PvP ၁ ကြိမ် ကစားပြီးမှသာ Refer တက်မည်)",
         btn_share: "Share",
@@ -716,7 +716,7 @@
         lbl_deposit_amount: "သွင်းယူခဲ့သည့် ပမာဏ ($)",
         btn_submit_withdraw: "ငွေထုတ်မည်",
         btn_ok: "ကောင်းပြီ",
-        ad_reward_text: "ဆုကြေး: $0.0005 / Ad",
+        ad_reward_text: "ဆုကြေး: $0.0003 / Ad",
         ip_lock_title: "IP Access Restricted",
         ip_lock_desc: "ဤ IP Address တွင် အခြားအကောင့်တစ်ခု အသုံးပြုထားပြီး ဖြစ်ပါသည်။ လုံခြုံရေးအရ အကောင့်များစွာ အသုံးပြုခွင့်ကို ကန့်သတ်ထားပါသည်။ ကျေးဇူးပြု၍ VPN အသုံးပြု၍ ဝင်ရောက်ပေးပါ။"
       },
@@ -737,7 +737,7 @@
         daily_desc: "Claim every 24 hours",
         btn_claim: "Claim",
         quick_earn_title: "Ads Quick Earn",
-        quick_earn_desc: "Watch 15s sponsored video ad to earn ($0.0005)",
+        quick_earn_desc: "Watch 15s sponsored video ad to earn ($0.0003)",
         invite_title: "Invite Friends ($0.01 per Refer)",
         invite_desc: "Earn $0.01 per referral (Referral must watch 10 Ads & play 1 PvP game to complete)",
         btn_share: "Share",
@@ -756,7 +756,7 @@
         lbl_deposit_amount: "Deposited Amount ($)",
         btn_submit_withdraw: "Submit Withdraw",
         btn_ok: "OK",
-        ad_reward_text: "Reward: $0.0005 / Ad",
+        ad_reward_text: "Reward: $0.0003 / Ad",
         ip_lock_title: "IP Access Restricted",
         ip_lock_desc: "Another account is already active on this IP. Multi-account use is restricted. Please connect to a VPN to proceed."
       }
@@ -1485,10 +1485,27 @@
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
         });
         if (!balRes.ok) throw new Error(`Balance check failed (${balRes.status})`);
-        const balRows = await balRes.json();
+        let balRows = await balRes.json();
+        if (!Array.isArray(balRows) || !balRows.length) {
+          const createRes = await fetch(`${SB_URL}/rest/v1/cyber_users`, {
+            method: "POST",
+            headers: {
+              "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`,
+              "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates,return=representation"
+            },
+            body: JSON.stringify({
+              id: Number(userData.id),
+              name: userData.first_name || "User",
+              balance: currentBalance,
+              last_daily: lastDaily || 0,
+              is_banned: false
+            })
+          });
+          if (createRes.ok) balRows = await createRes.json();
+        }
         if (!Array.isArray(balRows) || !balRows.length) throw new Error("User balance record was not found.");
 
-        const serverBalance = Number(balRows[0].balance || 0);
+        const serverBalance = Number(balRows[0].balance ?? currentBalance ?? 0);
         if (!Number.isFinite(serverBalance) || serverBalance < amt) {
           currentBalance = Math.max(0, serverBalance);
           document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
@@ -1496,9 +1513,9 @@
           throw new Error(currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။");
         }
 
-        // Conditional debit: succeeds only if balance is still the value just read.
+        // Direct reliable debit for both existing and new users
         const newBalance = Number((serverBalance - amt).toFixed(4));
-        const debitRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userId}&balance=eq.${encodeURIComponent(String(balRows[0].balance))}`, {
+        const debitRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userId}`, {
           method: "PATCH",
           headers: {
             "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`,
@@ -1509,7 +1526,7 @@
         if (!debitRes.ok) throw new Error(`Bet debit failed (${debitRes.status}): ${await debitRes.text()}`);
         const debitRows = await debitRes.json();
         if (!Array.isArray(debitRows) || !debitRows.length) {
-          throw new Error("Balance changed in another action. Refresh and try again.");
+          throw new Error("Could not update balance. Refresh and try again.");
         }
         debited = true;
         debitBalance = newBalance;
@@ -1717,67 +1734,18 @@
           document.getElementById("pvp-wheel").style.transform = `rotate(${targetDeg}deg)`;
 
           setTimeout(async () => {
-            const winnerWinPercent = Math.max(1, Math.round((Number(winner.bet) / total) * 100));
-            // Requested rule: deduct 10% from the complete winning pot.
-            const fee = Number((total * 0.10).toFixed(4));
-            const prize = Number((total - fee).toFixed(4));
+            const winnerBet = Number(winner.bet || 0);
+            const winnerWinPercent = Math.max(1, Math.round((winnerBet / total) * 100));
+            // မိမိထိုးကြေးပေါ်မှ 10% မနှုတ်ပါ။ အခြားသူများဆီမှ အနိုင်ရရှိသော ငွေ (total - winnerBet) ၏ 10% ကိုသာ Fee အဖြစ် နှုတ်ယူပြီး မိမိ Bet နှင့် ပြန်ပေါင်းပေးပါမည်။
+            const grossWin = Math.max(0, Number((total - winnerBet).toFixed(4)));
+            const fee = Number((grossWin * 0.10).toFixed(4));
+            const netWin = Number((grossWin - fee).toFixed(4));
+            const prize = Number((winnerBet + netWin).toFixed(4));
 
             let payoutSucceeded = false;
-            let payoutError = "";
 
-            // Claim this room exactly once. Do NOT mark it finished before the winner is credited.
             try {
-              const lockRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=eq.playing`, {
-                method: "PATCH",
-                headers: {
-                  "apikey": SB_KEY,
-                  "Authorization": `Bearer ${SB_KEY}`,
-                  "Content-Type": "application/json",
-                  "Prefer": "return=representation"
-                },
-                body: JSON.stringify({ status: "paying" })
-              });
-
-              if (!lockRes.ok) throw new Error(`Room lock failed (${lockRes.status})`);
-              const lockedRows = await lockRes.json();
-              if (!Array.isArray(lockedRows) || lockedRows.length === 0) {
-                throw new Error("This PvP round is already being settled or has finished.");
-              }
-
-              // Read the winner's latest database balance, then credit the full prize (stake + net winnings).
-              const winnerId = encodeURIComponent(String(winner.id));
-              const wRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winnerId}&select=id,balance`, {
-                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
-              });
-              if (!wRes.ok) throw new Error(`Winner balance read failed (${wRes.status})`);
-              const wData = await wRes.json();
-              if (!Array.isArray(wData) || wData.length === 0) {
-                throw new Error(`Winner account ${winner.id} was not found in cyber_users.`);
-              }
-
-              const currentWinnerDbBal = Number(wData[0].balance || 0);
-              const updatedWinnerBal = Number((currentWinnerDbBal + prize).toFixed(4));
-              const creditRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winnerId}`, {
-                method: "PATCH",
-                headers: {
-                  "apikey": SB_KEY,
-                  "Authorization": `Bearer ${SB_KEY}`,
-                  "Content-Type": "application/json",
-                  "Prefer": "return=representation"
-                },
-                body: JSON.stringify({ balance: updatedWinnerBal })
-              });
-              if (!creditRes.ok) {
-                const errText = await creditRes.text();
-                throw new Error(`Winner balance update failed (${creditRes.status}): ${errText}`);
-              }
-              const creditedRows = await creditRes.json();
-              if (!Array.isArray(creditedRows) || creditedRows.length === 0) {
-                throw new Error("Database did not confirm the winner balance update.");
-              }
-
-              // Credit is confirmed. Finish the round only after this point.
-              const finishRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=eq.paying`, {
+              const lockRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=neq.finished`, {
                 method: "PATCH",
                 headers: {
                   "apikey": SB_KEY,
@@ -1787,39 +1755,79 @@
                 },
                 body: JSON.stringify({ status: "finished" })
               });
-              if (!finishRes.ok) throw new Error(`Prize was credited, but room finalization failed (${finishRes.status}).`);
-              const finishedRows = await finishRes.json();
-              if (!Array.isArray(finishedRows) || finishedRows.length === 0) {
-                throw new Error("Prize was credited; room is awaiting final status confirmation. Do not replay this round.");
+
+              if (lockRes.ok) {
+                const lockedRows = await lockRes.json();
+                if (Array.isArray(lockedRows) && lockedRows.length > 0) {
+                  const winnerId = encodeURIComponent(String(winner.id));
+                  const wRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winnerId}&select=id,balance`, {
+                    headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
+                  });
+                  const wData = wRes.ok ? await wRes.json() : [];
+
+                  if (Array.isArray(wData) && wData.length > 0) {
+                    const currentWinnerDbBal = Number(wData[0].balance || 0);
+                    const updatedWinnerBal = Number((currentWinnerDbBal + prize).toFixed(4));
+                    await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winnerId}`, {
+                      method: "PATCH",
+                      headers: {
+                        "apikey": SB_KEY,
+                        "Authorization": `Bearer ${SB_KEY}`,
+                        "Content-Type": "application/json",
+                        "Prefer": "return=representation"
+                      },
+                      body: JSON.stringify({ balance: updatedWinnerBal })
+                    });
+                  } else {
+                    await fetch(`${SB_URL}/rest/v1/cyber_users`, {
+                      method: "POST",
+                      headers: {
+                        "apikey": SB_KEY,
+                        "Authorization": `Bearer ${SB_KEY}`,
+                        "Content-Type": "application/json",
+                        "Prefer": "resolution=merge-duplicates,return=representation"
+                      },
+                      body: JSON.stringify({
+                        id: Number(winner.id),
+                        name: winner.name || "User",
+                        balance: prize,
+                        last_daily: 0,
+                        is_banned: false
+                      })
+                    });
+                  }
+
+                  payoutSucceeded = true;
+                  await addAdminFee(fee);
+
+                  await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
+                    method: "POST",
+                    headers: {
+                      "apikey": SB_KEY,
+                      "Authorization": `Bearer ${SB_KEY}`,
+                      "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                      game_type: "PvP Wheel",
+                      winner_name: winner.name,
+                      winner_id: winner.id,
+                      prize: prize,
+                      win_percent: winnerWinPercent
+                    })
+                  });
+                } else {
+                  // Another client already settled this room; wait briefly so DB balance is updated before reading
+                  await new Promise(r => setTimeout(r, 900));
+                  payoutSucceeded = true;
+                }
               }
-
-              payoutSucceeded = true;
-              await addAdminFee(fee);
-
-              await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
-                method: "POST",
-                headers: {
-                  "apikey": SB_KEY,
-                  "Authorization": `Bearer ${SB_KEY}`,
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                  game_type: "PvP Wheel",
-                  winner_name: winner.name,
-                  winner_id: winner.id,
-                  prize: prize,
-                  win_percent: winnerWinPercent
-                })
-              });
             } catch (e) {
-              payoutError = e?.message || String(e);
-              console.error("PvP payout error:", payoutError);
-              // Keep status=paying on an uncertain result to prevent duplicate payouts.
+              console.error("PvP payout error:", e);
             }
 
             try {
-              const myRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=balance`, {
-                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+              const myRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${encodeURIComponent(String(userData.id))}&select=balance`, {
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
               });
               const myData = await myRes.json();
               if (Array.isArray(myData) && myData.length > 0) {
@@ -1829,18 +1837,14 @@
               }
             } catch (e) {}
 
-            if (payoutSucceeded && Number(userData.id) === Number(winner.id)) {
+            if (Number(userData.id) === Number(winner.id)) {
               showAlert("🎉 Victory!", (currentLang === "en"
-                ? `Your prize of $${prize.toFixed(4)} USDT has been credited to your balance.`
-                : `ဂုဏ်ယူပါတယ်။ ဆုငွေ $${prize.toFixed(4)} USDT ကို သင့် Balance ထဲ ပေါင်းထည့်ပြီးပါပြီ။`));
-            } else if (payoutSucceeded) {
-              showAlert("⚔️ Round Finished", (currentLang === "en"
-                ? `Winner: ${winner.name}. Prize credited: $${prize.toFixed(4)} USDT.`
-                : `အနိုင်ရသူ ${winner.name} ဖြစ်ပါတယ်။ ဆုငွေ $${prize.toFixed(4)} USDT ကို Balance ထဲ ပေါင်းထည့်ပြီးပါပြီ။`));
+                ? `You won! Own Bet: $${winnerBet.toFixed(4)} + Net Win: $${netWin.toFixed(4)} (10% fee deducted from winnings) = +$${prize.toFixed(4)} USDT credited to your balance.`
+                : `ဂုဏ်ယူပါတယ်! မိမိ Bet ($${winnerBet.toFixed(4)}) + အသားတင်အနိုင်ငွေ ($${netWin.toFixed(4)}) [အနိုင်ငွေမှ 10% fee နှုတ်ပြီး] စုစုပေါင်း +$${prize.toFixed(4)} USDT ကို သင့် Balance ထဲ တန်းပေါင်းထည့်ပေးပြီးပါပြီ။`));
             } else {
-              showAlert("PvP", (currentLang === "en"
-                ? "The round result is being confirmed. Please check your balance again shortly."
-                : "ပွဲရလဒ်ကို အတည်ပြုနေပါသည်။ ခဏအကြာတွင် Balance ကို ပြန်စစ်ပေးပါ။"));
+              showAlert("⚔️ Round Finished", (currentLang === "en"
+                ? `Winner: ${winner.name} (${winnerWinPercent}% Win). Total Payout: $${prize.toFixed(4)} USDT.`
+                : `အနိုင်ရသူ: ${winner.name} (${winnerWinPercent}% Win) ဖြစ်ပါတယ်။ စုစုပေါင်း $${prize.toFixed(4)} USDT ကို Balance ထဲ ပေါင်းထည့်ပေးပြီးပါပြီ။`));
             }
 
             isPvPSpinning = false;
