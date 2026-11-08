@@ -1431,49 +1431,197 @@
       }
     }
 
+    let pvpBetInProgress = false;
+
     async function addPublicBetPvP() {
-      const amt = Number(document.getElementById("pvp-bet-amt").value);
-      if (!amt || amt < 0.01) return showAlert("Notice", (currentLang === "en" ? "Minimum bet is $0.01" : "အနည်းဆုံး $0.01 Bet ထိုးရပါမည်။"));
-      if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
+      const btn = document.getElementById("btn-place-pvp");
+      const input = document.getElementById("pvp-bet-amt");
+      if (pvpBetInProgress) return;
 
-      let nBal = Number((currentBalance - amt).toFixed(4));
-      await updateBalanceInDB(nBal);
-
-      const res = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?status=in.(waiting,playing)&order=created_at.desc&limit=1`, {
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-      });
-      const rooms = await res.json();
-
-      if (Array.isArray(rooms) && rooms.length > 0) {
-        const r = rooms[0];
-        let pList = [];
-        try { pList = typeof r.players_data === 'string' ? JSON.parse(r.players_data) : (r.players_data || []); } catch (e) {}
-
-        const existIndex = pList.findIndex(p => Number(p.id) === Number(userData.id));
-        if (existIndex >= 0) {
-          pList[existIndex].bet = Number((Number(pList[existIndex].bet) + amt).toFixed(4));
-        } else {
-          const newColor = PLAYER_PALETTE[pList.length % PLAYER_PALETTE.length];
-          pList.push({ id: userData.id, name: userData.first_name || "User", bet: amt, color: newColor });
-        }
-
-        const newStatus = pList.length >= 2 ? "playing" : "waiting";
-        await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${r.id}`, {
-          method: "PATCH",
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ players_data: JSON.stringify(pList), status: newStatus })
-        });
-      } else {
-        const initPlayers = [{ id: userData.id, name: userData.first_name || "User", bet: amt, color: PLAYER_PALETTE[0] }];
-        await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms`, {
-          method: "POST",
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ player_1: userData.id, p1_name: userData.first_name || "User", bet_amount: amt, players_data: JSON.stringify(initPlayers), status: "waiting" })
-        });
+      const amt = Number(input.value);
+      if (!Number.isFinite(amt) || amt < 0.01) {
+        return showAlert("Notice", currentLang === "en" ? "Minimum bet is $0.01" : "အနည်းဆုံး $0.01 Bet ထိုးရပါမည်။");
+      }
+      if (amt > currentBalance) {
+        return showAlert("Notice", currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။");
       }
 
-      document.getElementById("pvp-bet-amt").value = "0.01";
-      listenPublicPvP();
+      pvpBetInProgress = true;
+      btn.disabled = true;
+      const oldButtonText = btn.innerText;
+      btn.innerText = currentLang === "en" ? "Processing..." : "လုပ်ဆောင်နေသည်...";
+
+      let debited = false;
+      let debitBalance = null;
+      let refundSucceeded = false;
+      let refundFailed = false;
+      try {
+        // Always use the latest server balance. Do not trust cached/local balance.
+        const userId = encodeURIComponent(String(userData.id));
+        const balRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userId}&select=id,balance`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
+        });
+        if (!balRes.ok) throw new Error(`Balance check failed (${balRes.status})`);
+        const balRows = await balRes.json();
+        if (!Array.isArray(balRows) || !balRows.length) throw new Error("User balance record was not found.");
+
+        const serverBalance = Number(balRows[0].balance || 0);
+        if (!Number.isFinite(serverBalance) || serverBalance < amt) {
+          currentBalance = Math.max(0, serverBalance);
+          document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+          localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+          throw new Error(currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။");
+        }
+
+        // Conditional debit: succeeds only if balance is still the value just read.
+        const newBalance = Number((serverBalance - amt).toFixed(4));
+        const debitRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userId}&balance=eq.${encodeURIComponent(String(balRows[0].balance))}`, {
+          method: "PATCH",
+          headers: {
+            "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`,
+            "Content-Type": "application/json", "Prefer": "return=representation"
+          },
+          body: JSON.stringify({ balance: newBalance })
+        });
+        if (!debitRes.ok) throw new Error(`Bet debit failed (${debitRes.status}): ${await debitRes.text()}`);
+        const debitRows = await debitRes.json();
+        if (!Array.isArray(debitRows) || !debitRows.length) {
+          throw new Error("Balance changed in another action. Refresh and try again.");
+        }
+        debited = true;
+        debitBalance = newBalance;
+
+        // Save the bet only after the debit is confirmed; require the database to confirm the room write.
+        const roomRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?status=in.(waiting,playing)&order=created_at.desc&limit=1`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
+        });
+        if (!roomRes.ok) throw new Error(`Could not load active PvP room (${roomRes.status}): ${await roomRes.text()}`);
+        const rooms = await roomRes.json();
+
+        let saveRes;
+        if (Array.isArray(rooms) && rooms.length > 0) {
+          const room = rooms[0];
+          let playerList = [];
+          try {
+            playerList = typeof room.players_data === "string"
+              ? JSON.parse(room.players_data)
+              : (room.players_data || []);
+          } catch (e) {
+            throw new Error("Active room player data is invalid. Admin must check cyber_pvp_rooms.players_data.");
+          }
+          if (!Array.isArray(playerList)) throw new Error("Active room player data is not a list.");
+
+          const existingIndex = playerList.findIndex(p => Number(p.id) === Number(userData.id));
+          if (existingIndex >= 0) {
+            playerList[existingIndex].bet = Number((Number(playerList[existingIndex].bet || 0) + amt).toFixed(4));
+          } else {
+            const color = PLAYER_PALETTE[playerList.length % PLAYER_PALETTE.length];
+            playerList.push({ id: userData.id, name: userData.first_name || "User", bet: amt, color });
+          }
+          const newStatus = playerList.length >= 2 ? "playing" : "waiting";
+          saveRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${encodeURIComponent(String(room.id))}`, {
+            method: "PATCH",
+            headers: {
+              "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`,
+              "Content-Type": "application/json", "Prefer": "return=representation"
+            },
+            body: JSON.stringify({ players_data: JSON.stringify(playerList), status: newStatus })
+          });
+        } else {
+          const initialPlayers = [{
+            id: userData.id, name: userData.first_name || "User",
+            bet: amt, color: PLAYER_PALETTE[0]
+          }];
+          saveRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms`, {
+            method: "POST",
+            headers: {
+              "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`,
+              "Content-Type": "application/json", "Prefer": "return=representation"
+            },
+            body: JSON.stringify({
+              player_1: userData.id,
+              p1_name: userData.first_name || "User",
+              bet_amount: amt,
+              players_data: JSON.stringify(initialPlayers),
+              status: "waiting"
+            })
+          });
+        }
+
+        if (!saveRes.ok) {
+          throw new Error(`Bet could not be saved to PvP room (${saveRes.status}): ${await saveRes.text()}`);
+        }
+        const savedRows = await saveRes.json();
+        if (!Array.isArray(savedRows) || !savedRows.length) {
+          throw new Error("Database did not confirm that your bet was added to the PvP room.");
+        }
+
+        // Bet is now safely recorded. Update the displayed balance only after both writes succeed.
+        currentBalance = debitBalance;
+        document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+        localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+        input.value = "0.01";
+        await listenPublicPvP();
+        showAlert("Bet placed", currentLang === "en"
+          ? `$${amt.toFixed(4)} USDT bet successfully added to the spin.`
+          : `$${amt.toFixed(4)} USDT Bet ကို Spin ထဲ အောင်မြင်စွာ ထည့်ပြီးပါပြီ။`);
+      } catch (error) {
+        console.error("PvP bet error:", error);
+
+        // If the bet row was not saved, return the deducted amount to the database.
+        if (debited) {
+          try {
+            const userId = encodeURIComponent(String(userData.id));
+            const checkRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userId}&select=balance`, {
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Cache-Control": "no-cache" }
+            });
+            if (!checkRes.ok) throw new Error(`Refund balance read failed (${checkRes.status})`);
+            const checkRows = await checkRes.json();
+            if (!Array.isArray(checkRows) || !checkRows.length) throw new Error("User row missing during refund.");
+            const nowBalance = Number(checkRows[0].balance || 0);
+            const refundBalance = Number((nowBalance + amt).toFixed(4));
+            const refundRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userId}`, {
+              method: "PATCH",
+              headers: {
+                "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`,
+                "Content-Type": "application/json", "Prefer": "return=representation"
+              },
+              body: JSON.stringify({ balance: refundBalance })
+            });
+            if (!refundRes.ok) throw new Error(`Refund failed (${refundRes.status}): ${await refundRes.text()}`);
+            const refundRows = await refundRes.json();
+            if (!Array.isArray(refundRows) || !refundRows.length) throw new Error("Refund was not confirmed by database.");
+            currentBalance = refundBalance;
+            document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+            localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+            refundSucceeded = true;
+          } catch (refundError) {
+            refundFailed = true;
+            console.error("PvP bet refund error:", refundError);
+            showAlert("⚠️ Refund needs checking", currentLang === "en"
+              ? `Bet save failed and automatic refund could not be confirmed. Contact admin with this error: ${refundError.message}`
+              : `Bet မသိမ်းနိုင်သလို ငွေပြန်အမ်းမှုလည်း အတည်မပြုနိုင်ပါ။ Admin ကို ဒီ Error ပြပါ: ${refundError.message}`);
+          }
+        }
+
+        if (!debited) {
+          showAlert("Bet failed", currentLang === "en"
+            ? `Your bet was not charged. ${error.message}`
+            : `Bet မဝင်ပါ။ ငွေလည်း မနှုတ်ထားပါ။ ${error.message}`);
+        } else if (refundSucceeded) {
+          showAlert("Bet failed", currentLang === "en"
+            ? `Your bet was not added. $${amt.toFixed(4)} has been returned to your balance.`
+            : `Bet မဝင်ခဲ့ပါ။ $${amt.toFixed(4)} ကို Balance ထဲ ပြန်အမ်းပြီးပါပြီ။`);
+        } else if (!refundFailed) {
+          showAlert("Bet status needs checking", currentLang === "en"
+            ? "The database result is uncertain. Do not place another bet until admin checks the room and balance."
+            : "Bet အခြေအနေ မသေချာပါ။ Admin က Room နဲ့ Balance ကို မစစ်မချင်း ထပ်မထိုးပါနဲ့။");
+        }
+      } finally {
+        pvpBetInProgress = false;
+        btn.disabled = false;
+        btn.innerText = oldButtonText || "Place bet";
+      }
     }
 
     function startPvPCountdownTimer(roomId) {
