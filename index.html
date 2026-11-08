@@ -962,45 +962,91 @@
       document.getElementById("modal-withdraw").classList.add("active");
     });
 
+    // Withdrawal guard: one request at a time + one-hour cooldown from the latest DB record.
+    let withdrawInProgress = false;
+    const WITHDRAW_COOLDOWN_MS = 60 * 60 * 1000;
+
+    async function getLatestWithdrawalTime() {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/cyber_withdrawals?user_id=eq.${userData.id}&select=created_at&order=created_at.desc&limit=1`,
+        { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }, cache: "no-store" }
+      );
+      if (!res.ok) throw new Error("Cannot check withdrawal history");
+      const rows = await res.json();
+      if (!Array.isArray(rows) || !rows.length || !rows[0].created_at) return 0;
+      const ts = Date.parse(rows[0].created_at);
+      return Number.isFinite(ts) ? ts : 0;
+    }
+
+    function showWithdrawCooldown(msLeft) {
+      const mins = Math.max(1, Math.ceil(msLeft / 60000));
+      showAlert("Notice", currentLang === "en"
+        ? `You can withdraw again in about ${mins} minute(s).`
+        : `ငွေထုတ်ပြီး ၁ နာရီမပြည့်သေးပါ။ ${mins} မိနစ်ခန့် စောင့်ပြီးမှ ပြန်ထုတ်နိုင်ပါမည်။`);
+    }
+
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
       const btn = document.getElementById("btn-submit-withdraw");
+      if (withdrawInProgress) return;
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
       if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
-        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်။`));
+        return showAlert("Notice", currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်။`);
       }
-      if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
-      if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
+      if (!Number.isFinite(amt) || amt <= 0) return showAlert("Notice", "မှန်ကန်သော ပမာဏထည့်ပါ။");
+      if (amt > currentBalance) return showAlert("Notice", currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။");
+      if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) return showAlert("Notice", currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။");
 
+      withdrawInProgress = true;
       btn.disabled = true;
       btn.innerText = "⏳ Checking...";
 
-      // ငွေမထုတ်မီ Channel များမှ ခိုးထွက်ထားခြင်း ရှိမရှိ စစ်ဆေးမည် (ထွက်ထားပါက 3x နုတ်မည်)
-      const isClean = await autoCheckLeftChannelsAndPenalize3x(true);
-      btn.disabled = false;
-      btn.innerText = I18N[currentLang].btn_submit_withdraw;
+      try {
+        // Read the latest withdrawal from Supabase so closing/reopening the app
+        // does not reset the one-hour cooldown.
+        const latestTime = await getLatestWithdrawalTime();
+        const remain = WITHDRAW_COOLDOWN_MS - (Date.now() - latestTime);
+        if (latestTime && remain > 0) {
+          showWithdrawCooldown(remain);
+          return;
+        }
 
-      if (!isClean || amt > currentBalance) {
+        // Verify channel membership and apply any outstanding 3x task penalties.
+        const isClean = await autoCheckLeftChannelsAndPenalize3x(true);
+        if (!isClean || amt > currentBalance) {
+          document.getElementById("modal-withdraw").classList.remove("active");
+          return;
+        }
+
+        // Insert withdrawal first; only debit balance if the DB accepted the request.
+        const createRes = await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
+          method: "POST",
+          headers: {
+            "apikey": SB_KEY,
+            "Authorization": `Bearer ${SB_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: "Pending" })
+        });
+        if (!createRes.ok) throw new Error("Withdrawal request could not be saved");
+
+        const nBal = Number((currentBalance - amt).toFixed(4));
+        await updateBalanceInDB(nBal);
+
         document.getElementById("modal-withdraw").classList.remove("active");
-        return;
+        showAlert("Success", currentLang === "en"
+          ? `Withdrawal of $${amt} USDT submitted! You can withdraw again after 1 hour.`
+          : `$${amt} USDT ငွေထုတ်တောင်းဆိုမှု အောင်မြင်ပါသည်။ နောက်တစ်ကြိမ် ငွေထုတ်ရန် ၁ နာရီစောင့်ပါ။`);
+      } catch (err) {
+        console.error("Withdrawal request error:", err);
+        showAlert("Error", currentLang === "en" ? "Could not submit withdrawal. Please try again." : "ငွေထုတ်တောင်းဆိုမှု မအောင်မြင်ပါ။ ပြန်စမ်းပါ။");
+      } finally {
+        withdrawInProgress = false;
+        btn.disabled = false;
+        btn.innerText = I18N[currentLang].btn_submit_withdraw;
       }
-
-      // Balance ချက်ချင်း နုတ်ယူခြင်း
-      const nBal = Number((currentBalance - amt).toFixed(4));
-      await updateBalanceInDB(nBal);
-
-      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (VPS/Termux Bot က Auto ဖတ်ပြီး လွှဲပေးရန်)
-      await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
-        method: "POST",
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userData.id, amount: amt, wallet_address: addr, status: "Pending" })
-      });
-
-      document.getElementById("modal-withdraw").classList.remove("active");
-      showAlert("Success", (currentLang === "en" 
-        ? `Withdrawal of $${amt} USDT submitted! Blockchain transfer is processing automatically.` 
-        : `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Auto Payment စနစ်မှ Blockchain ပေါ်သို့ တိုက်ရိုက် လွှဲပြောင်းပေးနေပါပြီ။`));
     });
 
     // IP LOCK (Runs asynchronously without blocking UI startup)
@@ -1496,8 +1542,11 @@
 
           setTimeout(async () => {
             const winnerWinPercent = Math.max(1, Math.round((Number(winner.bet) / total) * 100));
-            const fee = Number((total * 0.10).toFixed(4));
-            const prize = Number((total * 0.90).toFixed(4));
+            // Fee is 10% of the winner's net profit only (pool - winner's own stake).
+            // The winner's original stake is not charged a fee.
+            const winnerProfit = Math.max(0, total - Number(winner.bet || 0));
+            const fee = Number((winnerProfit * 0.10).toFixed(4));
+            const prize = Number((total - fee).toFixed(4));
 
             let shouldProcessPayout = false;
             try {
@@ -1610,281 +1659,242 @@
     }
 
     // ========================================================
-    // FAST NON-BLOCKING ONE-TIME TASK SYSTEM & AUTO 3X PENALTY
+    // TASK SYSTEM: one active claim per task; leaving removes the active
+    // completion record and deducts 3x. Re-joining can earn only the
+    // original reward again; the deducted penalty is never refunded.
     // ========================================================
     let cachedTasksList = null;
     let lastPenaltyCheckTime = 0;
     let isCheckingPenalty = false;
+    const taskClaimLocks = new Set();
+    const taskPenaltyLocks = new Set();
 
-    function getEverClaimedTasks() {
-      try {
-        return JSON.parse(localStorage.getItem(`cyber_ever_claimed_${userData.id}`) || "[]");
-      } catch (e) { return []; }
+    async function fetchUserCompletedTasks() {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&select=*`,
+        { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }, cache: "no-store" }
+      );
+      if (!res.ok) throw new Error("Could not load completed tasks");
+      const rows = await res.json();
+      return Array.isArray(rows) ? rows : [];
     }
 
-    function markTaskEverClaimed(taskId) {
-      const list = getEverClaimedTasks();
-      const sId = String(taskId);
-      if (!list.includes(sId)) {
-        list.push(sId);
-        localStorage.setItem(`cyber_ever_claimed_${userData.id}`, JSON.stringify(list));
-      }
-    }
-
-    function getPenalizedLeftTasks() {
-      try {
-        return JSON.parse(localStorage.getItem(`cyber_penalized_left_${userData.id}`) || "[]");
-      } catch (e) { return []; }
-    }
-
-    function setPenalizedLeftTasks(list) {
-      localStorage.setItem(`cyber_penalized_left_${userData.id}`, JSON.stringify(list));
-    }
-
-    // Channel မှ ခိုးထွက်ထားပါက နောက်ကွယ်မှ အမြန်စစ်ဆေးပြီး ဆုကြေး ၃ ဆ (3x) နုတ်ယူမည့် ဖန်ရှင်
     async function autoCheckLeftChannelsAndPenalize3x(forceImmediate = false) {
       if (IS_ADMIN) return true;
       const now = Date.now();
-      if (!forceImmediate && (isCheckingPenalty || (now - lastPenaltyCheckTime < 25000))) {
-        return true;
-      }
+      if (!forceImmediate && (isCheckingPenalty || now - lastPenaltyCheckTime < 25000)) return true;
+      if (isCheckingPenalty) return true;
 
       isCheckingPenalty = true;
       lastPenaltyCheckTime = now;
+      let foundLeft = false;
 
       try {
-        const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const cData = await cRes.json();
-        if (!Array.isArray(cData) || cData.length === 0) {
-          isCheckingPenalty = false;
-          return true;
-        }
+        const [completedRows, tasks] = await Promise.all([
+          fetchUserCompletedTasks(),
+          cachedTasksList ? Promise.resolve(cachedTasksList) :
+            fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+            }).then(r => r.json())
+        ]);
+        if (Array.isArray(tasks)) cachedTasksList = tasks;
 
-        if (!cachedTasksList) {
-          const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          });
-          const tData = await tRes.json();
-          if (Array.isArray(tData)) cachedTasksList = tData;
-        }
+        for (const row of completedRows) {
+          const taskId = String(row.task_id);
+          if (taskPenaltyLocks.has(taskId)) continue;
+          const task = (cachedTasksList || []).find(t => String(t.id) === taskId);
+          if (!task?.link) continue;
 
-        const tasks = cachedTasksList || [];
-        let penalizedList = getPenalizedLeftTasks();
+          const match = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
+          if (!match) continue;
+          const chat = `@${match[1]}`;
 
-        const checkPromises = cData.map(async (c) => {
-          const sTaskId = String(c.task_id);
-          markTaskEverClaimed(sTaskId);
-          if (penalizedList.includes(sTaskId)) return null;
-
-          const taskObj = tasks.find(t => String(t.id) === sTaskId);
-          if (!taskObj || !taskObj.link) return null;
-
-          const chMatch = taskObj.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
-          const chUsername = chMatch ? `@${chMatch[1]}` : null;
-          if (!chUsername) return null;
-
+          let isMember = false;
           try {
-            const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
-            const res = await chk.json();
-            const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
-            if (!isStillMember) {
-              return { sTaskId, taskObj, chUsername };
-            }
-          } catch (e) {}
-          return null;
-        });
+            const check = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chat}&user_id=${userData.id}`);
+            const data = await check.json();
+            isMember = !!(data.ok && ["creator", "administrator", "member"].includes(data.result?.status));
+          } catch (e) {
+            // Network/API failure is not treated as leaving; avoid false penalties.
+            continue;
+          }
 
-        const results = await Promise.all(checkPromises);
-        const leftItems = results.filter(Boolean);
+          if (isMember) continue;
 
-        if (leftItems.length > 0) {
-          let totalPenalty = 0;
-          let leftNames = [];
+          taskPenaltyLocks.add(taskId);
+          try {
+            // Delete only this active completion row. The returned row is the
+            // one-time guard that prevents repeat penalty for the same leave event.
+            const del = await fetch(
+              `${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${encodeURIComponent(taskId)}&select=user_id,task_id`,
+              {
+                method: "DELETE",
+                headers: {
+                  "apikey": SB_KEY,
+                  "Authorization": `Bearer ${SB_KEY}`,
+                  "Prefer": "return=representation"
+                }
+              }
+            );
+            if (!del.ok) throw new Error("Could not record task leave");
+            const deletedRows = await del.json();
+            if (!Array.isArray(deletedRows) || deletedRows.length === 0) continue;
 
-          leftItems.forEach(item => {
-            const p3x = Number((Number(item.taskObj.reward) * 3).toFixed(4));
-            totalPenalty = Number((totalPenalty + p3x).toFixed(4));
-            leftNames.push(item.chUsername);
-            if (!penalizedList.includes(item.sTaskId)) {
-              penalizedList.push(item.sTaskId);
-            }
-          });
+            const penalty = Number((Number(task.reward || 0) * 3).toFixed(4));
+            const newBal = Number(Math.max(0, currentBalance - penalty).toFixed(4));
+            await updateBalanceInDB(newBal);
+            foundLeft = true;
 
-          setPenalizedLeftTasks(penalizedList);
-          const newBal = Number(Math.max(0, currentBalance - totalPenalty).toFixed(4));
-          await updateBalanceInDB(newBal);
-
-          showAlert("⚠️ 3x Task Penalty!", (currentLang === "en"
-            ? `You left ${leftNames.join(", ")}! A 3x penalty (-$${totalPenalty} USDT) has been deducted. Re-joining will NOT grant any reward again.`
-            : `သတ်မှတ်ထားသော Channel (${leftNames.join(", ")}) မှ ခိုးထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၃ ဆ (-$${totalPenalty} USDT) အား အလိုအလျောက် နုတ်ယူလိုက်ပါပြီ! (နောက်တစ်ကြိမ် ပြန်လုပ်လျှင် ဆုကြေးထပ်မရပါ)`));
-          loadTasks();
-          isCheckingPenalty = false;
-          return false;
+            showAlert("⚠️ 3x Task Penalty!", currentLang === "en"
+              ? `You left ${chat}. A 3x penalty (-$${penalty.toFixed(4)}) was deducted. Re-joining can earn only the original task reward; the penalty is not refunded.`
+              : `${chat} Channel မှ ထွက်သွားသဖြင့် ၃ ဆ ဒဏ်ကြေး (-$${penalty.toFixed(4)}) နုတ်ယူလိုက်ပါပြီ။ ပြန် Join လုပ်ပြီး Task ပြန်လုပ်ပါက မူရင်းဆုကြေးသာ ပြန်ရပါမည်။ ဒဏ်ကြေးကို ပြန်မအမ်းပါ။`);
+          } catch (e) {
+            console.error("Task penalty error:", e);
+          } finally {
+            taskPenaltyLocks.delete(taskId);
+          }
         }
-      } catch (e) {}
 
-      isCheckingPenalty = false;
+        if (foundLeft) await loadTasks();
+      } catch (e) {
+        console.error("Task membership check error:", e);
+      } finally {
+        isCheckingPenalty = false;
+      }
       return true;
     }
 
     async function loadTasks() {
+      const container = document.getElementById("tasks-container");
+      if (!container) return;
       try {
-        const [cRes, tRes] = await Promise.all([
-          fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          }),
-          fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          })
+        // Keep the task UI responsive while loading data.
+        container.innerHTML = "<p style='font-size:12px;color:#9c8eaf;padding:10px 0;'>Loading tasks...</p>";
+        const [completedRows, tasks] = await Promise.all([
+          fetchUserCompletedTasks(),
+          cachedTasksList ? Promise.resolve(cachedTasksList) :
+            fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+            }).then(r => r.json())
         ]);
-
-        const [cData, tasks] = await Promise.all([cRes.json(), tRes.json()]);
         if (Array.isArray(tasks)) cachedTasksList = tasks;
 
-        const dbCompleted = Array.isArray(cData) ? cData.map(c => String(c.task_id)) : [];
-        dbCompleted.forEach(id => markTaskEverClaimed(id));
-
-        const everClaimed = getEverClaimedTasks();
-        const penalizedLeft = getPenalizedLeftTasks();
-
-        const container = document.getElementById("tasks-container");
+        const activeIds = new Set(completedRows.map(row => String(row.task_id)));
         container.innerHTML = "";
-
         if (!Array.isArray(tasks) || tasks.length === 0) {
-          container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>လက်ရှိ Task မရှိသေးပါ။</p>";
+          container.innerHTML = "<p style='font-size:12px;color:#9c8eaf;padding:10px 0;'>လက်ရှိ Task မရှိသေးပါ။</p>";
           return;
         }
 
-        tasks.forEach(t => {
-          const sId = String(t.id);
-          const isDone = dbCompleted.includes(sId) || everClaimed.includes(sId);
-          const isLeftPenalized = penalizedLeft.includes(sId);
-
+        tasks.forEach(task => {
+          const taskId = String(task.id);
+          const active = activeIds.has(taskId);
           const div = document.createElement("div");
           div.className = "card-item";
-
-          if (isDone) {
-            if (isLeftPenalized) {
-              div.innerHTML = `
-                <div>
-                  <h4>${t.title}</h4>
-                  <p style="color:#ff4757; font-weight:700;">⚠️ Left Channel (-3x Penalty Applied | ထပ်မရပါ)</p>
-                </div>
-                <button class="btn-sub" id="task-btn-${t.id}" style="border-color:#ff4757 !important; color:#ff4757 !important;">
-                  ${currentLang === "en" ? "Re-Join (No Reward)" : "ပြန် Join မည် (ဆုမရပါ)"}
-                </button>
-              `;
-              div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => {
-                if (tg?.openLink) { tg.openLink(t.link); } else { window.open(t.link, "_blank"); }
-                showAlert("Notice", (currentLang === "en"
-                  ? "You already claimed this task once. Re-joining does not give any reward."
-                  : "ဤ Task ကို တစ်ကြိမ် လုပ်ဆောင်ပြီးဖြစ်သဖြင့် နောက်တစ်ကြိမ် ပြန်လုပ်လျှင် ဆုကြေးထပ်မပေးပါ။"));
-              });
-            } else {
-              div.innerHTML = `
-                <div>
-                  <h4>${t.title}</h4>
-                  <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT (Completed ✅)</p>
-                </div>
-                <button class="btn-sub" disabled>
-                  ${currentLang === "en" ? "Completed ✅" : "ပြီးပြီးသား ✅"}
-                </button>
-              `;
-            }
-          } else {
-            div.innerHTML = `
-              <div>
-                <h4>${t.title}</h4>
-                <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
-              </div>
-              <button class="btn-sub" id="task-btn-${t.id}">
-                ${currentLang === "en" ? "Join & Check" : "Join & Check"}
-              </button>
-            `;
-            div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => verifyChannelAndReward(t));
+          div.innerHTML = `
+            <div>
+              <h4>${task.title || "Task"}</h4>
+              <p style="color:${active ? "#00ff88" : "#00ff88"};font-weight:700;">
+                ${active
+                  ? (currentLang === "en" ? "Joined & reward claimed ✅" : "Join လုပ်ပြီး ဆုကြေးရယူပြီးပါပြီ ✅")
+                  : `+$${Number(task.reward || 0).toFixed(3)} USDT`}
+              </p>
+            </div>
+            <button class="btn-sub" ${active ? "disabled" : ""} id="task-btn-${task.id}">
+              ${active
+                ? (currentLang === "en" ? "Completed ✅" : "ပြီးပြီးသား ✅")
+                : (currentLang === "en" ? "Join & Check" : "Join & Check")}
+            </button>
+          `;
+          if (!active) {
+            div.querySelector(`#task-btn-${task.id}`).addEventListener("click", () => verifyChannelAndReward(task));
           }
-
           container.appendChild(div);
         });
-      } catch (e) {}
+      } catch (e) {
+        console.error("Load tasks error:", e);
+        container.innerHTML = "<p style='font-size:12px;color:#ff6b81;padding:10px 0;'>Task များဖွင့်မရပါ။ ပြန်စမ်းပါ။</p>";
+      }
     }
 
     async function verifyChannelAndReward(task) {
-      const sTaskId = String(task.id);
-
-      // ချက်ချင်း Local စစ်ပြီး လုပ်ပြီးသားဆိုလျှင် ပိတ်မည်
-      if (getEverClaimedTasks().includes(sTaskId)) {
-        showAlert("Notice", (currentLang === "en"
-          ? "You have already claimed the reward for this task once!"
-          : "ဤ Task ကို တစ်ကြိမ် လုပ်ဆောင်ပြီးဖြစ်သဖြင့် နောက်တစ်ကြိမ် ဆုကြေးထပ်မရနိုင်ပါ။"));
-        loadTasks();
-        return;
+      const taskId = String(task.id);
+      if (taskClaimLocks.has(taskId)) return;
+      taskClaimLocks.add(taskId);
+      const btn = document.getElementById(`task-btn-${task.id}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Checking...";
       }
 
-      // နှိပ်လိုက်သည်နှင့် ချက်ချင်း Channel Link ဖွင့်ပေးမည် (လုံးဝ မလေးစေရန်)
-      if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
-      const b = document.getElementById(`task-btn-${task.id}`);
-      if (b) {
-        b.innerText = "Checking...";
-        b.disabled = true;
-      }
-
-      const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
-      const chUsername = chMatch ? `@${chMatch[1]}` : null;
-
-      setTimeout(async () => {
-        try {
-          const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          });
-          const checkDoneData = await checkDoneRes.json();
-          if ((Array.isArray(checkDoneData) && checkDoneData.length > 0) || getEverClaimedTasks().includes(sTaskId)) {
-            markTaskEverClaimed(sTaskId);
-            showAlert("Notice", "ဤ Task အတွက် ဆုကြေးရယူပြီးသား ဖြစ်ပါသည်။");
-            loadTasks();
-            return;
-          }
-        } catch (e) {}
-
-        let isMember = false;
-        try {
-          if (chUsername) {
-            const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
-            const res = await chk.json();
-            if (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status)) isMember = true;
-          } else {
-            isMember = true;
-          }
-        } catch (e) { isMember = false; }
-
-        if (isMember) {
-          markTaskEverClaimed(sTaskId);
-
-          await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
-            method: "POST",
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: userData.id, task_id: task.id })
-          });
-
-          const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
-          await updateBalanceInDB(nBal);
-
-          showAlert("Success", (currentLang === "en"
-            ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT added. (Leaving the channel will deduct 3x penalty!)`
-            : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ! +$${Number(task.reward).toFixed(3)} USDT ထည့်ပေးလိုက်ပါပြီ! (ပြန်ထွက်ပါက ဆုကြေး ၃ ဆ ပြန်နုတ်ပါမည်)`));
-          loadTasks();
-        } else {
-          if (b) {
-            b.innerText = "Join & Check";
-            b.disabled = false;
-          }
-          showAlert("Notice", (currentLang === "en"
-            ? "Please actually join the Telegram channel to claim reward."
-            : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
+      try {
+        // Re-check database before opening the channel to prevent repeat claims.
+        const existing = await fetch(
+          `${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${encodeURIComponent(taskId)}&select=task_id`,
+          { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }, cache: "no-store" }
+        );
+        if (!existing.ok) throw new Error("Could not verify task state");
+        const existingRows = await existing.json();
+        if (Array.isArray(existingRows) && existingRows.length) {
+          showAlert("Notice", currentLang === "en" ? "You have already claimed this task. Leave and re-join to claim it again." : "ဒီ Task ဆုကြေးကို ရယူပြီးပါပြီ။ Channel မှထွက်ပြီး ပြန် Join လုပ်မှသာ ပြန်လုပ်နိုင်ပါမည်။");
+          await loadTasks();
+          return;
         }
-      }, 3000);
+
+        if (tg?.openLink) tg.openLink(task.link);
+        else window.open(task.link, "_blank");
+
+        const match = String(task.link || "").match(/t\.me\/([a-zA-Z0-9_]+)/);
+        if (!match) throw new Error("Invalid Telegram channel link");
+        const chat = `@${match[1]}`;
+
+        // Give Telegram time to complete the join action.
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        const check = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chat}&user_id=${userData.id}`);
+        const memberData = await check.json();
+        const isMember = !!(memberData.ok && ["creator", "administrator", "member"].includes(memberData.result?.status));
+        if (!isMember) {
+          showAlert("Notice", currentLang === "en" ? "Please join the Telegram channel before claiming." : "ဆုကြေးမယူမီ Telegram Channel ကို Join လုပ်ပါ။");
+          return;
+        }
+
+        // Save the active task first. Pay only after Supabase confirms the row.
+        const save = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
+          method: "POST",
+          headers: {
+            "apikey": SB_KEY,
+            "Authorization": `Bearer ${SB_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify({ user_id: userData.id, task_id: task.id })
+        });
+        if (!save.ok) throw new Error("Task completion could not be saved");
+        const savedRows = await save.json();
+        if (!Array.isArray(savedRows) || savedRows.length !== 1) {
+          showAlert("Notice", currentLang === "en" ? "Task already claimed." : "ဒီ Task ကို ရယူပြီးသားဖြစ်ပါသည်။");
+          return;
+        }
+
+        const reward = Number(task.reward || 0);
+        const newBalance = Number((currentBalance + reward).toFixed(4));
+        await updateBalanceInDB(newBalance);
+        showAlert("Success", currentLang === "en"
+          ? `Task completed! +$${reward.toFixed(4)} added. Leaving the channel deducts 3x; re-joining pays only the original reward.`
+          : `Task အောင်မြင်ပါပြီ။ +$${reward.toFixed(4)} ထည့်ပေးလိုက်ပါပြီ။ Channel မှထွက်ပါက ၃ ဆ ဒဏ်ကြေးနုတ်မည်။ ပြန် Join လုပ်လျှင် မူရင်းဆုကြေးသာရပါမည်။`);
+        await loadTasks();
+      } catch (e) {
+        console.error("Task claim error:", e);
+        showAlert("Error", currentLang === "en" ? "Task could not be verified. Please try again." : "Task စစ်ဆေးမရပါ။ ပြန်စမ်းပါ။");
+      } finally {
+        taskClaimLocks.delete(taskId);
+        const currentBtn = document.getElementById(`task-btn-${task.id}`);
+        if (currentBtn && !currentBtn.disabled) {
+          currentBtn.disabled = false;
+          currentBtn.innerText = "Join & Check";
+        }
+      }
     }
 
     // DAILY BONUS: atomic 24-hour lock in Supabase.
@@ -1919,7 +1929,7 @@
         // Atomic condition: update succeeds only if last_daily is older than 24 hours.
         // A second click/device/request will receive zero updated rows and cannot earn twice.
         const claimRes = await fetch(
-          `${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&last_daily=lt.${cutoff}&select=id,last_daily,balance`,
+          `${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&or=(last_daily.is.null,last_daily.lte.${cutoff})&select=id,last_daily,balance`,
           {
             method: "PATCH",
             headers: {
