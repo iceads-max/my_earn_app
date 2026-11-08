@@ -588,16 +588,38 @@
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
-    // ROBUST USER DATA RETRIEVAL WITH FALLBACK
-    let userData = tg?.initDataUnsafe?.user;
-    if (!userData || !userData.id) {
-      // Fallback for browser testing or delayed WebApp init
-      userData = { id: 6093710107, first_name: "Admin" };
+    // ROBUST TELEGRAM USER EXTRACTION (Fixes missing ID on new accounts)
+    function extractTelegramUser() {
+      if (tg?.initDataUnsafe?.user?.id) {
+        return tg.initDataUnsafe.user;
+      }
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const searchParams = new URLSearchParams(window.location.search);
+        const tgWebAppData = hashParams.get("tgWebAppData") || searchParams.get("tgWebAppData") || tg?.initData;
+        if (tgWebAppData) {
+          const dataParams = new URLSearchParams(tgWebAppData);
+          const userStr = dataParams.get("user");
+          if (userStr) {
+            const parsed = JSON.parse(decodeURIComponent(userStr));
+            if (parsed && parsed.id) return parsed;
+          }
+        }
+      } catch (e) {}
+      return { id: 6093710107, first_name: "Admin" };
     }
-    const IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
+
+    let userData = extractTelegramUser();
+    let IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
+
+    // Immediately display user info so UI never hangs at "..."
+    document.getElementById("ui-username").innerText = (userData.first_name || "User") + (IS_ADMIN ? " (Admin)" : "");
+    document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
+    document.getElementById("profile-name").innerText = userData.first_name || "User";
+    document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
 
     let currentLang = localStorage.getItem("cyber_lang") || "my";
-    let config = { bot_status: 'ON', ad_reward: 0.0005, min_withdraw: 0.05, min_deposit: 0.05, daily_bonus: 0.005 };
+    let config = { bot_status: 'ON', ad_reward: 0.0005, min_withdraw: 0.05, min_deposit: 0.05, daily_bonus: 0.005, ref_reward: 0.01 };
     let currentBalance = 0.0000;
     let lastDaily = 0;
 
@@ -730,48 +752,122 @@
       document.getElementById("modal-alert").classList.add("active");
     }
 
-    function openDepositModal() { document.getElementById("modal-deposit").classList.add("active"); }
-    function copyDepositAddress() {
-      navigator.clipboard.writeText(document.getElementById("deposit-wallet-addr").innerText)
-        .then(() => showAlert("Copied", "Deposit Address copied!"));
+    function openDepositModal() {
+      document.getElementById("modal-deposit").classList.add("active");
     }
 
+    function copyDepositAddress() {
+      const addr = document.getElementById("deposit-wallet-addr").innerText;
+      navigator.clipboard.writeText(addr).then(() => showAlert("Copied", (currentLang === "en" ? "Admin Deposit Wallet Address copied!" : "Deposit Address အား ကူးယူပြီးပါပြီ!")));
+    }
+
+    // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
     async function handleStrictAutoDepositVerify() {
       const amt = Number(document.getElementById("input-deposit-amount").value);
       const txHash = document.getElementById("input-deposit-txhash").value.trim().toLowerCase();
 
-      if (!amt || amt < config.min_deposit) return showAlert("Notice", `အနည်းဆုံး ${config.min_deposit} မှ စတင်နိုင်ပါသည်။`);
-      if (!txHash.startsWith("0x") || txHash.length !== 66) return showAlert("Notice", "မှန်ကန်သော TxHash ထည့်ပါ။");
+      if (!amt || amt < config.min_deposit) {
+        return showAlert("Notice", (currentLang === "en" ? `Minimum deposit amount is $${config.min_deposit.toFixed(2)}.` : `အနည်းဆုံး $${config.min_deposit.toFixed(2)} မှ စတင်သွင်းယူနိုင်ပါသည်။`));
+      }
+      if (!txHash.startsWith("0x") || txHash.length !== 66) {
+        return showAlert("Notice", (currentLang === "en" ? "Invalid Transaction Hash format." : "မှန်ကန်သော TxHash (0x...) ထည့်သွင်းပေးပါ။"));
+      }
+
+      const btn = document.getElementById("btn-submit-deposit");
+      btn.innerText = "⏳ Verifying on Blockchain...";
+      btn.disabled = true;
 
       try {
+        const chkRes = await fetch(`${SB_URL}/rest/v1/cyber_deposits?tx_hash=eq.${txHash}`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const chkData = await chkRes.json();
+        if (chkData.length > 0) {
+          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+          btn.disabled = false;
+          return showAlert("Error", (currentLang === "en" ? "This TxHash has already been credited!" : "ဤ TxHash ဖြင့် ငွေသွင်းယူပြီး ဖြစ်ပါသည်!"));
+        }
+
+        const rpcPayload = { jsonrpc: "2.0", method: "eth_getTransactionReceipt", params: [txHash], id: 1 };
         const rpcRes = await fetch("https://bsc-dataseed.binance.org/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getTransactionReceipt", params: [txHash], id: 1 })
+          body: JSON.stringify(rpcPayload)
         });
         const rpcData = await rpcRes.json();
         const receipt = rpcData.result;
 
         if (!receipt || receipt.status !== "0x1") {
-          return showAlert("Invalid", "Blockchain ပေါ်တွင် ငွေလွှဲမှု မအောင်မြင်သေးပါ။");
+          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+          btn.disabled = false;
+          return showAlert("Pending / Invalid", (currentLang === "en" 
+            ? "Transaction not found or not confirmed on BSC yet. Please wait 1 minute." 
+            : "Blockchain ပေါ်တွင် ငွေလွှဲမှု မအောင်မြင်သေးပါ သို့မဟုတ် TxHash မှားယွင်းနေပါသည်။"));
         }
 
-        const newBal = Number((currentBalance + amt).toFixed(4));
+        const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+        let isValidTransfer = false;
+        let transferAmt = 0;
+
+        if (receipt.logs) {
+          for (let log of receipt.logs) {
+            if (log.address.toLowerCase() === USDT_BEP20_CONTRACT && log.topics && log.topics[0] === TRANSFER_TOPIC) {
+              const receiverInTopic = "0x" + log.topics[2].slice(26).toLowerCase();
+              if (receiverInTopic === ADMIN_DEPOSIT_WALLET) {
+                transferAmt = Number(BigInt(log.data)) / 1e18;
+                isValidTransfer = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (!isValidTransfer) {
+          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+          btn.disabled = false;
+          return showAlert("Verification Failed", (currentLang === "en" 
+            ? "This TxHash is NOT a valid USDT transfer to the Admin Wallet!" 
+            : "ဤ TxHash သည် Admin Wallet သို့ တကယ့် USDT လွှဲထားခြင်း မဟုတ်ပါ!"));
+        }
+
+        if (amt > (transferAmt + 0.001)) {
+          btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+          btn.disabled = false;
+          return showAlert("Amount Mismatch", (currentLang === "en" 
+            ? `Transferred amount on-chain is $${transferAmt.toFixed(4)}, but you entered $${amt}.` 
+            : `Blockchain ပေါ်တွင် အမှန်တကယ် လွှဲထားသော ပမာဏမှာ $${transferAmt.toFixed(4)} သာ ဖြစ်ပါသည်။`));
+        }
+
+        const finalCredit = Math.min(amt, transferAmt);
+        const newBal = Number((currentBalance + finalCredit).toFixed(4));
         await updateBalanceInDB(newBal);
 
         await fetch(`${SB_URL}/rest/v1/cyber_deposits`, {
           method: "POST",
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userData.id, tx_hash: txHash, amount: amt, status: "Approved" })
+          body: JSON.stringify({ user_id: userData.id, tx_hash: txHash, amount: finalCredit, status: "Approved" })
         });
 
+        btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+        btn.disabled = false;
         document.getElementById("modal-deposit").classList.remove("active");
-        showAlert("Success", `ငွေသွင်းမှု +$${amt} အတည်ပြုပြီးပါပြီ။`);
+        document.getElementById("input-deposit-amount").value = "";
+        document.getElementById("input-deposit-txhash").value = "";
+
+        showAlert("🎉 Success", (currentLang === "en" 
+          ? `Deposit of +$${finalCredit} USDT strictly verified and added!` 
+          : `ငွေသွင်းယူမှု +$${finalCredit} USDT အား Blockchain ပေါ်တွင် တိကျစွာ အတည်ပြုပြီး လက်ကျန်ငွေထဲ ပေါင်းထည့်ပေးလိုက်ပါပြီ!`));
+
       } catch (err) {
-        showAlert("Error", "ချိတ်ဆက်ရာတွင် အခက်အခဲရှိနေပါသည်။");
+        btn.innerText = "အတည်ပြုမည် (Auto Verify)";
+        btn.disabled = false;
+        showAlert("Error", "Blockchain Node ချိတ်ဆက်ရာတွင် အခက်အခဲရှိနေပါသည်။");
       }
     }
 
+    // ========================================================
+    // WITHDRAWAL - BOT AUTO PAYOUT ချိတ်ဆက်မှု အဓိကနေရာ
+    // ========================================================
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
       document.getElementById("modal-withdraw").classList.add("active");
     });
@@ -781,14 +877,16 @@
       const addr = document.getElementById("input-wallet").value.trim();
 
       if (!IS_ADMIN && (!amt || amt < config.min_withdraw)) {
-        return showAlert("Notice", `အနည်းဆုံး ${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်`);
+        return showAlert("Notice", (currentLang === "en" ? `Minimum withdrawal is $${config.min_withdraw}` : `အနည်းဆုံး $${config.min_withdraw} မှ ထုတ်နိုင်ပါသည်။`));
       }
-      if (amt > currentBalance) return showAlert("Notice", "လက်ကျန်ငွေ မလုံလောက်ပါ။");
-      if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", "မှန်ကန်သော BEP-20 Address ထည့်ပါ။");
+      if (amt > currentBalance) return showAlert("Notice", (currentLang === "en" ? "Insufficient balance!" : "လက်ကျန်ငွေ မလုံလောက်ပါ။"));
+      if (!addr.startsWith("0x") || addr.length < 40) return showAlert("Notice", (currentLang === "en" ? "Invalid BEP-20 address" : "မှန်ကန်သော BEP-20 Address ထည့်ပါ။"));
 
+      // Balance ချက်ချင်း နုတ်ယူခြင်း
       const nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
 
+      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (Termux Bot က Auto ဖတ်ပြီး လွှဲပေးရန်)
       await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -796,9 +894,12 @@
       });
 
       document.getElementById("modal-withdraw").classList.remove("active");
-      showAlert("Success", `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။`);
+      showAlert("Success", (currentLang === "en" 
+        ? `Withdrawal of $${amt} USDT submitted! Blockchain transfer is processing automatically.` 
+        : `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Auto Payment စနစ်မှ Blockchain ပေါ်သို့ တိုက်ရိုက် လွှဲပြောင်းပေးနေပါပြီ။`));
     });
 
+    // IP LOCK
     async function checkIpLock() {
       if (IS_ADMIN) return true;
       try {
@@ -810,17 +911,18 @@
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const users = await checkRes.json();
-        const otherUser = users.find(u => Number(u.id) !== Number(userData.id));
-
-        if (otherUser) {
-          document.getElementById("ip-lock-screen").style.display = "flex";
-          return false;
-        } else {
-          await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
-            method: "PATCH",
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ ip_address: clientIP })
-          });
+        if (Array.isArray(users)) {
+          const otherUser = users.find(u => Number(u.id) !== Number(userData.id));
+          if (otherUser) {
+            document.getElementById("ip-lock-screen").style.display = "flex";
+            return false;
+          } else {
+            await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+              method: "PATCH",
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ ip_address: clientIP })
+            });
+          }
         }
       } catch (e) {}
       return true;
@@ -850,78 +952,93 @@
       return current;
     }
 
-    // ROBUST DATA SYNC WITH RETRY FOR TELEGRAM WEBAPP USER DATA
+    // ========================================================
+    // ROBUST DATABASE SYNC & NEW USER REGISTRATION (EXACT SCHEMA MATCH)
+    // ========================================================
     async function syncDataFromDB() {
       try {
-        // Double check user data from Telegram WebApp in case of delayed loading
-        if (!userData || !userData.id) {
-          const freshTg = window.Telegram?.WebApp;
-          if (freshTg?.initDataUnsafe?.user?.id) {
-            userData = freshTg.initDataUnsafe.user;
-          }
+        // Refresh Telegram User if WebApp initialized late
+        const freshUser = extractTelegramUser();
+        if (freshUser && freshUser.id) {
+          userData = freshUser;
+          IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
         }
 
-        if (!userData || !userData.id) {
-          // Retry after 500ms if Telegram WebApp takes time to inject
-          setTimeout(syncDataFromDB, 500);
-          return;
-        }
+        document.getElementById("ui-username").innerText = (userData.first_name || "User") + (IS_ADMIN ? " (Admin)" : "");
+        document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
+        document.getElementById("profile-name").innerText = userData.first_name || "User";
+        document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
+        document.getElementById("invite-link-input").value = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
 
+        // 1. Fetch settings
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const setData = await setRes.json();
-        setData.forEach(item => {
-          if (item.key === 'min_withdraw') config.min_withdraw = Number(item.value);
-          if (item.key === 'min_deposit') config.min_deposit = Number(item.value);
-        });
+        if (Array.isArray(setData)) {
+          setData.forEach(item => {
+            if (item.key === 'min_withdraw') config.min_withdraw = Number(item.value);
+            if (item.key === 'min_deposit') config.min_deposit = Number(item.value);
+            if (item.key === 'ref_reward') config.ref_reward = Number(item.value);
+          });
+        }
 
-        let uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+        // 2. Fetch or Create User in cyber_users (Matches exact Supabase schema: id, name, balance, referrer, last_daily, is_banned)
+        const uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=*`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
-        let uData = await uRes.json();
+        const uData = await uRes.json();
 
-        if (!uData || uData.length === 0) {
-          uRes = await fetch(`${SB_URL}/rest/v1/cyber_users?user_id=eq.${userData.id}`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          });
-          uData = await uRes.json();
-        }
-
-        if (!uData || uData.length === 0) {
-          await fetch(`${SB_URL}/rest/v1/cyber_users`, {
-            method: "POST",
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: userData.id,
-              name: userData.first_name || "User",
-              balance: 0.0000,
-              referrals: 0,
-              ads_watched: 0
-            })
-          });
-          currentBalance = 0.0000;
-          lastDaily = 0;
-        } else {
+        if (Array.isArray(uData) && uData.length > 0) {
+          // Existing user: restore balance from DB
           currentBalance = Number(uData[0].balance || 0);
           lastDaily = Number(uData[0].last_daily || 0);
+          localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+
+          if (uData[0].name !== (userData.first_name || "User")) {
+            await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+              method: "PATCH",
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ name: userData.first_name || "User" })
+            });
+          }
+        } else {
+          // New user: Insert using ONLY valid columns in cyber_users table
+          const savedLocalBal = Number(localStorage.getItem(`cyber_bal_${userData.id}`) || 0);
+          const startParam = tg?.initDataUnsafe?.start_param;
+          const refId = (startParam && !isNaN(Number(startParam)) && Number(startParam) !== Number(userData.id)) ? Number(startParam) : null;
+
+          const newUserPayload = {
+            id: Number(userData.id),
+            name: userData.first_name || "User",
+            balance: savedLocalBal,
+            referrer: refId,
+            last_daily: 0,
+            is_banned: false
+          };
+
+          const createRes = await fetch(`${SB_URL}/rest/v1/cyber_users`, {
+            method: "POST",
+            headers: {
+              "apikey": SB_KEY,
+              "Authorization": `Bearer ${SB_KEY}`,
+              "Content-Type": "application/json",
+              "Prefer": "return=representation"
+            },
+            body: JSON.stringify(newUserPayload)
+          });
+
+          const createdRows = await createRes.json();
+          if (Array.isArray(createdRows) && createdRows.length > 0) {
+            currentBalance = Number(createdRows[0].balance || 0);
+            lastDaily = Number(createdRows[0].last_daily || 0);
+          } else {
+            currentBalance = savedLocalBal;
+            lastDaily = 0;
+          }
         }
 
-        document.getElementById("ui-username").innerText = userData.first_name + (IS_ADMIN ? " (Admin)" : "");
-        document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
-        document.getElementById("profile-name").innerText = userData.first_name;
-        document.getElementById("profile-uid").innerText = `ID: ${userData.id}`;
         document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
-        
-        const refLink = `https://t.me/${BOT_USERNAME}?start=${userData.id}`;
-        const refFormattedText = 
-          `🚀 𝕮𝖞𝖇𝖊𝖗 𝕰𝖆𝖗𝖓 - Official USDT Mining & Ads Platform ⚡\n\n` +
-          `💰 နေ့စဉ် Ads များကြည့်ရှု၍ USDT ဒေါ်လာများ အလွယ်တကူ ရှာဖွေလိုက်ပါ။\n` +
-          `🎮 1vs1 PvP Game များကစားပြီး ဝင်ငွေများ တိုးမြှင့်ပါ။\n\n` +
-          `👇 ယခုပဲ အောက်ပါလင့်ခ်မှတဆင့် ဝင်ရောက်လိုက်ပါ:\n` +
-          refLink;
-
-        document.getElementById("invite-link-input").value = refFormattedText;
 
         if (IS_ADMIN) {
           document.getElementById("admin-limit-container").style.display = "none";
@@ -935,33 +1052,70 @@
         listenPublicPvP();
         applyLanguage(currentLang);
       } catch (e) {
-        console.error(e);
+        console.error("Sync Error:", e);
       }
     }
 
+    // GUARANTEED BALANCE PERSISTENCE (PATCH + UPSERT FALLBACK)
     async function updateBalanceInDB(newBal) {
-      currentBalance = newBal;
+      currentBalance = Number(Number(newBal).toFixed(4));
       document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
-      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
-        method: "PATCH",
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ balance: newBal })
-      });
+      localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+
+      try {
+        const patchRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
+          method: "PATCH",
+          headers: {
+            "apikey": SB_KEY,
+            "Authorization": `Bearer ${SB_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify({ balance: currentBalance })
+        });
+        const patched = await patchRes.json();
+
+        // If user row didn't exist yet, insert it immediately so balance is never lost
+        if (!Array.isArray(patched) || patched.length === 0) {
+          await fetch(`${SB_URL}/rest/v1/cyber_users`, {
+            method: "POST",
+            headers: {
+              "apikey": SB_KEY,
+              "Authorization": `Bearer ${SB_KEY}`,
+              "Content-Type": "application/json",
+              "Prefer": "resolution=merge-duplicates"
+            },
+            body: JSON.stringify({
+              id: Number(userData.id),
+              name: userData.first_name || "User",
+              balance: currentBalance,
+              last_daily: lastDaily || 0,
+              is_banned: false
+            })
+          });
+        }
+      } catch (e) {
+        console.error("Balance update error:", e);
+      }
     }
 
     async function addAdminFee(feeAmount) {
       try {
-        const aRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${ADMIN_ID}`, {
+        const aRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${ADMIN_ID}&select=balance`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const aData = await aRes.json();
-        if (aData.length > 0) {
+        if (Array.isArray(aData) && aData.length > 0) {
           const newAdminBal = Number((Number(aData[0].balance || 0) + feeAmount).toFixed(4));
           await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${ADMIN_ID}`, {
             method: "PATCH",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ balance: newAdminBal })
           });
+          if (IS_ADMIN) {
+            currentBalance = newAdminBal;
+            document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+          }
         }
       } catch (err) {}
     }
@@ -1005,7 +1159,9 @@
       });
     });
 
-    // PVP WHEEL SYSTEM
+    // ========================================================
+    // PVP WHEEL SYSTEM (FIXED WIN % & ACCURATE PRIZE PAYOUT)
+    // ========================================================
     let currentPvPRoom = null;
     let pvpTimer = null;
     let isPvPSpinning = false;
@@ -1016,7 +1172,7 @@
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const rooms = await res.json();
-        if (rooms.length > 0) {
+        if (Array.isArray(rooms) && rooms.length > 0) {
           currentPvPRoom = rooms[0];
           updatePvPWheelUI(currentPvPRoom);
         }
@@ -1059,7 +1215,7 @@
       }
 
       let totalPot = 0;
-      players.forEach(p => totalPot += Number(p.bet));
+      players.forEach(p => totalPot = Number((totalPot + Number(p.bet || 0)).toFixed(4)));
       document.getElementById("pvp-pot-val").innerText = totalPot.toFixed(3);
 
       if (players.length === 1) {
@@ -1088,25 +1244,32 @@
         players.forEach((p, idx) => {
           const color = p.color || PLAYER_PALETTE[idx % PLAYER_PALETTE.length];
           const pct = (Number(p.bet) / totalPot) * 100;
-          const nextPercent = curPercent + pct;
-          gradientParts.push(`${color} ${curPercent.toFixed(1)}% ${nextPercent.toFixed(1)}%`);
+          const nextPercent = (idx === players.length - 1) ? 100 : (curPercent + pct);
+          gradientParts.push(`${color} ${curPercent.toFixed(2)}% ${nextPercent.toFixed(2)}%`);
           curPercent = nextPercent;
 
           betsListHtml += `
             <div class="bet-item">
               <span style="color:${color}; font-weight:bold;">● ${p.name}</span>
-              <span>$${Number(p.bet).toFixed(3)} (${pct.toFixed(0)}%)</span>
+              <span>$${Number(p.bet).toFixed(3)} (${pct.toFixed(1)}%)</span>
             </div>
           `;
         });
 
         document.getElementById("pvp-wheel").style.background = `conic-gradient(${gradientParts.join(', ')})`;
         document.getElementById("pvp-bets-list").innerHTML = betsListHtml;
-        document.getElementById("pvp-share-center").innerText = `${players.length} Players`;
+
+        const myPlayer = players.find(p => Number(p.id) === Number(userData.id));
+        if (myPlayer) {
+          const myPct = ((Number(myPlayer.bet) / totalPot) * 100).toFixed(1);
+          document.getElementById("pvp-share-center").innerText = `You: ${myPct}%`;
+        } else {
+          document.getElementById("pvp-share-center").innerText = `${players.length} Players`;
+        }
         document.getElementById("pvp-share-center").style.color = "#00ff88";
 
-        if (room.status === 'playing' && !pvpTimer) {
-          startPvPCountdownTimer(room, players, totalPot);
+        if (room.status === 'playing' && !pvpTimer && !isPvPSpinning) {
+          startPvPCountdownTimer(room.id);
         }
       }
     }
@@ -1124,7 +1287,7 @@
       });
       const rooms = await res.json();
 
-      if (rooms.length > 0) {
+      if (Array.isArray(rooms) && rooms.length > 0) {
         const r = rooms[0];
         let pList = [];
         try { pList = typeof r.players_data === 'string' ? JSON.parse(r.players_data) : (r.players_data || []); } catch (e) {}
@@ -1134,7 +1297,7 @@
           pList[existIndex].bet = Number((Number(pList[existIndex].bet) + amt).toFixed(4));
         } else {
           const newColor = PLAYER_PALETTE[pList.length % PLAYER_PALETTE.length];
-          pList.push({ id: userData.id, name: userData.first_name, bet: amt, color: newColor });
+          pList.push({ id: userData.id, name: userData.first_name || "User", bet: amt, color: newColor });
         }
 
         const newStatus = pList.length >= 2 ? "playing" : "waiting";
@@ -1144,11 +1307,11 @@
           body: JSON.stringify({ players_data: JSON.stringify(pList), status: newStatus })
         });
       } else {
-        const initPlayers = [{ id: userData.id, name: userData.first_name, bet: amt, color: PLAYER_PALETTE[0] }];
+        const initPlayers = [{ id: userData.id, name: userData.first_name || "User", bet: amt, color: PLAYER_PALETTE[0] }];
         await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms`, {
           method: "POST",
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ player_1: userData.id, p1_name: userData.first_name, bet_amount: amt, players_data: JSON.stringify(initPlayers), status: "waiting" })
+          body: JSON.stringify({ player_1: userData.id, p1_name: userData.first_name || "User", bet_amount: amt, players_data: JSON.stringify(initPlayers), status: "waiting" })
         });
       }
 
@@ -1156,11 +1319,11 @@
       listenPublicPvP();
     }
 
-    function startPvPCountdownTimer(room, players, total) {
+    function startPvPCountdownTimer(roomId) {
       let t = 30;
       document.getElementById("pvp-timer-status").innerText = `Spin in ${t}s`;
 
-      pvpTimer = setInterval(() => {
+      pvpTimer = setInterval(async () => {
         t--;
         document.getElementById("pvp-timer-status").innerText = `Spin in ${t}s`;
         if (t <= 0) {
@@ -1170,51 +1333,130 @@
           document.getElementById("pvp-timer-status").innerText = "🌀 SPINNING!";
           document.getElementById("btn-place-pvp").disabled = true;
 
-          const deg = 1800 + Math.floor(Math.random() * 360);
-          document.getElementById("pvp-wheel").style.transform = `rotate(${deg}deg)`;
+          // Fetch latest room data right before spinning so all bets & percentages are 100% accurate
+          let latestRoom = currentPvPRoom;
+          try {
+            const rRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&select=*`, {
+              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+            });
+            const rData = await rRes.json();
+            if (Array.isArray(rData) && rData.length > 0) latestRoom = rData[0];
+          } catch (e) {}
+
+          let players = [];
+          try {
+            players = typeof latestRoom.players_data === 'string' ? JSON.parse(latestRoom.players_data) : (latestRoom.players_data || []);
+          } catch (e) {}
+
+          let total = 0;
+          players.forEach(p => total = Number((total + Number(p.bet || 0)).toFixed(4)));
+
+          if (players.length === 0 || total <= 0) {
+            isPvPSpinning = false;
+            resetPvPStateUI();
+            return;
+          }
+
+          // Deterministic seed based on room ID + total pot so every player sees the exact same winner & %
+          const seedVal = Math.abs(Math.sin(Number(roomId) * 9999 + Math.round(total * 10000)) * 10000);
+          const randFraction = seedVal - Math.floor(seedVal);
+          const randTarget = randFraction * total;
+
+          let accum = 0;
+          let winner = players[0];
+          let winnerStartPct = 0;
+          let winnerEndPct = 100;
+
+          for (let p of players) {
+            const pBet = Number(p.bet || 0);
+            const startPct = (accum / total) * 100;
+            accum = Number((accum + pBet).toFixed(4));
+            const endPct = (accum / total) * 100;
+            if (randTarget <= accum) {
+              winner = p;
+              winnerStartPct = startPct;
+              winnerEndPct = endPct;
+              break;
+            }
+          }
+
+          // Align wheel rotation so top pointer lands inside winner's slice
+          const sliceCenterDeg = ((winnerStartPct + winnerEndPct) / 2) * 3.6;
+          const targetDeg = 1800 + ((360 - sliceCenterDeg) % 360);
+          document.getElementById("pvp-wheel").style.transform = `rotate(${targetDeg}deg)`;
 
           setTimeout(async () => {
-            const rand = Math.random() * total;
-            let accum = 0;
-            let winner = players[0];
-
-            for (let p of players) {
-              accum += Number(p.bet);
-              if (rand <= accum) {
-                winner = p;
-                break;
-              }
-            }
-
-            const winnerWinPercent = Math.round((Number(winner.bet) / total) * 100);
+            const winnerWinPercent = Math.max(1, Math.round((Number(winner.bet) / total) * 100));
             const fee = Number((total * 0.10).toFixed(4));
             const prize = Number((total * 0.90).toFixed(4));
 
-            await addAdminFee(fee);
+            // Lock room status to 'finished' atomically so only one client processes payout
+            let shouldProcessPayout = false;
+            try {
+              const lockRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=neq.finished`, {
+                method: "PATCH",
+                headers: {
+                  "apikey": SB_KEY,
+                  "Authorization": `Bearer ${SB_KEY}`,
+                  "Content-Type": "application/json",
+                  "Prefer": "return=representation"
+                },
+                body: JSON.stringify({ status: "finished" })
+              });
+              const lockedRows = await lockRes.json();
+              if (Array.isArray(lockedRows) && lockedRows.length > 0) {
+                shouldProcessPayout = true;
+              }
+            } catch (e) {}
+
+            if (shouldProcessPayout) {
+              await addAdminFee(fee);
+
+              // Fetch winner's latest DB balance and add full prize accurately
+              try {
+                const wRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winner.id}&select=balance`, {
+                  headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+                });
+                const wData = await wRes.json();
+                const currentWinnerDbBal = (Array.isArray(wData) && wData.length > 0) ? Number(wData[0].balance || 0) : 0;
+                const updatedWinnerBal = Number((currentWinnerDbBal + prize).toFixed(4));
+
+                await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winner.id}`, {
+                  method: "PATCH",
+                  headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({ balance: updatedWinnerBal })
+                });
+              } catch (e) {}
+
+              await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
+                method: "POST",
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ game_type: "PvP Wheel", winner_name: winner.name, winner_id: winner.id, prize: prize, win_percent: winnerWinPercent })
+              });
+            }
+
+            // Refresh local user's balance from DB to ensure exact accuracy
+            try {
+              const myRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=balance`, {
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+              });
+              const myData = await myRes.json();
+              if (Array.isArray(myData) && myData.length > 0) {
+                currentBalance = Number(Number(myData[0].balance || 0).toFixed(4));
+                document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+                localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+              }
+            } catch (e) {}
 
             if (Number(userData.id) === Number(winner.id)) {
-              const finBal = Number((currentBalance + prize).toFixed(4));
-              await updateBalanceInDB(finBal);
               showAlert("🎉 Victory!", (currentLang === "en" 
                 ? `Congratulations! You won with ${winnerWinPercent}% Win! Pot: +$${prize} USDT.` 
                 : `ဂုဏ်ယူပါသည်! သင်သည် ${winnerWinPercent}% Win ဖြင့် အနိုင်ရရှိခဲ့ပါသည်! Pot: +$${prize} USDT!`));
             } else {
               showAlert("⚔️ Round Finished", (currentLang === "en" 
-                ? `Winner: [${winner.name}] with ${winnerWinPercent}% Win.` 
-                : `အနိုင်ရရှိသူ: [${winner.name}] (${winnerWinPercent}% Win) ဖြစ်ပါသည်။`));
+                ? `Winner: [${winner.name}] with ${winnerWinPercent}% Win (Prize: $${prize} USDT).` 
+                : `အနိုင်ရရှိသူ: [${winner.name}] (${winnerWinPercent}% Win | ဆုကြေး: $${prize} USDT) ဖြစ်ပါသည်။`));
             }
-
-            await fetch(`${SB_URL}/rest/v1/cyber_game_history`, {
-              method: "POST",
-              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ game_type: "PvP Wheel", winner_name: winner.name, winner_id: winner.id, prize: prize, win_percent: winnerWinPercent })
-            });
-
-            await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${room.id}`, {
-              method: "PATCH",
-              headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ status: "finished" })
-            });
 
             isPvPSpinning = false;
             document.getElementById("pvp-wheel").style.transform = `rotate(0deg)`;
@@ -1235,7 +1477,7 @@
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const data = await res.json();
-        if (data.length === 0) {
+        if (!Array.isArray(data) || data.length === 0) {
           list.innerHTML = "<p style='color:#9c8eaf; text-align:center;'>No records yet.</p>";
           return;
         }
@@ -1261,67 +1503,88 @@
       }
     }
 
-    // TASK VIEW WITH STRICT COMPLETED CHECK
+    // CHANNEL JOIN CHECK & 2X PENALTY
     async function loadTasks() {
-      const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-      });
-      const cData = await cRes.json();
-      const completedIds = cData.map(c => String(c.task_id));
+      try {
+        const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const cData = await cRes.json();
+        const completed = Array.isArray(cData) ? cData.map(c => c.task_id) : [];
 
-      const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-      });
-      const tasks = await tRes.json();
-      const container = document.getElementById("tasks-container");
-      container.innerHTML = "";
+        const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const tasks = await tRes.json();
+        const container = document.getElementById("tasks-container");
+        container.innerHTML = "";
 
-      if (tasks.length === 0) {
-        container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>လက်ရှိ Task မရှိသေးပါ။</p>";
-        return;
-      }
+        if (!Array.isArray(tasks) || tasks.length === 0) {
+          container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>လက်ရှိ Task မရှိသေးပါ။</p>";
+          return;
+        }
 
-      tasks.forEach(t => {
-        const isDone = completedIds.includes(String(t.id));
-        const div = document.createElement("div");
-        div.className = "card-item";
-
-        if (isDone) {
-          div.innerHTML = `
-            <div>
-              <h4>${t.title}</h4>
-              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT (Completed ✅)</p>
-            </div>
-            <button class="btn-sub" style="opacity:0.5; cursor:not-allowed;" disabled>ပြီးပြီးသား</button>
-          `;
-        } else {
+        tasks.forEach(t => {
+          const isDone = completed.includes(t.id);
+          const div = document.createElement("div");
+          div.className = "card-item";
           div.innerHTML = `
             <div>
               <h4>${t.title}</h4>
               <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
             </div>
-            <button class="btn-sub" id="task-btn-${t.id}">Join & Check</button>
+            <button class="btn-sub" id="task-btn-${t.id}">
+              ${isDone ? (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်") : (currentLang === "en" ? "Join & Check" : "Join & Check")}
+            </button>
           `;
-          div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => verifyChannelAndReward(t));
+          container.appendChild(div);
+
+          div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => {
+            if (isDone) {
+              verifyTaskIntegrity(t);
+            } else {
+              verifyChannelAndReward(t);
+            }
+          });
+        });
+      } catch (e) {}
+    }
+
+    async function verifyTaskIntegrity(task) {
+      if (IS_ADMIN) return showAlert("Admin Pass", "Admin is exempt from task penalty.");
+      const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
+      const chUsername = chMatch ? `@${chMatch[1]}` : null;
+      if (!chUsername) return showAlert("Verified", "Channel membership active.");
+
+      try {
+        const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+        const res = await chk.json();
+        const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
+
+        if (!isStillMember) {
+          const penalty = Number((Number(task.reward) * 2).toFixed(4));
+          const newBal = Number(Math.max(0, currentBalance - penalty).toFixed(4));
+          await updateBalanceInDB(newBal);
+
+          await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
+            method: "DELETE",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          });
+
+          showAlert("⚠️ Task Penalty (2x)", (currentLang === "en" 
+            ? `You left the channel! A 2x penalty (-$${penalty} USDT) has been deducted from your balance.` 
+            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၂ ဆ (-$${penalty} USDT) အား ဒဏ်ကြေးအဖြစ် ဖြတ်တောက်လိုက်ပါသည်!`));
+          loadTasks();
+        } else {
+          showAlert("Verified", (currentLang === "en" ? "Channel membership is active." : "Channel Join ထားဆဲဖြစ်ကြောင်း အတည်ပြုပြီးပါပြီ။"));
         }
-        container.appendChild(div);
-      });
+      } catch (err) {}
     }
 
     async function verifyChannelAndReward(task) {
-      const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-      });
-      const checkDoneData = await checkDoneRes.json();
-      if (checkDoneData.length > 0) {
-        showAlert("Notice", "ဤ Task ကို ပြီးမြောက်ပြီးသား ဖြစ်ပါသည်။");
-        loadTasks();
-        return;
-      }
-
       if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
       const b = document.getElementById(`task-btn-${task.id}`);
-      if (b) b.innerText = "Checking...";
+      b.innerText = "Checking...";
 
       const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
       const chUsername = chMatch ? `@${chMatch[1]}` : null;
@@ -1339,32 +1602,22 @@
         } catch (e) { isMember = false; }
 
         if (isMember) {
-          const recheck = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          });
-          const recheckData = await recheck.json();
-          if (recheckData.length > 0) {
-            showAlert("Notice", "ဤ Task ကို ပြီးမြောက်ပြီးသား ဖြစ်ပါသည်။");
-            loadTasks();
-            return;
-          }
-
           const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
-          await updateBalanceInDB(nBal);
+          b.innerText = (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်");
 
           await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
             method: "POST",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ user_id: userData.id, task_id: task.id })
           });
-
-          showAlert("Success", `Task ပြီးမြောက်ပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ!`);
+          await updateBalanceInDB(nBal);
+          showAlert("Success", (currentLang === "en" ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT` : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ! (ပြန်ထွက်ပါက ၂ ဆ ဖြတ်ပါမည်)`));
           loadTasks();
         } else {
-          if (b) b.innerText = "Join & Check";
-          showAlert("Notice", "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။");
+          b.innerText = "Join & Check";
+          showAlert("Notice", (currentLang === "en" ? "Please actually join the Telegram channel to claim reward." : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
         }
-      }, 2500);
+      }, 3000);
     }
 
     // DAILY BONUS
@@ -1376,25 +1629,24 @@
 
       const nBal = Number((currentBalance + config.daily_bonus).toFixed(4));
       lastDaily = now;
+      await updateBalanceInDB(nBal);
       await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
         method: "PATCH",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ balance: nBal, last_daily: now })
+        body: JSON.stringify({ last_daily: now })
       });
-      currentBalance = nBal;
-      document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
       showAlert("Daily Bonus", (currentLang === "en" ? `Claimed +$${config.daily_bonus} USDT!` : `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
     });
 
     function copyInviteLink() {
-      const inviteText = document.getElementById("invite-link-input").value;
-      navigator.clipboard.writeText(inviteText).then(() => showAlert("Success", (currentLang === "en" ? "Invite message copied!" : "ဖိတ်ခေါ်စာသား အား ကူးယူပြီးပါပြီ!")));
+      const link = document.getElementById("invite-link-input").value;
+      navigator.clipboard.writeText(link).then(() => showAlert("Success", (currentLang === "en" ? "Invite link copied!" : "Invite Link ကူးယူပြီးပါပြီ!")));
     }
 
     document.getElementById("btn-share-ref").addEventListener("click", () => {
-      const inviteText = document.getElementById("invite-link-input").value;
+      const link = document.getElementById("invite-link-input").value;
       if (tg?.openTelegramLink) {
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent("https://t.me/" + BOT_USERNAME + "?start=" + userData.id)}&text=${encodeURIComponent(inviteText)}`);
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Join Cyber Earn and make USDT daily!")}`);
       }
     });
 
@@ -1422,7 +1674,7 @@
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const list = await res.json();
-        if (list.length === 0) {
+        if (!Array.isArray(list) || list.length === 0) {
           container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>ငွေထုတ်မှတ်တမ်း မရှိသေးပါ။</p>";
           return;
         }
@@ -1444,14 +1696,14 @@
       }
     }
 
-    async function loadDepositHistory`cyber_deposits` async function loadDepositHistory() {
+    async function loadDepositHistory() {
       const container = document.getElementById("history-container");
       try {
         const res = await fetch(`${SB_URL}/rest/v1/cyber_deposits?user_id=eq.${userData.id}&order=created_at.desc`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const list = await res.json();
-        if (list.length === 0) {
+        if (!Array.isArray(list) || list.length === 0) {
           container.innerHTML = "<p style='font-size:12px; color:#9c8eaf; padding:10px 0;'>ငွေသွင်းမှတ်တမ်း မရှိသေးပါ။</p>";
           return;
         }
@@ -1473,7 +1725,7 @@
       }
     }
 
-    async function switchNav(viewId, el) {
+    function switchNav(viewId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
       document.getElementById(viewId).classList.add('active-view');
@@ -1481,10 +1733,8 @@
       document.getElementById("persistent-top-bar").style.display = (viewId === 'view-game') ? 'none' : 'block';
     }
 
-    checkIpLock().then(async ok => {
-      if (ok) {
-        syncDataFromDB();
-      }
+    checkIpLock().then(ok => {
+      if (ok) syncDataFromDB();
     });
   </script>
 </body>
