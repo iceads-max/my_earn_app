@@ -588,7 +588,12 @@
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
-    const userData = tg?.initDataUnsafe?.user || { id: 6093710107, first_name: "Admin" };
+    // ROBUST USER DATA RETRIEVAL WITH FALLBACK
+    let userData = tg?.initDataUnsafe?.user;
+    if (!userData || !userData.id) {
+      // Fallback for browser testing or delayed WebApp init
+      userData = { id: 6093710107, first_name: "Admin" };
+    }
     const IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
 
     let currentLang = localStorage.getItem("cyber_lang") || "my";
@@ -845,9 +850,23 @@
       return current;
     }
 
-    // ORIGINAL STABLE SYNC (PREVENTS BALANCE LOSS & RESTORES NEW USERS PROPERLY)
+    // ROBUST DATA SYNC WITH RETRY FOR TELEGRAM WEBAPP USER DATA
     async function syncDataFromDB() {
       try {
+        // Double check user data from Telegram WebApp in case of delayed loading
+        if (!userData || !userData.id) {
+          const freshTg = window.Telegram?.WebApp;
+          if (freshTg?.initDataUnsafe?.user?.id) {
+            userData = freshTg.initDataUnsafe.user;
+          }
+        }
+
+        if (!userData || !userData.id) {
+          // Retry after 500ms if Telegram WebApp takes time to inject
+          setTimeout(syncDataFromDB, 500);
+          return;
+        }
+
         const setRes = await fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
@@ -1425,7 +1444,7 @@
       }
     }
 
-    async function loadDepositHistory() {
+    async function loadDepositHistory`cyber_deposits` async function loadDepositHistory() {
       const container = document.getElementById("history-container");
       try {
         const res = await fetch(`${SB_URL}/rest/v1/cyber_deposits?user_id=eq.${userData.id}&order=created_at.desc`, {
