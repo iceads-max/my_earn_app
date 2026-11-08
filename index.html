@@ -192,6 +192,13 @@
       font-weight: 800;
       cursor: pointer;
     }
+    .btn-sub:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      border-color: #00ff88 !important;
+      color: #00ff88 !important;
+      background: rgba(0, 255, 136, 0.1) !important;
+    }
 
     /* PVP WHEEL STYLES */
     .pvp-stage {
@@ -873,6 +880,13 @@
     });
 
     document.getElementById("btn-submit-withdraw").addEventListener("click", async () => {
+      // ငွေမထုတ်မီ Channel များမှ ခိုးထွက်ထားခြင်း ရှိမရှိ အရင်စစ်ဆေးမည် (ထွက်ထားပါက 3x နုတ်မည်)
+      const isClean = await autoCheckLeftChannelsAndPenalize3x();
+      if (!isClean) {
+        document.getElementById("modal-withdraw").classList.remove("active");
+        return;
+      }
+
       const amt = Number(document.getElementById("input-amount").value);
       const addr = document.getElementById("input-wallet").value.trim();
 
@@ -886,7 +900,7 @@
       const nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
 
-      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (Termux Bot က Auto ဖတ်ပြီး လွှဲပေးရန်)
+      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (VPS/Termux Bot က Auto ဖတ်ပြီး လွှဲပေးကာ Channel နှင့် User ဆီ Auto ပို့ပေးရန်)
       await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -1048,6 +1062,7 @@
           document.getElementById("ads-progress-fill").style.width = `${Math.min(100, Math.round((currentAds / MAX_DAILY_ADS) * 100))}%`;
         }
 
+        await autoCheckLeftChannelsAndPenalize3x();
         loadTasks();
         listenPublicPvP();
         applyLanguage(currentLang);
@@ -1333,7 +1348,6 @@
           document.getElementById("pvp-timer-status").innerText = "🌀 SPINNING!";
           document.getElementById("btn-place-pvp").disabled = true;
 
-          // Fetch latest room data right before spinning so all bets & percentages are 100% accurate
           let latestRoom = currentPvPRoom;
           try {
             const rRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&select=*`, {
@@ -1380,7 +1394,6 @@
             }
           }
 
-          // Align wheel rotation so top pointer lands inside winner's slice
           const sliceCenterDeg = ((winnerStartPct + winnerEndPct) / 2) * 3.6;
           const targetDeg = 1800 + ((360 - sliceCenterDeg) % 360);
           document.getElementById("pvp-wheel").style.transform = `rotate(${targetDeg}deg)`;
@@ -1390,7 +1403,6 @@
             const fee = Number((total * 0.10).toFixed(4));
             const prize = Number((total * 0.90).toFixed(4));
 
-            // Lock room status to 'finished' atomically so only one client processes payout
             let shouldProcessPayout = false;
             try {
               const lockRes = await fetch(`${SB_URL}/rest/v1/cyber_pvp_rooms?id=eq.${roomId}&status=neq.finished`, {
@@ -1412,7 +1424,6 @@
             if (shouldProcessPayout) {
               await addAdminFee(fee);
 
-              // Fetch winner's latest DB balance and add full prize accurately
               try {
                 const wRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${winner.id}&select=balance`, {
                   headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -1435,7 +1446,6 @@
               });
             }
 
-            // Refresh local user's balance from DB to ensure exact accuracy
             try {
               const myRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=balance`, {
                 headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -1503,14 +1513,101 @@
       }
     }
 
-    // CHANNEL JOIN CHECK & 2X PENALTY
+    // ========================================================
+    // STRICT ONE-TIME TASK SYSTEM & AUTO 3X PENALTY ON LEAVE
+    // ========================================================
+    function getEverClaimedTasks() {
+      try {
+        return JSON.parse(localStorage.getItem(`cyber_ever_claimed_${userData.id}`) || "[]");
+      } catch (e) { return []; }
+    }
+
+    function markTaskEverClaimed(taskId) {
+      const list = getEverClaimedTasks();
+      const sId = String(taskId);
+      if (!list.includes(sId)) {
+        list.push(sId);
+        localStorage.setItem(`cyber_ever_claimed_${userData.id}`, JSON.stringify(list));
+      }
+    }
+
+    function getPenalizedLeftTasks() {
+      try {
+        return JSON.parse(localStorage.getItem(`cyber_penalized_left_${userData.id}`) || "[]");
+      } catch (e) { return []; }
+    }
+
+    function setPenalizedLeftTasks(list) {
+      localStorage.setItem(`cyber_penalized_left_${userData.id}`, JSON.stringify(list));
+    }
+
+    // Channel မှ ခိုးထွက်ထားပါက အလိုအလျောက် ဆုကြေး ၃ ဆ (3x) နုတ်ယူမည့် ဖန်ရှင်
+    async function autoCheckLeftChannelsAndPenalize3x() {
+      if (IS_ADMIN) return true;
+      try {
+        const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const cData = await cRes.json();
+        if (!Array.isArray(cData) || cData.length === 0) return true;
+
+        const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const tasks = await tRes.json();
+        if (!Array.isArray(tasks)) return true;
+
+        let penalizedList = getPenalizedLeftTasks();
+
+        for (const c of cData) {
+          const sTaskId = String(c.task_id);
+          markTaskEverClaimed(sTaskId);
+
+          // ယခင်က ၃ ဆ ဒဏ်ကြေးဖြတ်ပြီးသားဖြစ်လျှင် ထပ်မဖြတ်ရန်
+          if (penalizedList.includes(sTaskId)) continue;
+
+          const taskObj = tasks.find(t => String(t.id) === sTaskId);
+          if (taskObj && taskObj.link) {
+            const chMatch = taskObj.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
+            const chUsername = chMatch ? `@${chMatch[1]}` : null;
+            if (chUsername) {
+              const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
+              const res = await chk.json();
+              const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
+
+              if (!isStillMember) {
+                // ဆုကြေး၏ ၃ ဆ (3x Penalty) တွက်ချက်၍ လက်ကျန်ငွေမှ ချက်ချင်းနုတ်ယူခြင်း
+                const penalty3x = Number((Number(taskObj.reward) * 3).toFixed(4));
+                const newBal = Number(Math.max(0, currentBalance - penalty3x).toFixed(4));
+                await updateBalanceInDB(newBal);
+
+                penalizedList.push(sTaskId);
+                setPenalizedLeftTasks(penalizedList);
+
+                showAlert("⚠️ 3x Task Penalty!", (currentLang === "en"
+                  ? `You left ${chUsername}! A 3x penalty (-$${penalty3x} USDT) has been deducted. Re-joining will NOT grant any reward again.`
+                  : `သတ်မှတ်ထားသော Channel (${chUsername}) မှ ခိုးထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၃ ဆ (-$${penalty3x} USDT) အား အလိုအလျောက် နုတ်ယူလိုက်ပါပြီ! (နောက်တစ်ကြိမ် ပြန်လုပ်လျှင် ဆုကြေးထပ်မရပါ)`));
+                loadTasks();
+                return false;
+              }
+            }
+          }
+        }
+      } catch (e) {}
+      return true;
+    }
+
     async function loadTasks() {
       try {
         const cRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
         const cData = await cRes.json();
-        const completed = Array.isArray(cData) ? cData.map(c => c.task_id) : [];
+        const dbCompleted = Array.isArray(cData) ? cData.map(c => String(c.task_id)) : [];
+        dbCompleted.forEach(id => markTaskEverClaimed(id));
+
+        const everClaimed = getEverClaimedTasks();
+        const penalizedLeft = getPenalizedLeftTasks();
 
         const tRes = await fetch(`${SB_URL}/rest/v1/cyber_tasks?select=*`, {
           headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -1525,66 +1622,94 @@
         }
 
         tasks.forEach(t => {
-          const isDone = completed.includes(t.id);
+          const sId = String(t.id);
+          const isDone = dbCompleted.includes(sId) || everClaimed.includes(sId);
+          const isLeftPenalized = penalizedLeft.includes(sId);
+
           const div = document.createElement("div");
           div.className = "card-item";
-          div.innerHTML = `
-            <div>
-              <h4>${t.title}</h4>
-              <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
-            </div>
-            <button class="btn-sub" id="task-btn-${t.id}">
-              ${isDone ? (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်") : (currentLang === "en" ? "Join & Check" : "Join & Check")}
-            </button>
-          `;
-          container.appendChild(div);
 
-          div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => {
-            if (isDone) {
-              verifyTaskIntegrity(t);
+          if (isDone) {
+            if (isLeftPenalized) {
+              // ခိုးထွက်ထားသဖြင့် ၃ ဆ အဖြတ်ခံထားရသော Task (ပြန် Join လျှင်လည်း Reward လုံးဝမပေးပါ)
+              div.innerHTML = `
+                <div>
+                  <h4>${t.title}</h4>
+                  <p style="color:#ff4757; font-weight:700;">⚠️ Left Channel (-3x Penalty Applied | ထပ်မရပါ)</p>
+                </div>
+                <button class="btn-sub" id="task-btn-${t.id}" style="border-color:#ff4757 !important; color:#ff4757 !important;">
+                  ${currentLang === "en" ? "Re-Join (No Reward)" : "ပြန် Join မည် (ဆုမရပါ)"}
+                </button>
+              `;
+              div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => {
+                if (tg?.openLink) { tg.openLink(t.link); } else { window.open(t.link, "_blank"); }
+                showAlert("Notice", (currentLang === "en"
+                  ? "You already claimed this task once. Re-joining does not give any reward."
+                  : "ဤ Task ကို တစ်ကြိမ် လုပ်ဆောင်ပြီးဖြစ်သဖြင့် နောက်တစ်ကြိမ် ပြန်လုပ်လျှင် ဆုကြေးထပ်မပေးပါ။"));
+              });
             } else {
-              verifyChannelAndReward(t);
+              // တစ်ကြိမ်လုပ်ပြီးသား Task ကို ထပ်နှိပ်မရအောင် အပြီးပိတ်ထားမည်
+              div.innerHTML = `
+                <div>
+                  <h4>${t.title}</h4>
+                  <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT (Completed ✅)</p>
+                </div>
+                <button class="btn-sub" disabled>
+                  ${currentLang === "en" ? "Completed ✅" : "ပြီးပြီးသား ✅"}
+                </button>
+              `;
             }
-          });
+          } else {
+            div.innerHTML = `
+              <div>
+                <h4>${t.title}</h4>
+                <p style="color:#00ff88; font-weight:700;">+$${Number(t.reward).toFixed(3)} USDT</p>
+              </div>
+              <button class="btn-sub" id="task-btn-${t.id}">
+                ${currentLang === "en" ? "Join & Check" : "Join & Check"}
+              </button>
+            `;
+            div.querySelector(`#task-btn-${t.id}`).addEventListener("click", () => verifyChannelAndReward(t));
+          }
+
+          container.appendChild(div);
         });
       } catch (e) {}
     }
 
-    async function verifyTaskIntegrity(task) {
-      if (IS_ADMIN) return showAlert("Admin Pass", "Admin is exempt from task penalty.");
-      const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
-      const chUsername = chMatch ? `@${chMatch[1]}` : null;
-      if (!chUsername) return showAlert("Verified", "Channel membership active.");
+    async function verifyChannelAndReward(task) {
+      const sTaskId = String(task.id);
+
+      // ၁။ ယခင်က လုပ်ပြီးသား ဟုတ်မဟုတ် Local နှင့် Database နှစ်ထပ် စစ်ဆေးခြင်း (တစ်ကြိမ်သာ ဆုပေးရန်)
+      if (getEverClaimedTasks().includes(sTaskId)) {
+        showAlert("Notice", (currentLang === "en"
+          ? "You have already claimed the reward for this task once!"
+          : "ဤ Task ကို တစ်ကြိမ် လုပ်ဆောင်ပြီးဖြစ်သဖြင့် နောက်တစ်ကြိမ် ဆုကြေးထပ်မရနိုင်ပါ။"));
+        loadTasks();
+        return;
+      }
 
       try {
-        const chk = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chUsername}&user_id=${userData.id}`);
-        const res = await chk.json();
-        const isStillMember = (res.ok && ['creator', 'administrator', 'member'].includes(res.result?.status));
-
-        if (!isStillMember) {
-          const penalty = Number((Number(task.reward) * 2).toFixed(4));
-          const newBal = Number(Math.max(0, currentBalance - penalty).toFixed(4));
-          await updateBalanceInDB(newBal);
-
-          await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
-            method: "DELETE",
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-          });
-
-          showAlert("⚠️ Task Penalty (2x)", (currentLang === "en" 
-            ? `You left the channel! A 2x penalty (-$${penalty} USDT) has been deducted from your balance.` 
-            : `သတ်မှတ်ထားသော Channel မှ ပြန်ထွက်သွားသည်ကို တွေ့ရှိရသဖြင့် ဆုကြေး၏ ၂ ဆ (-$${penalty} USDT) အား ဒဏ်ကြေးအဖြစ် ဖြတ်တောက်လိုက်ပါသည်!`));
+        const checkDoneRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
+          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        const checkDoneData = await checkDoneRes.json();
+        if (Array.isArray(checkDoneData) && checkDoneData.length > 0) {
+          markTaskEverClaimed(sTaskId);
+          showAlert("Notice", (currentLang === "en"
+            ? "You have already completed this task! Reward is only given once."
+            : "ဤ Task ကို လုပ်ဆောင်ပြီးသား ဖြစ်ပါသည်။ ဆုကြေးကို တစ်ကြိမ်သာ ပေးအပ်ပါသည်။"));
           loadTasks();
-        } else {
-          showAlert("Verified", (currentLang === "en" ? "Channel membership is active." : "Channel Join ထားဆဲဖြစ်ကြောင်း အတည်ပြုပြီးပါပြီ။"));
+          return;
         }
-      } catch (err) {}
-    }
+      } catch (e) {}
 
-    async function verifyChannelAndReward(task) {
       if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
       const b = document.getElementById(`task-btn-${task.id}`);
-      b.innerText = "Checking...";
+      if (b) {
+        b.innerText = "Checking...";
+        b.disabled = true;
+      }
 
       const chMatch = task.link.match(/t\.me\/([a-zA-Z0-9_]+)/);
       const chUsername = chMatch ? `@${chMatch[1]}` : null;
@@ -1602,26 +1727,49 @@
         } catch (e) { isMember = false; }
 
         if (isMember) {
-          const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
-          b.innerText = (currentLang === "en" ? "Check Active" : "စစ်ဆေးမည်");
+          // ဆုကြေးမပေးမီ နောက်ဆုံးအကြိမ် Database ထပ်စစ်ခြင်း (Double Claim လုံးဝမရစေရန်)
+          const recheckRes = await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks?user_id=eq.${userData.id}&task_id=eq.${task.id}`, {
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+          });
+          const recheckData = await recheckRes.json();
+          if ((Array.isArray(recheckData) && recheckData.length > 0) || getEverClaimedTasks().includes(sTaskId)) {
+            markTaskEverClaimed(sTaskId);
+            showAlert("Notice", "ဤ Task အတွက် ဆုကြေးရယူပြီးသား ဖြစ်ပါသည်။");
+            loadTasks();
+            return;
+          }
+
+          markTaskEverClaimed(sTaskId);
 
           await fetch(`${SB_URL}/rest/v1/cyber_completed_tasks`, {
             method: "POST",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ user_id: userData.id, task_id: task.id })
           });
+
+          const nBal = Number((currentBalance + Number(task.reward)).toFixed(4));
           await updateBalanceInDB(nBal);
-          showAlert("Success", (currentLang === "en" ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT` : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ +$${Number(task.reward).toFixed(3)} ထည့်ပေးလိုက်ပါပြီ! (ပြန်ထွက်ပါက ၂ ဆ ဖြတ်ပါမည်)`));
+
+          showAlert("Success", (currentLang === "en"
+            ? `Task completed! +$${Number(task.reward).toFixed(3)} USDT added. (Leaving the channel will deduct 3x penalty!)`
+            : `Channel Join ထားကြောင်း အတည်ပြုပြီးပါပြီ! +$${Number(task.reward).toFixed(3)} USDT ထည့်ပေးလိုက်ပါပြီ! (ပြန်ထွက်ပါက ဆုကြေး ၃ ဆ ပြန်နုတ်ပါမည်)`));
           loadTasks();
         } else {
-          b.innerText = "Join & Check";
-          showAlert("Notice", (currentLang === "en" ? "Please actually join the Telegram channel to claim reward." : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
+          if (b) {
+            b.innerText = "Join & Check";
+            b.disabled = false;
+          }
+          showAlert("Notice", (currentLang === "en"
+            ? "Please actually join the Telegram channel to claim reward."
+            : "Telegram Channel သို့ အမှန်တကယ် Join ထားမှသာ ဆုကြေးရရှိပါမည်။"));
         }
       }, 3000);
     }
 
     // DAILY BONUS
     document.getElementById("btn-daily").addEventListener("click", async () => {
+      if (!(await autoCheckLeftChannelsAndPenalize3x())) return;
+
       const now = Date.now();
       if (!IS_ADMIN && (now - lastDaily < 24 * 60 * 60 * 1000)) {
         return showAlert("Notice", (currentLang === "en" ? "Already claimed today." : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။"));
@@ -1725,7 +1873,9 @@
       }
     }
 
-    function switchNav(viewId, el) {
+    async function switchNav(viewId, el) {
+      await autoCheckLeftChannelsAndPenalize3x();
+
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
       document.getElementById(viewId).classList.add('active-view');
