@@ -350,9 +350,31 @@
     }
     #ip-lock-screen h2 { color: #ffeb3b; margin-bottom: 12px; font-size: 20px; }
     #ip-lock-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.6; }
+
+    /* MAINTENANCE SCREEN: shown to users when Admin switches bot_status to OFF */
+    #maintenance-screen {
+      position: fixed; inset: 0; z-index: 1000000;
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; padding: 28px; text-align: center;
+      background: #09050d;
+    }
+    #maintenance-screen h2 { color: #ffeb3b; margin: 12px 0; font-size: 22px; }
+    #maintenance-screen p { color: #9c8eaf; font-size: 13px; line-height: 1.7; }
+    #admin-maintenance-toggle {
+      display: none; border: 1px solid #ffeb3b; border-radius: 9px;
+      background: rgba(255,235,59,.12); color: #ffeb3b;
+      padding: 5px 8px; font-size: 10px; font-weight: 800;
+    }
   </style>
 </head>
 <body>
+
+  <!-- MAINTENANCE SCREEN -->
+  <div id="maintenance-screen">
+    <div style="font-size:58px;">🛠️</div>
+    <h2>ခေတ္တပြုပြင်ထိန်းသိမ်းနေပါသည်</h2>
+    <p>Cyber Earn ကို ခေတ္တပိတ်ထားပါသည်။ ပြန်လည်ဖွင့်လှစ်သည်အထိ စောင့်ဆိုင်းပေးပါ။</p>
+  </div>
 
   <!-- IP LOCK SCREEN -->
   <div id="ip-lock-screen">
@@ -373,6 +395,7 @@
     <div class="header-actions">
       <button class="lang-btn" id="btn-lang-toggle" onclick="toggleLanguage()">🇬🇧 EN</button>
       <div class="status-badge" id="bot-status-tag">ONLINE</div>
+      <button id="admin-maintenance-toggle" type="button">PAUSE APP</button>
     </div>
   </div>
 
@@ -599,6 +622,7 @@
     const tg = window.Telegram?.WebApp;
     if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
+    // ROBUST TELEGRAM USER EXTRACTION (Fixes missing ID on new accounts)
     function extractTelegramUser() {
       if (tg?.initDataUnsafe?.user?.id) {
         return tg.initDataUnsafe.user;
@@ -622,6 +646,7 @@
     let userData = extractTelegramUser();
     let IS_ADMIN = (Number(userData.id) === Number(ADMIN_ID));
 
+    // Immediately display user info & cached balance so UI is 100% responsive right away
     document.getElementById("ui-username").innerText = (userData.first_name || "User") + (IS_ADMIN ? " (Admin)" : "");
     document.getElementById("ui-userid").innerText = `ID: ${userData.id}`;
     document.getElementById("profile-name").innerText = userData.first_name || "User";
@@ -630,7 +655,7 @@
     let currentLang = localStorage.getItem("cyber_lang") || "my";
     let config = { bot_status: 'ON', ad_reward: 0.0005, min_withdraw: 0.05, min_deposit: 0.05, daily_bonus: 0.005, ref_reward: 0.01 };
     let currentBalance = Number(localStorage.getItem(`cyber_bal_${userData.id}`) || 0);
-    let lastDailyDate = ""; // Database မှ ရလာသော နေ့စွဲအမှန် (YYYY-MM-DD)
+    let lastDaily = 0;
 
     document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
 
@@ -719,6 +744,58 @@
       }
     };
 
+    // ADMIN MAINTENANCE SWITCH.
+    // This writes cyber_settings.key="bot_status", value="OFF" or "ON".
+    function applyMaintenanceState() {
+      const stopped = String(config.bot_status).toUpperCase() !== "ON";
+      const screen = document.getElementById("maintenance-screen");
+      const adminButton = document.getElementById("admin-maintenance-toggle");
+      const status = document.getElementById("bot-status-tag");
+
+      if (status) {
+        status.innerText = stopped ? "MAINTENANCE" : "ONLINE";
+        status.style.color = stopped ? "#ffeb3b" : "#00ff88";
+        status.style.borderColor = stopped ? "#ffeb3b" : "#00ff88";
+        status.style.background = stopped ? "rgba(255,235,59,.12)" : "rgba(0,255,136,.12)";
+      }
+      if (adminButton) {
+        adminButton.style.display = IS_ADMIN ? "inline-block" : "none";
+        adminButton.innerText = stopped ? "RESUME APP" : "PAUSE APP";
+      }
+      // Admin can still enter the app to resume it.
+      if (screen) screen.style.display = (stopped && !IS_ADMIN) ? "flex" : "none";
+    }
+
+    async function toggleMiniAppMaintenance() {
+      if (!IS_ADMIN) return;
+      const nextStatus = String(config.bot_status).toUpperCase() === "ON" ? "OFF" : "ON";
+      const button = document.getElementById("admin-maintenance-toggle");
+      if (button) button.disabled = true;
+      try {
+        // Upsert the setting so this works even if bot_status row does not exist yet.
+        const response = await fetch(`${SB_URL}/rest/v1/cyber_settings?on_conflict=key`, {
+          method: "POST",
+          headers: {
+            "apikey": SB_KEY,
+            "Authorization": `Bearer ${SB_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates,return=minimal"
+          },
+          body: JSON.stringify({ key: "bot_status", value: nextStatus })
+        });
+        if (!response.ok) throw new Error("Could not update bot_status");
+        config.bot_status = nextStatus;
+        applyMaintenanceState();
+        showAlert("Cyber Earn", nextStatus === "OFF" ? "Mini App ကို ပိတ်ထားပါပြီ။" : "Mini App ကို ပြန်ဖွင့်လိုက်ပါပြီ။");
+      } catch (error) {
+        showAlert("Error", "Maintenance setting မပြောင်းနိုင်ပါ။ Supabase cyber_settings table/RLS ကိုစစ်ပါ။");
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    document.getElementById("admin-maintenance-toggle").addEventListener("click", toggleMiniAppMaintenance);
+
     function updateMinLimitsDisplay() {
       const minWText = `$${config.min_withdraw}`;
       const minDText = `$${config.min_deposit}`;
@@ -764,6 +841,7 @@
     }
 
     function openDepositModal() {
+      if (String(config.bot_status).toUpperCase() !== "ON" && !IS_ADMIN) return;
       document.getElementById("modal-deposit").classList.add("active");
     }
 
@@ -772,6 +850,7 @@
       navigator.clipboard.writeText(addr).then(() => showAlert("Copied", (currentLang === "en" ? "Admin Deposit Wallet Address copied!" : "Deposit Address အား ကူးယူပြီးပါပြီ!")));
     }
 
+    // STRICT BLOCKCHAIN AUTO DEPOSIT VERIFICATION
     async function handleStrictAutoDepositVerify() {
       const amt = Number(document.getElementById("input-deposit-amount").value);
       const txHash = document.getElementById("input-deposit-txhash").value.trim().toLowerCase();
@@ -875,7 +954,11 @@
       }
     }
 
+    // ========================================================
+    // WITHDRAWAL - BOT AUTO PAYOUT ချိတ်ဆက်မှု အဓိကနေရာ
+    // ========================================================
     document.getElementById("btn-open-withdraw").addEventListener("click", () => {
+      if (String(config.bot_status).toUpperCase() !== "ON" && !IS_ADMIN) return;
       document.getElementById("modal-withdraw").classList.add("active");
     });
 
@@ -893,6 +976,7 @@
       btn.disabled = true;
       btn.innerText = "⏳ Checking...";
 
+      // ငွေမထုတ်မီ Channel များမှ ခိုးထွက်ထားခြင်း ရှိမရှိ စစ်ဆေးမည် (ထွက်ထားပါက 3x နုတ်မည်)
       const isClean = await autoCheckLeftChannelsAndPenalize3x(true);
       btn.disabled = false;
       btn.innerText = I18N[currentLang].btn_submit_withdraw;
@@ -902,9 +986,11 @@
         return;
       }
 
+      // Balance ချက်ချင်း နုတ်ယူခြင်း
       const nBal = Number((currentBalance - amt).toFixed(4));
       await updateBalanceInDB(nBal);
 
+      // Status: Pending အဖြစ် တိုက်ရိုက် ထည့်သွင်းခြင်း (VPS/Termux Bot က Auto ဖတ်ပြီး လွှဲပေးရန်)
       await fetch(`${SB_URL}/rest/v1/cyber_withdrawals`, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
@@ -917,6 +1003,7 @@
         : `$${amt} USDT ထုတ်ယူမှု အောင်မြင်ပါသည်။ Auto Payment စနစ်မှ Blockchain ပေါ်သို့ တိုက်ရိုက် လွှဲပြောင်းပေးနေပါပြီ။`));
     });
 
+    // IP LOCK (Runs asynchronously without blocking UI startup)
     async function checkIpLock() {
       if (IS_ADMIN) return true;
       try {
@@ -947,7 +1034,7 @@
 
     function getTodayString() {
       const d = new Date();
-      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
     }
 
     function getDailyAdCount() {
@@ -969,6 +1056,9 @@
       return current;
     }
 
+    // ========================================================
+    // FAST PARALLEL DATABASE SYNC & NEW USER REGISTRATION
+    // ========================================================
     async function syncDataFromDB() {
       try {
         const freshUser = extractTelegramUser();
@@ -993,6 +1083,7 @@
 
         applyLanguage(currentLang);
 
+        // Fetch Settings & User Profile in parallel for maximum speed
         const [setRes, uRes] = await Promise.all([
           fetch(`${SB_URL}/rest/v1/cyber_settings?select=*`, {
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -1003,19 +1094,23 @@
         ]);
 
         const [setData, uData] = await Promise.all([setRes.json(), uRes.json()]);
+        applyMaintenanceState();
 
         if (Array.isArray(setData)) {
           setData.forEach(item => {
             if (item.key === 'min_withdraw') config.min_withdraw = Number(item.value);
             if (item.key === 'min_deposit') config.min_deposit = Number(item.value);
             if (item.key === 'ref_reward') config.ref_reward = Number(item.value);
+            if (item.key === 'daily_bonus') config.daily_bonus = Number(item.value);
+            if (item.key === 'bot_status') config.bot_status = String(item.value).toUpperCase();
           });
           updateMinLimitsDisplay();
+          applyMaintenanceState();
         }
 
         if (Array.isArray(uData) && uData.length > 0) {
           currentBalance = Number(uData[0].balance || 0);
-          lastDailyDate = uData[0].last_daily || ""; // Database မှ နေ့စွဲအမှန်ကို ရယူခြင်း
+          lastDaily = Number(uData[0].last_daily || 0);
           localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
 
           if (uData[0].name !== (userData.first_name || "User")) {
@@ -1035,7 +1130,7 @@
             name: userData.first_name || "User",
             balance: savedLocalBal,
             referrer: refId,
-            last_daily: "",
+            last_daily: 0,
             is_banned: false
           };
 
@@ -1053,15 +1148,16 @@
           const createdRows = await createRes.json();
           if (Array.isArray(createdRows) && createdRows.length > 0) {
             currentBalance = Number(createdRows[0].balance || 0);
-            lastDailyDate = createdRows[0].last_daily || "";
+            lastDaily = Number(createdRows[0].last_daily || 0);
           } else {
             currentBalance = savedLocalBal;
-            lastDailyDate = "";
+            lastDaily = 0;
           }
         }
 
         document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
 
+        // Load tasks, PvP, IP lock, and 3x penalty check in background without freezing UI
         loadTasks();
         listenPublicPvP();
         checkIpLock();
@@ -1071,6 +1167,7 @@
       }
     }
 
+    // GUARANTEED BALANCE PERSISTENCE (PATCH + UPSERT FALLBACK)
     async function updateBalanceInDB(newBal) {
       currentBalance = Number(Number(newBal).toFixed(4));
       document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
@@ -1102,7 +1199,7 @@
               id: Number(userData.id),
               name: userData.first_name || "User",
               balance: currentBalance,
-              last_daily: lastDailyDate || "",
+              last_daily: lastDaily || 0,
               is_banned: false
             })
           });
@@ -1133,8 +1230,10 @@
       } catch (err) {}
     }
 
+    // MONETAG AD ENFORCEMENT
     let isShowingAd = false;
     document.getElementById("btn-watch-ad").addEventListener("click", () => {
+      if (String(config.bot_status).toUpperCase() !== "ON" && !IS_ADMIN) return;
       if (!IS_ADMIN && getDailyAdCount() >= MAX_DAILY_ADS) {
         showAlert("Limit Reached", `Daily limit of ${MAX_DAILY_ADS} ads reached.`);
         return;
@@ -1171,6 +1270,9 @@
       });
     });
 
+    // ========================================================
+    // PVP WHEEL SYSTEM (FIXED WIN % & ACCURATE PRIZE PAYOUT)
+    // ========================================================
     let currentPvPRoom = null;
     let pvpTimer = null;
     let isPvPSpinning = false;
@@ -1365,6 +1467,7 @@
             return;
           }
 
+          // Deterministic seed based on room ID + total pot so every player sees the exact same winner & %
           const seedVal = Math.abs(Math.sin(Number(roomId) * 9999 + Math.round(total * 10000)) * 10000);
           const randFraction = seedVal - Math.floor(seedVal);
           const randTarget = randFraction * total;
@@ -1506,6 +1609,9 @@
       }
     }
 
+    // ========================================================
+    // FAST NON-BLOCKING ONE-TIME TASK SYSTEM & AUTO 3X PENALTY
+    // ========================================================
     let cachedTasksList = null;
     let lastPenaltyCheckTime = 0;
     let isCheckingPenalty = false;
@@ -1535,6 +1641,7 @@
       localStorage.setItem(`cyber_penalized_left_${userData.id}`, JSON.stringify(list));
     }
 
+    // Channel မှ ခိုးထွက်ထားပါက နောက်ကွယ်မှ အမြန်စစ်ဆေးပြီး ဆုကြေး ၃ ဆ (3x) နုတ်ယူမည့် ဖန်ရှင်
     async function autoCheckLeftChannelsAndPenalize3x(forceImmediate = false) {
       if (IS_ADMIN) return true;
       const now = Date.now();
@@ -1707,6 +1814,7 @@
     async function verifyChannelAndReward(task) {
       const sTaskId = String(task.id);
 
+      // ချက်ချင်း Local စစ်ပြီး လုပ်ပြီးသားဆိုလျှင် ပိတ်မည်
       if (getEverClaimedTasks().includes(sTaskId)) {
         showAlert("Notice", (currentLang === "en"
           ? "You have already claimed the reward for this task once!"
@@ -1715,6 +1823,7 @@
         return;
       }
 
+      // နှိပ်လိုက်သည်နှင့် ချက်ချင်း Channel Link ဖွင့်ပေးမည် (လုံးဝ မလေးစေရန်)
       if (tg?.openLink) { tg.openLink(task.link); } else { window.open(task.link, "_blank"); }
       const b = document.getElementById(`task-btn-${task.id}`);
       if (b) {
@@ -1778,44 +1887,90 @@
       }, 3000);
     }
 
-    // ========================================================
-    // SECURE STRICT DATE-BASED DAILY BONUS (RELOAD PROOF)
-    // ========================================================
+    // DAILY BONUS: atomic 24-hour lock in Supabase.
+    // Only one request can update this user's last_daily inside the 24-hour window.
+    let dailyClaimInProgress = false;
     document.getElementById("btn-daily").addEventListener("click", async () => {
-      const todayStr = getTodayString(); // ယနေ့ရက်စွဲ (ဥပမာ: "2026-11-08")
+      const btn = document.getElementById("btn-daily");
+      if (String(config.bot_status).toUpperCase() !== "ON" && !IS_ADMIN) {
+        return showAlert("Notice", "Mini App ကို ခေတ္တပိတ်ထားပါသည်။");
+      }
+      if (dailyClaimInProgress) return;
 
-      // 1. Database မှ အဲ့ဒီ User ရဲ့ last_daily (ရက်စွဲ) ကို တိုက်ရိုက် တောင်းခံစစ်ဆေးခြင်း
-      try {
-        const freshRes = await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=last_daily`, {
-          headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const freshData = await freshRes.json();
-        if (Array.isArray(freshData) && freshData.length > 0) {
-          lastDailyDate = freshData[0].last_daily || "";
-        }
-      } catch (e) {}
+      const now = Date.now();
+      const cooldown = 24 * 60 * 60 * 1000;
+      const cutoff = now - cooldown;
 
-      // 2. ယနေ့ရက်စွဲနှင့် တူနေပါက Reload လုပ်ထားလည်း လုံးဝ ထပ်မရအောင် တားဆီးခြင်း
-      if (!IS_ADMIN && lastDailyDate === todayStr) {
-        return showAlert("Notice", (currentLang === "en" 
-          ? "Already claimed today. Please come back tomorrow!" 
-          : "ယနေ့အတွက် Daily Bonus ရယူပြီးပါပြီ။ မနက်ဖြန်မှ ထပ်မံရယူပါခင်ဗျာ။"));
+      if (Number(lastDaily || 0) > cutoff) {
+        const remaining = cooldown - (now - Number(lastDaily));
+        const hours = Math.ceil(remaining / (60 * 60 * 1000));
+        return showAlert("Notice", (currentLang === "en"
+          ? `Already claimed. Try again in about ${hours} hour(s).`
+          : `Daily Bonus ရယူပြီးပါပြီ။ ${hours} နာရီခန့်ကြာမှ ပြန်ယူနိုင်ပါမည်။`));
       }
 
-      const nBal = Number((currentBalance + config.daily_bonus).toFixed(4));
-      lastDailyDate = todayStr; // ယနေ့ရက်စွဲဖြင့် အပ်ဒိတ်လုပ်မည်
-      
-      showAlert("Daily Bonus", (currentLang === "en" ? `Claimed +$${config.daily_bonus} USDT!` : `Daily Bonus +$${config.daily_bonus} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
+      dailyClaimInProgress = true;
+      btn.disabled = true;
+      btn.innerText = "⏳ Claiming...";
 
-      // Balance နှင့် Database ၏ last_daily (ရက်စွဲ) ကို တစ်ခါတည်း တိကျစွာ သိမ်းဆည်းခြင်း
-      await updateBalanceInDB(nBal);
-      await fetch(`${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}`, {
-        method: "PATCH",
-        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ last_daily: todayStr })
-      }).catch(() => {});
+      try {
+        const newBalance = Number((currentBalance + Number(config.daily_bonus)).toFixed(4));
 
-      autoCheckLeftChannelsAndPenalize3x(false);
+        // Atomic condition: update succeeds only if last_daily is older than 24 hours.
+        // A second click/device/request will receive zero updated rows and cannot earn twice.
+        const claimRes = await fetch(
+          `${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&last_daily=lt.${cutoff}&select=id,last_daily,balance`,
+          {
+            method: "PATCH",
+            headers: {
+              "apikey": SB_KEY,
+              "Authorization": `Bearer ${SB_KEY}`,
+              "Content-Type": "application/json",
+              "Prefer": "return=representation"
+            },
+            body: JSON.stringify({ last_daily: now, balance: newBalance })
+          }
+        );
+
+        if (!claimRes.ok) throw new Error("Daily claim database request failed");
+        const claimedRows = await claimRes.json();
+
+        if (!Array.isArray(claimedRows) || claimedRows.length !== 1) {
+          // Refresh the authoritative cooldown timestamp from the database.
+          const refreshRes = await fetch(
+            `${SB_URL}/rest/v1/cyber_users?id=eq.${userData.id}&select=last_daily,balance`,
+            { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` } }
+          );
+          const refreshRows = await refreshRes.json();
+          if (Array.isArray(refreshRows) && refreshRows[0]) {
+            lastDaily = Number(refreshRows[0].last_daily || 0);
+            currentBalance = Number(refreshRows[0].balance || currentBalance);
+            document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+            localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+          }
+          return showAlert("Notice", (currentLang === "en"
+            ? "Already claimed or claim is locked. Please try again later."
+            : "Daily Bonus ရယူပြီးဖြစ်ပါသည် (သို့) Claim လုပ်နေဆဲဖြစ်ပါသည်။ နောက်မှပြန်စမ်းပါ။"));
+        }
+
+        lastDaily = now;
+        currentBalance = newBalance;
+        document.getElementById("ui-balance").innerText = currentBalance.toFixed(4);
+        localStorage.setItem(`cyber_bal_${userData.id}`, currentBalance.toString());
+
+        showAlert("Daily Bonus", (currentLang === "en"
+          ? `Claimed +$${Number(config.daily_bonus).toFixed(4)} USDT!`
+          : `Daily Bonus +$${Number(config.daily_bonus).toFixed(4)} ထည့်သွင်းပေးလိုက်ပါပြီ!`));
+
+        autoCheckLeftChannelsAndPenalize3x(false);
+      } catch (error) {
+        console.error("Daily claim error:", error);
+        showAlert("Error", "Daily Bonus ကို သိမ်းဆည်းမရပါ။ Internet/Database ကိုစစ်ပြီး ပြန်စမ်းပါ။");
+      } finally {
+        dailyClaimInProgress = false;
+        btn.disabled = false;
+        btn.innerText = I18N[currentLang].btn_claim;
+      }
     });
 
     function copyInviteLink() {
@@ -1830,6 +1985,7 @@
       }
     });
 
+    // HISTORY SWITCH (WITHDRAW & DEPOSIT)
     function switchHistoryTab(type) {
       if (type === "withdraw") {
         document.getElementById("btn-tab-w-hist").style.borderColor = "#00ff88";
@@ -1904,6 +2060,7 @@
       }
     }
 
+    // INSTANT TAB SWITCHING (0ms Delay - Runs 3x Penalty Check in Background)
     function switchNav(viewId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-view'));
       document.querySelectorAll('.cnav-item').forEach(item => item.classList.remove('active'));
@@ -1911,9 +2068,11 @@
       if (el) el.classList.add('active');
       document.getElementById("persistent-top-bar").style.display = (viewId === 'view-game') ? 'none' : 'block';
 
+      // Trigger non-blocking background check
       autoCheckLeftChannelsAndPenalize3x(false);
     }
 
+    // Start app immediately without waiting for slow IP API
     syncDataFromDB();
   </script>
 </body>
